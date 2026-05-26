@@ -1,0 +1,28 @@
+# Godot 4 — generated cache (never commit)
+.godot/
+
+# Export targets and presets (contain absolute/machine-specific paths)
+/android/
+/ios/
+/web/
+/windows/
+/linux/
+/macos/
+export_presets.cfg
+
+# Mono/C# build artefacts (not used yet, but safe to exclude)
+.mono/
+data_*/
+mono_crash.*.json
+
+# macOS metadata
+.DS_Store
+
+# Windows thumbnail cache
+Thumbs.db
+desktop.ini
+
+# Editor swap/backup files
+*.swp
+*.swo
+*~
