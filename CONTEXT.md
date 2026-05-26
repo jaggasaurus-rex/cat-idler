@@ -90,7 +90,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 |---|---|---|---|
 | `money` | `float` | `0.0` | Current money (primary currency) |
 | `cats` | `int` | `0` | Number of cats purchased |
-| `next_cat_cost` | `float` | `5.0` | Cost of the next cat; doubles after every successful purchase |
+| `next_cat_cost` | `float` | `5.0` | Cost of the next cat; multiplied by `cat_cost_growth_rate` after each purchase |
 | `shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `click()` the first time `money >= next_cat_cost` |
 | `onlypaws_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 3` |
 | `paws_income_rate` | `float` | `0.0` | Passive $/sec; recalculated by `_update_paws_rate()` after each cat purchase or bot purchase |
@@ -178,7 +178,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Money counter** — label refreshes every frame, displayed to 2 decimal places (`$X.XX`)
 - [x] **Cats counter** — label refreshes every frame showing total purchased cats
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `onlypaws_unlocked`, `paws_income_rate`; emits `cat_purchased`
-- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by 1.5 each purchase
+- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.5, reduced to 1.25 by breeder contract)
 - [x] **Onlypaws passive income** — unlocks at 3 cats; base rate `floor(cats/3)` $/sec; each Manager-Bot doubles total output via `pow(2, manager_bots)`
 - [x] **Onlypaws button + income label** — revealed together when `onlypaws_unlocked`; button toggles info panel popup
 - [x] **Onlypaws info panel** — PanelContainer with static description text; shown/hidden by button press; positioned above button
@@ -186,7 +186,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Procedural cat character** — drawn with `_draw()` primitives (body, head, ears, eyes, nose, tail); smooth vertical bob animation via sine wave
 - [x] **Onlypaws Manager-Bot** — unlocks at 6 cats; costs $50 (doubles each purchase); each bot doubles total Onlypaws income rate; button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count and current rate
 - [x] **Onlypaws ON/OFF toggle** — `OnlypawsButton` flips `onlypaws_active`; income and attrition only run while active; button label and green modulate reflect state
-- [x] **Cat attrition** — time-based; activates at `manager_bots >= 2`; rate = `(manager_bots - 1)` cats/min (1/sec stored as `attrition_rate`); `attrition_timer` accumulates delta; `cat_attrition` signal drives visual removal in Main; `AttritionLabel` shows `"%d cats/min" % (manager_bots - 1)`, visible only when `manager_bots >= 2`
+- [x] **Cat attrition** — time-based; activates at `manager_bots >= 2`; rate = `(manager_bots - 1) * attrition_rate_per_bot` cats/min (default 0.5, halved to 0.25 by cat trees); stored as cats/sec in `attrition_rate`; `attrition_timer` accumulates delta; `cat_attrition` signal drives visual removal in Main; `AttritionLabel` shows `attrition_display_rate` cats/min, visible only when `manager_bots >= 2`
 - [x] **Theft warning popup** — `TheftWarningLayer` (CanvasLayer, layer 10) shown + tree paused when `manager_bots` reaches 2 (`first_bot_purchased` signal); `CloseButton` (PROCESS_MODE_ALWAYS) dismisses it and unpauses; `GameState` also runs PROCESS_MODE_ALWAYS
 - [x] **Attrition-reduction shop** — unlocks at 4 bots (`shop_unlocked_bots`); right-side `ShopPanel` VBoxContainer with two one-time purchases:
   - **Contract w/ a Breeder** ($2,000) — reduces `cat_cost_growth_rate` 1.5→1.25; retroactively lowers `next_cat_cost`
