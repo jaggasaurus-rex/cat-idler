@@ -8,13 +8,17 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var cat_container: Node2D = $CatContainer
 @onready var onlypaws_button: Button = $OnlypawsButton
 @onready var onlypaws_income_label: Label = $OnlypawsIncomeLabel
-@onready var onlypaws_info_panel: PanelContainer = $OnlypawsInfoPanel
 @onready var manager_bot_button: Button = $ManagerBotButton
 @onready var bots_rate_label: Label = $BotsRateLabel
+@onready var attrition_label: Label = $AttritionLabel
+@onready var theft_warning_layer: CanvasLayer = $TheftWarningLayer
+@onready var close_button: Button = $TheftWarningLayer/TheftWarningPanel/VBoxContainer/CloseRow/CloseButton
 
 
 func _ready() -> void:
 	GameState.cat_purchased.connect(_on_cat_purchased)
+	GameState.cat_attrition.connect(_on_cat_attrition)
+	GameState.first_bot_purchased.connect(_on_first_bot_purchased)
 
 
 func _process(_delta: float) -> void:
@@ -26,19 +30,29 @@ func _process(_delta: float) -> void:
 	if GameState.shop_unlocked and not purchase_cat_button.visible:
 		purchase_cat_button.visible = true
 
-	# One-way latch — both the button and income label appear together
+	# One-way latch — Onlypaws button, income label, and attrition label appear together
 	if GameState.onlypaws_unlocked and not onlypaws_button.visible:
 		onlypaws_button.visible = true
 		onlypaws_income_label.visible = true
+		attrition_label.visible = true
 
 	# One-way latch — bot button and status label appear together
 	if GameState.bot_shop_unlocked and not manager_bot_button.visible:
 		manager_bot_button.visible = true
 		bots_rate_label.visible = true
 
+	# Onlypaws toggle state — green tint when active, default when inactive
+	if GameState.onlypaws_active:
+		onlypaws_button.text = "Onlypaws: ON"
+		onlypaws_button.modulate = Color(0.4, 1.0, 0.4)
+	else:
+		onlypaws_button.text = "Onlypaws: OFF"
+		onlypaws_button.modulate = Color(1.0, 1.0, 1.0)
+
 	manager_bot_button.text = "Onlypaws Manager-Bot ($%.2f)" % GameState.next_bot_cost
 	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
 	bots_rate_label.text = "Bots: %d | Rate: $%.2f/sec" % [GameState.manager_bots, GameState.paws_income_rate]
+	attrition_label.text = "Cat Attrition: %.2f cats/min" % GameState.attrition_rate_per_min
 
 
 func _on_earn_money_button_pressed() -> void:
@@ -49,9 +63,9 @@ func _on_purchase_cat_button_pressed() -> void:
 	GameState.buy_cat()
 
 
-# Info panel is a toggle — the button itself has no game effect.
+# Toggles Onlypaws passive income on/off.
 func _on_onlypaws_button_pressed() -> void:
-	onlypaws_info_panel.visible = not onlypaws_info_panel.visible
+	GameState.onlypaws_active = not GameState.onlypaws_active
 
 
 func _on_manager_bot_button_pressed() -> void:
@@ -63,6 +77,26 @@ func _on_cat_purchased() -> void:
 	cat.scale = Vector2(0.4, 0.4)
 	cat_container.add_child(cat)
 	_reposition_cats()
+
+
+# Removes the last visual cat when attrition fires in GameState.
+func _on_cat_attrition() -> void:
+	var children := cat_container.get_children()
+	if children.size() > 0:
+		children.back().queue_free()
+		_reposition_cats()
+
+
+# Shows the theft warning popup and pauses the scene tree.
+# GameState continues ticking because its process_mode is ALWAYS.
+func _on_first_bot_purchased() -> void:
+	theft_warning_layer.visible = true
+	get_tree().paused = true
+
+
+func _on_theft_warning_close_pressed() -> void:
+	theft_warning_layer.visible = false
+	get_tree().paused = false
 
 
 # Keeps all purchased cats evenly spaced and centered around the
