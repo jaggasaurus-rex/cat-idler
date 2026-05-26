@@ -30,10 +30,13 @@ func _process(_delta: float) -> void:
 	if GameState.shop_unlocked and not purchase_cat_button.visible:
 		purchase_cat_button.visible = true
 
-	# One-way latch — Onlypaws button, income label, and attrition label appear together
+	# One-way latch — Onlypaws button and income label appear together
 	if GameState.onlypaws_unlocked and not onlypaws_button.visible:
 		onlypaws_button.visible = true
 		onlypaws_income_label.visible = true
+
+	# One-way latch — attrition label appears only once attrition is active (2+ bots)
+	if GameState.manager_bots >= 2 and not attrition_label.visible:
 		attrition_label.visible = true
 
 	# One-way latch — bot button and status label appear together
@@ -52,7 +55,7 @@ func _process(_delta: float) -> void:
 	manager_bot_button.text = "Onlypaws Manager-Bot ($%.2f)" % GameState.next_bot_cost
 	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
 	bots_rate_label.text = "Bots: %d | Rate: $%.2f/sec" % [GameState.manager_bots, GameState.paws_income_rate]
-	attrition_label.text = "Cat Attrition: %.2f cats/min" % GameState.attrition_rate_per_min
+	attrition_label.text = "Cat Attrition: %d cats/min" % (GameState.manager_bots - 1)
 
 
 func _on_earn_money_button_pressed() -> void:

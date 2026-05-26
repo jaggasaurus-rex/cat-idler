@@ -14,9 +14,8 @@ var paws_income_rate: float = 0.0
 var manager_bots: int = 0
 var next_bot_cost: float = 50.0
 var bot_shop_unlocked: bool = false
-var attrition_threshold: float = 5000.0
-var attrition_tracker: float = 0.0
-var attrition_rate_per_min: float = 0.0
+var attrition_rate: float = 0.0
+var attrition_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -27,13 +26,15 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if onlypaws_active:
-		var earned: float = paws_income_rate * delta
-		money += earned
-		# Attrition only activates once the player has 2+ bots.
+		money += paws_income_rate * delta
+		# Attrition is time-based and only activates at 2+ bots.
+		# attrition_rate is guaranteed > 0 here because _update_attrition_rate()
+		# only sets a non-zero value when manager_bots >= 2.
 		if manager_bots >= 2:
-			attrition_tracker += earned
-			while attrition_tracker >= attrition_threshold:
-				attrition_tracker -= attrition_threshold
+			attrition_timer += delta
+			var interval: float = 1.0 / attrition_rate
+			while attrition_timer >= interval:
+				attrition_timer -= interval
 				cats = max(0, cats - 1)
 				_update_paws_rate()
 				cat_attrition.emit()
@@ -60,10 +61,9 @@ func buy_cat() -> void:
 
 
 ## Deducts next_bot_cost, increments manager_bots, doubles the cost,
-## and recalculates the paws income rate. Each bot is a full doubling
-## of total output, so n bots = 2^n multiplier via pow(2, manager_bots).
-## Emits first_bot_purchased on the very first bot purchase.
-## Attrition activates at manager_bots >= 2; threshold tightens each bot beyond the first.
+## and recalculates income and attrition rates.
+## Emits first_bot_purchased when manager_bots reaches 2 (the point
+## where attrition activates and the theft warning popup is shown).
 func buy_bot() -> void:
 	if money < next_bot_cost:
 		return
@@ -71,30 +71,22 @@ func buy_bot() -> void:
 	manager_bots += 1
 	next_bot_cost *= 2.0
 	_update_paws_rate()
-	if manager_bots == 1:
+	_update_attrition_rate()
+	if manager_bots == 2:
 		first_bot_purchased.emit()
-	_update_attrition_threshold()
-	_update_attrition_display()
 
 
 # Base tier: floor(cats / 3) $/sec (0-2 cats=$0, 3-5=$1, 6-8=$2, …).
 # Each manager bot doubles the entire output: total = base * 2^manager_bots.
 func _update_paws_rate() -> void:
 	paws_income_rate = float(cats / 3) * pow(2.0, manager_bots)
-	_update_attrition_display()
 
 
-# Recalculates attrition_rate_per_min for display purposes only.
-# Represents how many cats per minute are lost at the current income rate.
-func _update_attrition_display() -> void:
-	if attrition_threshold <= 0.0:
-		attrition_rate_per_min = 0.0
+# Attrition rate is (manager_bots - 1) cats/min, converted to cats/sec.
+# Zero when fewer than 2 bots so the _process guard is always consistent.
+func _update_attrition_rate() -> void:
+	if manager_bots < 2:
+		attrition_rate = 0.0
 	else:
-		attrition_rate_per_min = (paws_income_rate * 60.0) / attrition_threshold
-
-
-# Tightens the attrition threshold with each bot purchased beyond the first.
-# Each additional bot reduces the threshold by 2500, floored at 500 to prevent
-# the threshold reaching 0 or going negative (which would cause infinite cat loss).
-func _update_attrition_threshold() -> void:
-	attrition_threshold = max(500.0, 5000.0 - (float(manager_bots - 1) * 2500.0))
+		var cats_per_minute: float = float(manager_bots - 1)
+		attrition_rate = cats_per_minute / 60.0
