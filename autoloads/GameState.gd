@@ -1,8 +1,20 @@
 extends Node
 
-var fish: float = 0.0
-var fish_per_click: float = 1.0
+signal cat_purchased
+
+const CAT_COST: float = 100.0
+
+var money: float = 0.0
+var cats: int = 0
 
 
 func click() -> void:
-	fish += fish_per_click
+	money += 1.0
+
+
+func buy_cat() -> void:
+	if money < CAT_COST:
+		return
+	money -= CAT_COST
+	cats += 1
+	cat_purchased.emit()

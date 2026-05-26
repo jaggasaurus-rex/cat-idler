@@ -45,9 +45,12 @@ cat-idler/
 
 ```
 Main (Control, full-rect)        ← Main.gd
-├── CatCharacter (Node2D)        ← instanced from CatCharacter.tscn; pos (576, 300)
-├── FishLabel (Label)            ← updated every _process() frame
-└── PetCatButton (Button)        ← pressed → GameState.click()
+├── CatCharacter (Node2D)        ← decorative; instanced from CatCharacter.tscn; pos (576, 300)
+├── MoneyLabel (Label)           ← updated every _process() frame
+├── CatsLabel (Label)            ← updated every _process() frame
+├── EarnMoneyButton (Button)     ← pressed → GameState.click()
+├── PurchaseCatButton (Button)   ← hidden until money >= CAT_COST; pressed → GameState.buy_cat()
+└── CatContainer (Node2D)        ← pos (576, 530); purchased cats added here, auto-recentred
 ```
 
 ---
@@ -58,14 +61,23 @@ Main (Control, full-rect)        ← Main.gd
 
 Central singleton that owns all game variables. Accessed globally as `GameState`.
 
+| Constant | Type | Value | Description |
+|---|---|---|---|
+| `CAT_COST` | `float` | `100.0` | Money required to purchase one cat |
+
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `fish` | `float` | `0.0` | Current fish (primary currency) |
-| `fish_per_click` | `float` | `1.0` | Fish awarded per manual click |
+| `money` | `float` | `0.0` | Current money (primary currency) |
+| `cats` | `int` | `0` | Number of cats purchased |
+
+| Signal | Description |
+|---|---|
+| `cat_purchased` | Emitted by `buy_cat()` after a successful purchase |
 
 | Method | Signature | Description |
 |---|---|---|
-| `click` | `() -> void` | Adds `fish_per_click` to `fish` |
+| `click` | `() -> void` | Adds `1.0` to `money` |
+| `buy_cat` | `() -> void` | Guards `money >= CAT_COST`, deducts cost, increments `cats`, emits `cat_purchased` |
 
 ### CatCharacter (`res://scripts/CatCharacter.gd`)
 
@@ -94,20 +106,27 @@ Procedurally drawn cat rendered entirely with `_draw()` primitives. No sprites o
 
 ### Main UI (`res://scenes/Main.gd`)
 
-Drives the root scene. No state lives here — reads from `GameState` only.
+Drives the root scene. No mutable state lives here — reads from and delegates to `GameState`.
 
 | Method | Description |
 |---|---|
-| `_process(delta)` | Refreshes `FishLabel` every frame: `"Fish: %.1f" % GameState.fish` |
-| `_on_pet_cat_button_pressed()` | Calls `GameState.click()` |
+| `_ready()` | Connects `GameState.cat_purchased` → `_on_cat_purchased` |
+| `_process(delta)` | Updates `MoneyLabel`, `CatsLabel`; toggles `PurchaseCatButton.visible` |
+| `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
+| `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
+| `_on_cat_purchased()` | Instantiates `CatCharacter` at scale 0.4, adds to `CatContainer`, calls `_reposition_cats()` |
+| `_reposition_cats()` | Spaces all `CatContainer` children evenly (72 px) and re-centres the row around the container origin |
 
 ---
 
 ## Current Features
 
-- [x] **Pet Cat button** — manual click awards `fish_per_click` fish
-- [x] **Fish counter** — label refreshes every frame, displayed to 1 decimal place
-- [x] **GameState singleton** — autoloaded, holds `fish` and `fish_per_click`
+- [x] **Earn Money button** — manual click adds $1.0 to `money`
+- [x] **Money counter** — label refreshes every frame, displayed to 1 decimal place (`$X.X`)
+- [x] **Cats counter** — label refreshes every frame showing total purchased cats
+- [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `CAT_COST`; emits `cat_purchased` signal
+- [x] **Purchase Cat button** — hidden until `money >= 100`; deducts $100 and emits signal on press
+- [x] **Cat spawning** — each purchase instances `CatCharacter` at scale 0.4 into `CatContainer`; row auto-centres as it grows
 - [x] **Procedural cat character** — drawn with `_draw()` primitives (body, head, ears, eyes, nose, tail); smooth vertical bob animation via sine wave
 
 ---
@@ -115,13 +134,14 @@ Drives the root scene. No state lives here — reads from `GameState` only.
 ## Planned Features
 
 ### Phase 1 — Core Click Loop *(in progress)*
-- [x] Pet Cat button with fish counter
-- [ ] Idle/passive fish income (`fish_per_second` variable + `_process` accumulation)
-- [ ] Basic UI polish (centered layout, styled label & button)
+- [x] Earn Money button with money counter
+- [x] Purchase Cat button (gated at $100) with cat spawning
+- [ ] Idle/passive income (`income_per_second` driven by owned cats)
+- [ ] Basic UI polish (centered layout, styled labels & buttons)
 
 ### Phase 2 — Upgrades
-- [ ] Upgrade: increase `fish_per_click` (e.g. "Better Petting Technique")
-- [ ] Upgrade: increase `fish_per_second` (e.g. "Autonomous Purring")
+- [ ] Upgrade: increase click value (e.g. "Better Petting Technique")
+- [ ] Upgrade: increase `income_per_second` (e.g. "Autonomous Purring")
 - [ ] Upgrade cost system (deduct fish on purchase, disable button if unaffordable)
 - [ ] Upgrade panel scene (`res://scenes/UpgradePanel.tscn`)
 
