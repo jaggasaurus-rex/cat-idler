@@ -87,7 +87,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `next_bot_cost` | `float` | `50.0` | Cost of the next bot; doubles after every successful purchase |
 | `bot_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 6` |
 | `onlypaws_active` | `bool` | `false` | Player-toggled; income and attrition only tick when `true` |
-| `attrition_threshold` | `float` | `5000.0` | Onlypaws earnings required to lose 1 cat; variable so upgrades can reduce it |
+| `attrition_threshold` | `float` | `5000.0` | Onlypaws earnings required to lose 1 cat; recalculated by `_update_attrition_threshold()` — decreases by 2500 per bot beyond the first, floored at 500 |
 | `attrition_tracker` | `float` | `0.0` | Running total of Onlypaws earnings toward the next attrition event |
 | `attrition_rate_per_min` | `float` | `0.0` | Display-only; `(paws_income_rate * 60) / attrition_threshold`; recalculated by `_update_attrition_display()` |
 
@@ -100,12 +100,13 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | Method | Signature | Description |
 |---|---|---|
 | `_ready` | `() -> void` | Sets `process_mode = PROCESS_MODE_ALWAYS` so income ticks even while tree is paused |
-| `_process` | `(delta) -> void` | If `onlypaws_active`: earns `paws_income_rate * delta`, accumulates `attrition_tracker`; while loop fires `cat_attrition` and decrements `cats` each time threshold is crossed |
+| `_process` | `(delta) -> void` | If `onlypaws_active`: earns `paws_income_rate * delta`; if additionally `manager_bots >= 2`: accumulates `attrition_tracker`; while loop fires `cat_attrition` and decrements `cats` each time threshold is crossed |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, doubles `next_cat_cost`, sets `onlypaws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
-| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, emits `first_bot_purchased` when `manager_bots == 1` |
+| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, emits `first_bot_purchased` when `manager_bots == 1`, then calls `_update_attrition_threshold()` and `_update_attrition_display()` |
 | `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats / 3) * pow(2.0, manager_bots)`; calls `_update_attrition_display()` |
 | `_update_attrition_display` | `() -> void` | Recalculates `attrition_rate_per_min = (paws_income_rate * 60) / attrition_threshold` (display only) |
+| `_update_attrition_threshold` | `() -> void` | `attrition_threshold = max(500.0, 5000.0 - ((manager_bots - 1) * 2500.0))` — tightens threshold with each bot beyond the first; 500 floor prevents divide-by-zero / infinite loss |
 
 ### CatCharacter (`res://scripts/CatCharacter.gd`)
 
@@ -166,7 +167,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Procedural cat character** — drawn with `_draw()` primitives (body, head, ears, eyes, nose, tail); smooth vertical bob animation via sine wave
 - [x] **Onlypaws Manager-Bot** — unlocks at 6 cats; costs $50 (doubles each purchase); each bot doubles total Onlypaws income rate; button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count and current rate
 - [x] **Onlypaws ON/OFF toggle** — `OnlypawsButton` flips `onlypaws_active`; income and attrition only run while active; button label and green modulate reflect state
-- [x] **Cat attrition** — every $5,000 earned on Onlypaws removes 1 cat; `attrition_tracker` accumulates earnings; `cat_attrition` signal drives visual removal in Main; `AttritionLabel` shows rate in cats/min
+- [x] **Cat attrition** — activates only when `manager_bots >= 2`; threshold starts at $5,000, drops by $2,500 per bot beyond the first, floored at $500; `attrition_tracker` accumulates Onlypaws earnings; `cat_attrition` signal drives visual removal in Main; `AttritionLabel` shows rate in cats/min
 - [x] **Theft warning popup** — `TheftWarningLayer` (CanvasLayer, layer 10) shown + tree paused on first bot purchase; `CloseButton` (PROCESS_MODE_ALWAYS) dismisses it and unpauses; `GameState` also runs PROCESS_MODE_ALWAYS
 
 ---
