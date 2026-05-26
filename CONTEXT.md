@@ -48,7 +48,7 @@ Main (Control, full-rect)        ← Main.gd
 ├── MoneyLabel (Label)           ← updated every _process() frame
 ├── CatsLabel (Label)            ← updated every _process() frame
 ├── EarnMoneyButton (Button)     ← pressed → GameState.click()
-├── PurchaseCatButton (Button)   ← hidden until money >= next_cat_cost; label updates every frame
+├── PurchaseCatButton (Button)   ← permanently shown once shop_unlocked; label updates every frame
 └── CatContainer (Node2D)        ← pos (576, 530); purchased cats added here, auto-recentred
 ```
 
@@ -65,6 +65,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `money` | `float` | `0.0` | Current money (primary currency) |
 | `cats` | `int` | `0` | Number of cats purchased |
 | `next_cat_cost` | `float` | `20.0` | Cost of the next cat; doubles after every successful purchase |
+| `shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `click()` the first time `money >= next_cat_cost` |
 
 | Signal | Description |
 |---|---|
@@ -72,7 +73,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 
 | Method | Signature | Description |
 |---|---|---|
-| `click` | `() -> void` | Adds `1.0` to `money` |
+| `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, doubles `next_cat_cost`, emits `cat_purchased` |
 
 ### CatCharacter (`res://scripts/CatCharacter.gd`)
@@ -107,7 +108,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | Method | Description |
 |---|---|
 | `_ready()` | Connects `GameState.cat_purchased` → `_on_cat_purchased` |
-| `_process(delta)` | Updates `MoneyLabel`, `CatsLabel`; sets `PurchaseCatButton.text` with current cost; toggles visibility |
+| `_process(delta)` | Updates `MoneyLabel`, `CatsLabel`; updates `PurchaseCatButton.text`; one-time latch: shows button when `shop_unlocked` first becomes true |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
 | `_on_cat_purchased()` | Instantiates `CatCharacter` at scale 0.4, adds to `CatContainer`, calls `_reposition_cats()` |
@@ -121,7 +122,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Money counter** — label refreshes every frame, displayed to 1 decimal place (`$X.X`)
 - [x] **Cats counter** — label refreshes every frame showing total purchased cats
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`; emits `cat_purchased` signal
-- [x] **Purchase Cat button** — hidden until `money >= next_cat_cost`; label shows live cost; cost starts at $20 and doubles each purchase
+- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost; cost starts at $20 and doubles each purchase
 - [x] **Cat spawning** — each purchase instances `CatCharacter` at scale 0.4 into `CatContainer`; row auto-centres as it grows
 - [x] **Procedural cat character** — drawn with `_draw()` primitives (body, head, ears, eyes, nose, tail); smooth vertical bob animation via sine wave
 
