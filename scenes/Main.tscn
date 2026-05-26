@@ -40,10 +40,44 @@ offset_top = 135.0
 offset_right = 275.0
 offset_bottom = 165.0
 visible = false
-text = "Purchase Cat ($20)"
+text = "Purchase Cat ($5)"
+
+[node name="OnlypawsButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 175.0
+offset_right = 275.0
+offset_bottom = 205.0
+visible = false
+text = "Sell pics on Onlypaws"
+
+[node name="OnlypawsIncomeLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 210.0
+offset_right = 350.0
+offset_bottom = 235.0
+visible = false
+text = "Onlypaws: $0/sec"
+
+[node name="OnlypawsInfoPanel" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 62.0
+offset_right = 420.0
+offset_bottom = 170.0
+visible = false
+
+[node name="InfoLabel" type="Label" parent="OnlypawsInfoPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Post your cats on Onlypaws!
+Earns $1/sec for every 3 cats you own.
+Buy more cats to increase your income."
 
 [node name="CatContainer" type="Node2D" parent="."]
 position = Vector2(576, 530)
 
 [connection signal="pressed" from="EarnMoneyButton" to="." method="_on_earn_money_button_pressed"]
 [connection signal="pressed" from="PurchaseCatButton" to="." method="_on_purchase_cat_button_pressed"]
+[connection signal="pressed" from="OnlypawsButton" to="." method="_on_onlypaws_button_pressed"]

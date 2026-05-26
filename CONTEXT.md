@@ -44,12 +44,16 @@ cat-idler/
 ### Scene structure
 
 ```
-Main (Control, full-rect)        ← Main.gd
-├── MoneyLabel (Label)           ← updated every _process() frame
-├── CatsLabel (Label)            ← updated every _process() frame
-├── EarnMoneyButton (Button)     ← pressed → GameState.click()
-├── PurchaseCatButton (Button)   ← permanently shown once shop_unlocked; label updates every frame
-└── CatContainer (Node2D)        ← pos (576, 530); purchased cats added here, auto-recentred
+Main (Control, full-rect)             ← Main.gd
+├── MoneyLabel (Label)                ← updated every _process() frame
+├── CatsLabel (Label)                 ← updated every _process() frame
+├── EarnMoneyButton (Button)          ← pressed → GameState.click()
+├── PurchaseCatButton (Button)        ← permanently shown once shop_unlocked; label updates every frame
+├── OnlypawsButton (Button)           ← permanently shown once onlypaws_unlocked; toggles InfoPanel on press
+├── OnlypawsIncomeLabel (Label)       ← shown with OnlypawsButton; "Onlypaws: $X/sec" updates every frame
+├── OnlypawsInfoPanel (PanelContainer)← hidden by default; toggled by OnlypawsButton; sits above button (y 62–170)
+│   └── InfoLabel (Label)             ← static info text, autowrap enabled
+└── CatContainer (Node2D)             ← pos (576, 530); purchased cats added here, auto-recentred
 ```
 
 ---
@@ -64,8 +68,10 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 |---|---|---|---|
 | `money` | `float` | `0.0` | Current money (primary currency) |
 | `cats` | `int` | `0` | Number of cats purchased |
-| `next_cat_cost` | `float` | `20.0` | Cost of the next cat; doubles after every successful purchase |
+| `next_cat_cost` | `float` | `5.0` | Cost of the next cat; doubles after every successful purchase |
 | `shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `click()` the first time `money >= next_cat_cost` |
+| `onlypaws_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 3` |
+| `paws_income_rate` | `float` | `0.0` | Passive $/sec; recalculated by `_update_paws_rate()` after each cat purchase |
 
 | Signal | Description |
 |---|---|
@@ -73,8 +79,10 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 
 | Method | Signature | Description |
 |---|---|---|
+| `_process` | `(delta) -> void` | If `onlypaws_unlocked`: `money += paws_income_rate * delta` |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
-| `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, doubles `next_cat_cost`, emits `cat_purchased` |
+| `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, doubles `next_cat_cost`, sets `onlypaws_unlocked` when `cats >= 3`, calls `_update_paws_rate()`, emits `cat_purchased` |
+| `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats / 3)` — integer floor division; tiers: 0–2 cats=$0, 3–5=$1, 6–8=$2, … |
 
 ### CatCharacter (`res://scripts/CatCharacter.gd`)
 
@@ -108,9 +116,10 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | Method | Description |
 |---|---|
 | `_ready()` | Connects `GameState.cat_purchased` → `_on_cat_purchased` |
-| `_process(delta)` | Updates `MoneyLabel`, `CatsLabel`; updates `PurchaseCatButton.text`; one-time latch: shows button when `shop_unlocked` first becomes true |
+| `_process(delta)` | Updates `MoneyLabel`, `CatsLabel`, `PurchaseCatButton.text`, `OnlypawsIncomeLabel.text`; one-time latches for `shop_unlocked` and `onlypaws_unlocked` |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
+| `_on_onlypaws_button_pressed()` | Toggles `OnlypawsInfoPanel.visible` — button is an info anchor, not a game action |
 | `_on_cat_purchased()` | Instantiates `CatCharacter` at scale 0.4, adds to `CatContainer`, calls `_reposition_cats()` |
 | `_reposition_cats()` | Spaces all `CatContainer` children evenly (72 px) and re-centres the row around the container origin |
 
@@ -121,8 +130,11 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Earn Money button** — manual click adds $1.0 to `money`
 - [x] **Money counter** — label refreshes every frame, displayed to 1 decimal place (`$X.X`)
 - [x] **Cats counter** — label refreshes every frame showing total purchased cats
-- [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`; emits `cat_purchased` signal
-- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost; cost starts at $20 and doubles each purchase
+- [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `onlypaws_unlocked`, `paws_income_rate`; emits `cat_purchased`
+- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost; cost starts at $5 and doubles each purchase
+- [x] **Onlypaws passive income** — unlocks at 3 cats; `paws_income_rate = floor(cats/3)` $/sec added in GameState `_process()`; tiers every 3 cats
+- [x] **Onlypaws button + income label** — revealed together when `onlypaws_unlocked`; button toggles info panel popup
+- [x] **Onlypaws info panel** — PanelContainer with static description text; shown/hidden by button press; positioned above button
 - [x] **Cat spawning** — each purchase instances `CatCharacter` at scale 0.4 into `CatContainer`; row auto-centres as it grows
 - [x] **Procedural cat character** — drawn with `_draw()` primitives (body, head, ears, eyes, nose, tail); smooth vertical bob animation via sine wave
 
@@ -133,7 +145,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 ### Phase 1 — Core Click Loop *(in progress)*
 - [x] Earn Money button with money counter
 - [x] Purchase Cat button (gated at $100) with cat spawning
-- [ ] Idle/passive income (`income_per_second` driven by owned cats)
+- [x] Idle/passive income (Onlypaws: `floor(cats/3)` $/sec, unlocks at 3 cats)
 - [ ] Basic UI polish (centered layout, styled labels & buttons)
 
 ### Phase 2 — Upgrades
