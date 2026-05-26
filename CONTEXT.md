@@ -128,10 +128,10 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 ## Current Features
 
 - [x] **Earn Money button** — manual click adds $1.0 to `money`
-- [x] **Money counter** — label refreshes every frame, displayed to 1 decimal place (`$X.X`)
+- [x] **Money counter** — label refreshes every frame, displayed to 2 decimal places (`$X.XX`)
 - [x] **Cats counter** — label refreshes every frame showing total purchased cats
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `onlypaws_unlocked`, `paws_income_rate`; emits `cat_purchased`
-- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost; cost starts at $5 and doubles each purchase
+- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by 1.5 each purchase
 - [x] **Onlypaws passive income** — unlocks at 3 cats; `paws_income_rate = floor(cats/3)` $/sec added in GameState `_process()`; tiers every 3 cats
 - [x] **Onlypaws button + income label** — revealed together when `onlypaws_unlocked`; button toggles info panel popup
 - [x] **Onlypaws info panel** — PanelContainer with static description text; shown/hidden by button press; positioned above button

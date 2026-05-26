@@ -2,14 +2,16 @@
 
 [ext_resource type="Script" uid="uid://o5gwfm8dh73h" path="res://scenes/Main.gd" id="1"]
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=613534989]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1")
 
-[node name="MoneyLabel" type="Label" parent="."]
+[node name="MoneyLabel" type="Label" parent="." unique_id=1899892703]
 layout_mode = 0
 offset_left = 20.0
 offset_top = 20.0
@@ -17,7 +19,7 @@ offset_right = 300.0
 offset_bottom = 50.0
 text = "Money: $0.0"
 
-[node name="CatsLabel" type="Label" parent="."]
+[node name="CatsLabel" type="Label" parent="." unique_id=1595888146]
 layout_mode = 0
 offset_left = 20.0
 offset_top = 55.0
@@ -25,7 +27,7 @@ offset_right = 300.0
 offset_bottom = 85.0
 text = "Cats: 0"
 
-[node name="EarnMoneyButton" type="Button" parent="."]
+[node name="EarnMoneyButton" type="Button" parent="." unique_id=1094360717]
 layout_mode = 0
 offset_left = 20.0
 offset_top = 95.0
@@ -33,49 +35,49 @@ offset_right = 185.0
 offset_bottom = 125.0
 text = "Earn Money"
 
-[node name="PurchaseCatButton" type="Button" parent="."]
+[node name="PurchaseCatButton" type="Button" parent="." unique_id=375900732]
+visible = false
 layout_mode = 0
 offset_left = 20.0
 offset_top = 135.0
 offset_right = 275.0
 offset_bottom = 165.0
-visible = false
 text = "Purchase Cat ($5)"
 
-[node name="OnlypawsButton" type="Button" parent="."]
+[node name="OnlypawsButton" type="Button" parent="." unique_id=519044290]
+visible = false
 layout_mode = 0
 offset_left = 20.0
 offset_top = 175.0
 offset_right = 275.0
 offset_bottom = 205.0
-visible = false
 text = "Sell pics on Onlypaws"
 
-[node name="OnlypawsIncomeLabel" type="Label" parent="."]
+[node name="OnlypawsIncomeLabel" type="Label" parent="." unique_id=1013931731]
+visible = false
 layout_mode = 0
 offset_left = 20.0
 offset_top = 210.0
 offset_right = 350.0
 offset_bottom = 235.0
-visible = false
 text = "Onlypaws: $0/sec"
 
-[node name="OnlypawsInfoPanel" type="PanelContainer" parent="."]
+[node name="OnlypawsInfoPanel" type="PanelContainer" parent="." unique_id=820538870]
+visible = false
 layout_mode = 0
 offset_left = 20.0
 offset_top = 62.0
 offset_right = 420.0
 offset_bottom = 170.0
-visible = false
 
-[node name="InfoLabel" type="Label" parent="OnlypawsInfoPanel"]
+[node name="InfoLabel" type="Label" parent="OnlypawsInfoPanel" unique_id=1796548188]
 layout_mode = 2
-autowrap_mode = 3
 text = "Post your cats on Onlypaws!
 Earns $1/sec for every 3 cats you own.
 Buy more cats to increase your income."
+autowrap_mode = 3
 
-[node name="CatContainer" type="Node2D" parent="."]
+[node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
 position = Vector2(576, 530)
 
 [connection signal="pressed" from="EarnMoneyButton" to="." method="_on_earn_money_button_pressed"]

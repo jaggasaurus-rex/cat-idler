@@ -26,7 +26,7 @@ func buy_cat() -> void:
 		return
 	money -= next_cat_cost
 	cats += 1
-	next_cat_cost *= 2.0
+	next_cat_cost *= 1.5
 	if not onlypaws_unlocked and cats >= 3:
 		onlypaws_unlocked = true
 	_update_paws_rate()
