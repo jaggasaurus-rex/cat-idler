@@ -77,9 +77,28 @@ Earns $1/sec for every 3 cats you own.
 Buy more cats to increase your income."
 autowrap_mode = 3
 
+[node name="ManagerBotButton" type="Button" parent="." unique_id=641728503]
+visible = false
+layout_mode = 0
+offset_left = 20.0
+offset_top = 245.0
+offset_right = 360.0
+offset_bottom = 275.0
+text = "Onlypaws Manager-Bot ($50.00)"
+
+[node name="BotsRateLabel" type="Label" parent="." unique_id=982341620]
+visible = false
+layout_mode = 0
+offset_left = 20.0
+offset_top = 280.0
+offset_right = 400.0
+offset_bottom = 305.0
+text = "Bots: 0 | Rate: $0.00/sec"
+
 [node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
 position = Vector2(576, 530)
 
 [connection signal="pressed" from="EarnMoneyButton" to="." method="_on_earn_money_button_pressed"]
 [connection signal="pressed" from="PurchaseCatButton" to="." method="_on_purchase_cat_button_pressed"]
 [connection signal="pressed" from="OnlypawsButton" to="." method="_on_onlypaws_button_pressed"]
+[connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]

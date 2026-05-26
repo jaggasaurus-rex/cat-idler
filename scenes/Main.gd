@@ -9,6 +9,8 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var onlypaws_button: Button = $OnlypawsButton
 @onready var onlypaws_income_label: Label = $OnlypawsIncomeLabel
 @onready var onlypaws_info_panel: PanelContainer = $OnlypawsInfoPanel
+@onready var manager_bot_button: Button = $ManagerBotButton
+@onready var bots_rate_label: Label = $BotsRateLabel
 
 
 func _ready() -> void:
@@ -19,7 +21,7 @@ func _process(_delta: float) -> void:
 	money_label.text = "Money: $%.2f" % GameState.money
 	cats_label.text = "Cats: %d" % GameState.cats
 	purchase_cat_button.text = "Purchase Cat ($%.2f)" % GameState.next_cat_cost
-	onlypaws_income_label.text = "Onlypaws: $%.0f/sec" % GameState.paws_income_rate
+	onlypaws_income_label.text = "Onlypaws: $%.2f/sec" % GameState.paws_income_rate
 
 	if GameState.shop_unlocked and not purchase_cat_button.visible:
 		purchase_cat_button.visible = true
@@ -28,6 +30,15 @@ func _process(_delta: float) -> void:
 	if GameState.onlypaws_unlocked and not onlypaws_button.visible:
 		onlypaws_button.visible = true
 		onlypaws_income_label.visible = true
+
+	# One-way latch — bot button and status label appear together
+	if GameState.bot_shop_unlocked and not manager_bot_button.visible:
+		manager_bot_button.visible = true
+		bots_rate_label.visible = true
+
+	manager_bot_button.text = "Onlypaws Manager-Bot ($%.2f)" % GameState.next_bot_cost
+	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
+	bots_rate_label.text = "Bots: %d | Rate: $%.2f/sec" % [GameState.manager_bots, GameState.paws_income_rate]
 
 
 func _on_earn_money_button_pressed() -> void:
@@ -41,6 +52,10 @@ func _on_purchase_cat_button_pressed() -> void:
 # Info panel is a toggle — the button itself has no game effect.
 func _on_onlypaws_button_pressed() -> void:
 	onlypaws_info_panel.visible = not onlypaws_info_panel.visible
+
+
+func _on_manager_bot_button_pressed() -> void:
+	GameState.buy_bot()
 
 
 func _on_cat_purchased() -> void:
