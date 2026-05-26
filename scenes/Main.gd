@@ -15,7 +15,8 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	money_label.text = "Money: $%.1f" % GameState.money
 	cats_label.text = "Cats: %d" % GameState.cats
-	purchase_cat_button.visible = GameState.money >= GameState.CAT_COST
+	purchase_cat_button.text = "Purchase Cat ($%.0f)" % GameState.next_cat_cost
+	purchase_cat_button.visible = GameState.money >= GameState.next_cat_cost
 
 
 func _on_earn_money_button_pressed() -> void:

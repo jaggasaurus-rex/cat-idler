@@ -2,10 +2,9 @@ extends Node
 
 signal cat_purchased
 
-const CAT_COST: float = 100.0
-
 var money: float = 0.0
 var cats: int = 0
+var next_cat_cost: float = 20.0
 
 
 func click() -> void:
@@ -13,8 +12,9 @@ func click() -> void:
 
 
 func buy_cat() -> void:
-	if money < CAT_COST:
+	if money < next_cat_cost:
 		return
-	money -= CAT_COST
+	money -= next_cat_cost
 	cats += 1
+	next_cat_cost *= 2.0
 	cat_purchased.emit()
