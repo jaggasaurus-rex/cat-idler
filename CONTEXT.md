@@ -32,6 +32,7 @@ cat-idler/
 ├── scripts/
 │   └── CatCharacter.gd     # Cat draw + bob animation
 ├── CONTEXT.md              # This file
+├── ROADMAP.md              # Phase plan and design intent
 └── project.godot
 ```
 
@@ -57,6 +58,16 @@ Main (Control, full-rect)             ← Main.gd
 ├── ManagerBotButton (Button)         ← hidden until bot_shop_unlocked; label shows live cost; disabled when unaffordable
 ├── BotsRateLabel (Label)             ← shown with ManagerBotButton; "Bots: X | Rate: $X.XX/sec" updates every frame
 ├── AttritionLabel (Label)            ← shown when manager_bots >= 2; "Cat Attrition: X cats/min" updates every frame
+├── ShopPanel (VBoxContainer)         ← right-anchored, hidden until shop_unlocked_bots (manager_bots == 4)
+│   ├── ShopLabel (Label "Shop")
+│   ├── BreederItem (VBoxContainer)
+│   │   ├── BreederButton (Button)    ← calls buy_breeder_contract(); green+disabled after purchase
+│   │   ├── BreederCostLabel (Label "($2,000)")
+│   │   └── BreederDescLabel (Label, description)
+│   └── CatTreesItem (VBoxContainer)
+│       ├── CatTreesButton (Button)   ← calls buy_cat_trees(); green+disabled after purchase
+│       ├── CatTreesCostLabel (Label "($4,000)")
+│       └── CatTreesDescLabel (Label, description)
 ├── TheftWarningLayer (CanvasLayer)   ← layer=10; hidden by default; shown + tree paused when manager_bots reaches 2 (first_bot_purchased)
 │   └── TheftWarningPanel (PanelContainer) ← centered (~520×180px)
 │       └── VBoxContainer
@@ -86,9 +97,15 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `manager_bots` | `int` | `0` | Number of Manager-Bots purchased; each one doubles total Onlypaws output |
 | `next_bot_cost` | `float` | `50.0` | Cost of the next bot; doubles after every successful purchase |
 | `bot_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 6` |
+| `shop_unlocked_bots` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots == 4`; reveals the attrition-reduction shop |
 | `onlypaws_active` | `bool` | `false` | Player-toggled; income and attrition only tick when `true` |
-| `attrition_rate` | `float` | `0.0` | Cats lost per second; `(manager_bots - 1) / 60`; 0 when `manager_bots < 2` |
+| `attrition_rate` | `float` | `0.0` | Cats lost per second; `(manager_bots - 1) * attrition_rate_per_bot / 60`; 0 when `manager_bots < 2` |
 | `attrition_timer` | `float` | `0.0` | Accumulates delta toward the next cat loss event |
+| `attrition_display_rate` | `float` | `0.0` | Display-only; `attrition_rate * 60`; updated by `_update_attrition_rate()` |
+| `cat_cost_growth_rate` | `float` | `1.5` | Multiplier applied to `next_cat_cost` each purchase; reduced to 1.25 by breeder contract |
+| `attrition_rate_per_bot` | `float` | `0.5` | Cats/min added per bot beyond the first; halved to 0.25 by cat trees purchase |
+| `breeder_purchased` | `bool` | `false` | One-way latch; set by `buy_breeder_contract()` |
+| `cat_trees_purchased` | `bool` | `false` | One-way latch; set by `buy_cat_trees()` |
 
 | Signal | Description |
 |---|---|
@@ -101,10 +118,12 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `_ready` | `() -> void` | Sets `process_mode = PROCESS_MODE_ALWAYS` so income ticks even while tree is paused |
 | `_process` | `(delta) -> void` | If `onlypaws_active`: earns `paws_income_rate * delta`; if additionally `manager_bots >= 2`: accumulates `attrition_timer`; while loop fires `cat_attrition` and decrements `cats` each time `1.0 / attrition_rate` seconds elapses |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
-| `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, doubles `next_cat_cost`, sets `onlypaws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
-| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, calls `_update_attrition_rate()`, emits `first_bot_purchased` when `manager_bots == 2` |
+| `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `onlypaws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
+| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()` and `_update_attrition_rate()`, emits `first_bot_purchased` when `manager_bots == 2`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
+| `buy_breeder_contract` | `() -> void` | Guards `money >= 2000 and not breeder_purchased`; sets `cat_cost_growth_rate = 1.25`; retroactively recalculates `next_cat_cost = 5.0 * pow(1.25, cats)` |
+| `buy_cat_trees` | `() -> void` | Guards `money >= 4000 and not cat_trees_purchased`; sets `attrition_rate_per_bot = 0.25`; calls `_update_attrition_rate()` |
 | `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats / 3) * pow(2.0, manager_bots)` |
-| `_update_attrition_rate` | `() -> void` | Sets `attrition_rate = (manager_bots - 1) / 60.0` when `manager_bots >= 2`, else `0.0` |
+| `_update_attrition_rate` | `() -> void` | Sets `attrition_rate = (manager_bots - 1) * attrition_rate_per_bot / 60.0` when `manager_bots >= 2`, else `0.0`; updates `attrition_display_rate` |
 
 ### CatCharacter (`res://scripts/CatCharacter.gd`)
 
@@ -138,7 +157,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | Method | Description |
 |---|---|
 | `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`, `cat_attrition` → `_on_cat_attrition`, `first_bot_purchased` → `_on_first_bot_purchased` |
-| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `onlypaws_unlocked`, `bot_shop_unlocked`, and `manager_bots >= 2` (attrition label); sets `OnlypawsButton` label ("ON"/"OFF") and green/default modulate |
+| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `onlypaws_unlocked`, `bot_shop_unlocked`, `manager_bots >= 2` (attrition label), and `shop_unlocked_bots` (shop panel); sets `OnlypawsButton` label and modulate; applies green+disabled to shop buttons when their purchase flags are set |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
 | `_on_onlypaws_button_pressed()` | Flips `GameState.onlypaws_active` |
@@ -147,6 +166,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | `_on_cat_attrition()` | Removes the last child of `CatContainer` (if any), calls `_reposition_cats()` |
 | `_on_first_bot_purchased()` | Makes `TheftWarningLayer` visible; sets `get_tree().paused = true` |
 | `_on_theft_warning_close_pressed()` | Hides `TheftWarningLayer`; sets `get_tree().paused = false` |
+| `_on_breeder_button_pressed()` | Calls `GameState.buy_breeder_contract()` |
+| `_on_cat_trees_button_pressed()` | Calls `GameState.buy_cat_trees()` |
 | `_reposition_cats()` | Spaces all `CatContainer` children evenly (72 px) and re-centres the row around the container origin |
 
 ---
@@ -167,6 +188,9 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Onlypaws ON/OFF toggle** — `OnlypawsButton` flips `onlypaws_active`; income and attrition only run while active; button label and green modulate reflect state
 - [x] **Cat attrition** — time-based; activates at `manager_bots >= 2`; rate = `(manager_bots - 1)` cats/min (1/sec stored as `attrition_rate`); `attrition_timer` accumulates delta; `cat_attrition` signal drives visual removal in Main; `AttritionLabel` shows `"%d cats/min" % (manager_bots - 1)`, visible only when `manager_bots >= 2`
 - [x] **Theft warning popup** — `TheftWarningLayer` (CanvasLayer, layer 10) shown + tree paused when `manager_bots` reaches 2 (`first_bot_purchased` signal); `CloseButton` (PROCESS_MODE_ALWAYS) dismisses it and unpauses; `GameState` also runs PROCESS_MODE_ALWAYS
+- [x] **Attrition-reduction shop** — unlocks at 4 bots (`shop_unlocked_bots`); right-side `ShopPanel` VBoxContainer with two one-time purchases:
+  - **Contract w/ a Breeder** ($2,000) — reduces `cat_cost_growth_rate` 1.5→1.25; retroactively lowers `next_cat_cost`
+  - **Purchase Cat Trees** ($4,000) — halves `attrition_rate_per_bot` 0.5→0.25; immediately recalculates attrition rate
 
 ---
 

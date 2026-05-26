@@ -105,11 +105,11 @@ offset_bottom = 340.0
 text = "Cat Attrition: 0.00 cats/min"
 
 [node name="TheftWarningLayer" type="CanvasLayer" parent="." unique_id=556173042]
-visible = false
 layer = 10
+visible = false
 
 [node name="TheftWarningPanel" type="PanelContainer" parent="TheftWarningLayer" unique_id=119283746]
-layout_mode = 0
+anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -139,9 +139,57 @@ text = "X"
 
 [node name="WarningLabel" type="Label" parent="TheftWarningLayer/TheftWarningPanel/VBoxContainer" unique_id=662749381]
 layout_mode = 2
-text = "Your cats are so popular on OnlyPaws that people have started stealing them!
-(You lose 1 cat for every $5,000 earned on OnlyPaws)"
+text = "Your cats are so popular on OnlyPaws that people have started stealing them!"
 autowrap_mode = 3
+
+[node name="ShopPanel" type="VBoxContainer" parent="." unique_id=210934857]
+visible = false
+layout_mode = 0
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -260.0
+offset_top = 20.0
+offset_right = -10.0
+offset_bottom = 400.0
+theme_override_constants/separation = 12
+
+[node name="ShopLabel" type="Label" parent="ShopPanel" unique_id=304719283]
+layout_mode = 2
+text = "Shop"
+
+[node name="BreederItem" type="VBoxContainer" parent="ShopPanel" unique_id=519283740]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="BreederButton" type="Button" parent="ShopPanel/BreederItem" unique_id=628374910]
+layout_mode = 2
+text = "Contract w/ a Breeder"
+
+[node name="BreederCostLabel" type="Label" parent="ShopPanel/BreederItem" unique_id=738291045]
+layout_mode = 2
+text = "($2,000)"
+
+[node name="BreederDescLabel" type="Label" parent="ShopPanel/BreederItem" unique_id=847362910]
+layout_mode = 2
+text = "Halves the cost growth rate of new cats"
+
+[node name="CatTreesItem" type="VBoxContainer" parent="ShopPanel" unique_id=956473021]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="CatTreesButton" type="Button" parent="ShopPanel/CatTreesItem" unique_id=103948275]
+layout_mode = 2
+text = "Purchase Cat Trees"
+
+[node name="CatTreesCostLabel" type="Label" parent="ShopPanel/CatTreesItem" unique_id=217384950]
+layout_mode = 2
+text = "($4,000)"
+
+[node name="CatTreesDescLabel" type="Label" parent="ShopPanel/CatTreesItem" unique_id=329104857]
+layout_mode = 2
+text = "Halves the attrition rate increase per bot"
 
 [node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
 position = Vector2(576, 530)
@@ -151,3 +199,5 @@ position = Vector2(576, 530)
 [connection signal="pressed" from="OnlypawsButton" to="." method="_on_onlypaws_button_pressed"]
 [connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
 [connection signal="pressed" from="TheftWarningLayer/TheftWarningPanel/VBoxContainer/CloseRow/CloseButton" to="." method="_on_theft_warning_close_pressed"]
+[connection signal="pressed" from="ShopPanel/BreederItem/BreederButton" to="." method="_on_breeder_button_pressed"]
+[connection signal="pressed" from="ShopPanel/CatTreesItem/CatTreesButton" to="." method="_on_cat_trees_button_pressed"]

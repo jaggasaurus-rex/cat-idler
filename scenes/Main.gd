@@ -13,6 +13,9 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var attrition_label: Label = $AttritionLabel
 @onready var theft_warning_layer: CanvasLayer = $TheftWarningLayer
 @onready var close_button: Button = $TheftWarningLayer/TheftWarningPanel/VBoxContainer/CloseRow/CloseButton
+@onready var shop_panel: VBoxContainer = $ShopPanel
+@onready var breeder_button: Button = $ShopPanel/BreederItem/BreederButton
+@onready var cat_trees_button: Button = $ShopPanel/CatTreesItem/CatTreesButton
 
 
 func _ready() -> void:
@@ -44,6 +47,18 @@ func _process(_delta: float) -> void:
 		manager_bot_button.visible = true
 		bots_rate_label.visible = true
 
+	# One-way latch — attrition-reduction shop appears at 4 bots
+	if GameState.shop_unlocked_bots and not shop_panel.visible:
+		shop_panel.visible = true
+
+	# Purchased state: green + disabled (checked every frame; cheap bool read)
+	if GameState.breeder_purchased:
+		breeder_button.modulate = Color(0.4, 1.0, 0.4)
+		breeder_button.disabled = true
+	if GameState.cat_trees_purchased:
+		cat_trees_button.modulate = Color(0.4, 1.0, 0.4)
+		cat_trees_button.disabled = true
+
 	# Onlypaws toggle state — green tint when active, default when inactive
 	if GameState.onlypaws_active:
 		onlypaws_button.text = "Onlypaws: ON"
@@ -55,7 +70,7 @@ func _process(_delta: float) -> void:
 	manager_bot_button.text = "Onlypaws Manager-Bot ($%.2f)" % GameState.next_bot_cost
 	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
 	bots_rate_label.text = "Bots: %d | Rate: $%.2f/sec" % [GameState.manager_bots, GameState.paws_income_rate]
-	attrition_label.text = "Cat Attrition: %d cats/min" % (GameState.manager_bots - 1)
+	attrition_label.text = "Cat Attrition: %d cats/min" % (GameState.attrition_display_rate)
 
 
 func _on_earn_money_button_pressed() -> void:
@@ -73,6 +88,14 @@ func _on_onlypaws_button_pressed() -> void:
 
 func _on_manager_bot_button_pressed() -> void:
 	GameState.buy_bot()
+
+
+func _on_breeder_button_pressed() -> void:
+	GameState.buy_breeder_contract()
+
+
+func _on_cat_trees_button_pressed() -> void:
+	GameState.buy_cat_trees()
 
 
 func _on_cat_purchased() -> void:
