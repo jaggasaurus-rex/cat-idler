@@ -53,7 +53,7 @@ func _process(_delta: float) -> void:
 
 	manager_bot_button.text = "Onlypaws Manager-Bot ($%.2f)" % GameState.next_bot_cost
 	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
-	bots_rate_label.text = "Bots: %d | Rate: $%.2f/sec" % [GameState.manager_bots, GameState.paws_income_rate]
+	bots_rate_label.text = "Bots: %d" % GameState.manager_bots
 
 
 func _on_earn_money_button_pressed() -> void:

@@ -57,7 +57,7 @@ Main (Control, full-rect)             ← Main.gd
 ├── OnlypawsInfoPanel (PanelContainer)← hidden permanently (legacy node, not wired to button anymore)
 │   └── InfoLabel (Label)             ← static info text, autowrap enabled
 ├── ManagerBotButton (Button)         ← hidden until bot_shop_unlocked; label shows live cost; disabled when unaffordable
-├── BotsRateLabel (Label)             ← shown with ManagerBotButton; "Bots: X | Rate: $X.XX/sec" updates every frame
+├── BotsRateLabel (Label)             ← shown with ManagerBotButton; "Bots: X" updates every frame
 ├── ShopPanel (VBoxContainer)         ← right-anchored, always visible; offset_left=-380, offset_right=-10 (370px wide)
 │   ├── ShopLabel (Label "Shop")
 │   └── CatFoodItem (VBoxContainer)
