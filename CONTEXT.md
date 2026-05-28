@@ -24,7 +24,8 @@
 ```
 cat-idler/
 ├── autoloads/
-│   └── GameState.gd        # Global state singleton
+│   ├── GameState.gd        # Global state singleton
+│   └── Util.gd             # Stateless helper functions (format_number)
 ├── scenes/
 │   ├── CatCharacter.tscn   # Procedural cat (instances scripts/CatCharacter.gd)
 │   ├── Main.gd             # Root scene script
@@ -41,6 +42,7 @@ cat-idler/
 
 | Singleton name | Path | Purpose |
 |---|---|---|
+| `Util` | `res://autoloads/Util.gd` | Stateless helper functions; no mutable state |
 | `Config` | `res://Config.gd` | Static tuning constants; no mutable state; referenced by GameState and Main |
 | `GameState` | `res://autoloads/GameState.gd` | Holds all persistent game state; the single source of truth for currency and rates |
 
@@ -147,6 +149,14 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `breeder_contract_cost` | `float` | `2000.0` | Cost of the breeder contract upgrade |
 | `breeder_contract_growth_rate` | `float` | `1.25` | Cat cost growth rate after breeder contract |
 | `cat_trees_cost` | `float` | `4000.0` | Cost of the cat trees upgrade |
+
+### Util (`res://autoloads/Util.gd`)
+
+Autoloaded singleton containing stateless helper functions. No mutable state.
+
+| Function | Signature | Description |
+|---|---|---|
+| `format_number` | `(value: float) -> String` | Returns the integer portion of `value` formatted with comma separators (e.g. `1000.0` → `"1,000"`). Never uses scientific notation. |
 
 ---
 

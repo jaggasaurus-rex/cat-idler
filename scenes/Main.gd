@@ -25,8 +25,8 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	money_label.text = "Money: $%.2f" % GameState.money
-	cats_label.text = "Cats: %d" % GameState.cats
+	money_label.text = "Money: $" + Util.format_number(GameState.money)
+	cats_label.text = "Cats: " + Util.format_number(GameState.cats)
 	purchase_cat_button.text = "Purchase Cat ($%.2f)" % GameState.next_cat_cost
 	onlypaws_income_label.text = "Onlypaws: $%.2f/sec" % GameState.paws_income_rate
 
@@ -43,7 +43,7 @@ func _process(_delta: float) -> void:
 		manager_bot_button.visible = true
 		bots_rate_label.visible = true
 
-	cat_food_label.text = "Cat Food: %d" % int(GameState.cat_food)
+	cat_food_label.text = "Cat Food: " + Util.format_number(GameState.cat_food)
 	buy_cat_food_x1_button.disabled = GameState.money < Config.cat_food_pack_cost
 	buy_cat_food_x10_button.disabled = GameState.money < Config.cat_food_pack_cost
 
@@ -52,7 +52,7 @@ func _process(_delta: float) -> void:
 		tokens_label.visible = true
 		token_pack_item.visible = true
 
-	tokens_label.text = "Tokens: %d" % int(GameState.tokens)
+	tokens_label.text = "Tokens: " + Util.format_number(GameState.tokens)
 	buy_token_x1_button.disabled = GameState.money < Config.token_pack_cost
 	buy_token_x10_button.disabled = GameState.money < Config.token_pack_cost
 
@@ -66,7 +66,7 @@ func _process(_delta: float) -> void:
 
 	manager_bot_button.text = "Onlypaws Manager-Bot ($%.2f)" % GameState.next_bot_cost
 	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
-	bots_rate_label.text = "Bots: %d" % GameState.manager_bots
+	bots_rate_label.text = "Bots: " + Util.format_number(GameState.manager_bots)
 
 
 func _on_earn_money_button_pressed() -> void:

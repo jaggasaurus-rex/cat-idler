@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Util="*res://autoloads/Util.gd"
 Config="*res://Config.gd"
 GameState="*res://autoloads/GameState.gd"
 
