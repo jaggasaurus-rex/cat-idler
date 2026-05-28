@@ -41,7 +41,7 @@ offset_left = 20.0
 offset_top = 130.0
 offset_right = 185.0
 offset_bottom = 160.0
-text = "Earn Money"
+text = "Work at McPawnalds"
 
 [node name="PurchaseCatButton" type="Button" parent="." unique_id=375900732]
 visible = false

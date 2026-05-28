@@ -157,7 +157,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 
 ## Current Features
 
-- [x] **Earn Money button** — manual click adds $1.0 to `money`
+- [x] **"Work at McPawnalds" button** — manual click adds $1.0 to `money`
 - [x] **Money counter** — label refreshes every frame, displayed to 2 decimal places (`$X.XX`)
 - [x] **Cats counter** — label refreshes every frame showing total purchased cats
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `onlypaws_unlocked`, `paws_income_rate`; emits `cat_purchased`
@@ -179,7 +179,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 ## Planned Features
 
 ### Phase 1 — Core Click Loop *(in progress)*
-- [x] Earn Money button with money counter
+- [x] "Work at McPawnalds" button with money counter
 - [x] Purchase Cat button (gated at $100) with cat spawning
 - [x] Idle/passive income (Onlypaws: `floor(cats/3)` $/sec, unlocks at 3 cats)
 - [ ] Basic UI polish (centered layout, styled labels & buttons)
