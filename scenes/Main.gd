@@ -14,6 +14,10 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var cat_food_label: Label = $CatFoodLabel
 @onready var buy_cat_food_x1_button: Button = $ShopPanel/CatFoodItem/BuyCatFoodX1Button
 @onready var buy_cat_food_x10_button: Button = $ShopPanel/CatFoodItem/BuyCatFoodX10Button
+@onready var tokens_label: Label = $TokensLabel
+@onready var token_pack_item: VBoxContainer = $ShopPanel/TokenPackItem
+@onready var buy_token_x1_button: Button = $ShopPanel/TokenPackItem/BuyTokenX1Button
+@onready var buy_token_x10_button: Button = $ShopPanel/TokenPackItem/BuyTokenX10Button
 
 
 func _ready() -> void:
@@ -42,6 +46,15 @@ func _process(_delta: float) -> void:
 	cat_food_label.text = "Cat Food: %d" % int(GameState.cat_food)
 	buy_cat_food_x1_button.disabled = GameState.money < 10.0
 	buy_cat_food_x10_button.disabled = GameState.money < 10.0
+
+	# One-way latch — tokens label and token shop item appear on first bot purchase
+	if GameState.tokens_shop_unlocked and not tokens_label.visible:
+		tokens_label.visible = true
+		token_pack_item.visible = true
+
+	tokens_label.text = "Tokens: %d" % int(GameState.tokens)
+	buy_token_x1_button.disabled = GameState.money < 20.0
+	buy_token_x10_button.disabled = GameState.money < 20.0
 
 	# Onlypaws toggle state — green tint when active, default when inactive
 	if GameState.onlypaws_active:
@@ -79,6 +92,14 @@ func _on_buy_cat_food_x1_button_pressed() -> void:
 
 func _on_buy_cat_food_x10_button_pressed() -> void:
 	GameState.buy_cat_food_pack(10)
+
+
+func _on_buy_token_x1_button_pressed() -> void:
+	GameState.buy_tokens(1)
+
+
+func _on_buy_token_x10_button_pressed() -> void:
+	GameState.buy_tokens(10)
 
 
 func _on_cat_purchased() -> void:

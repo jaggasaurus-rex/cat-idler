@@ -17,6 +17,9 @@ var shop_unlocked_bots: bool = false
 var cat_cost_growth_rate: float = 1.5
 var breeder_purchased: bool = false
 var cat_trees_purchased: bool = false
+var tokens: float = 0.0
+var token_drain_per_bot: float = 1.0
+var tokens_shop_unlocked: bool = false
 
 
 func _ready() -> void:
@@ -27,6 +30,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	cat_food = max(0.0, cat_food - (float(cats) / 10.0) * delta)
+	tokens = max(0.0, tokens - (float(manager_bots) * token_drain_per_bot) * delta)
 	if onlypaws_active:
 		money += paws_income_rate * delta
 
@@ -61,6 +65,8 @@ func buy_bot() -> void:
 	manager_bots += 1
 	next_bot_cost *= 2.0
 	_update_paws_rate()
+	if not tokens_shop_unlocked and manager_bots >= 1:
+		tokens_shop_unlocked = true
 	if manager_bots == 4:
 		shop_unlocked_bots = true
 
@@ -88,6 +94,14 @@ func buy_cat_food_pack(quantity: int) -> void:
 		return
 	money -= 10.0 * float(quantity)
 	cat_food += 100.0 * float(quantity)
+
+
+## Purchases quantity token packs at $20 each, adding 100 tokens per pack.
+func buy_tokens(quantity: int) -> void:
+	if money < 20.0 * float(quantity):
+		return
+	money -= 20.0 * float(quantity)
+	tokens += 100.0 * float(quantity)
 
 
 ## Purchases cat trees upgrade.

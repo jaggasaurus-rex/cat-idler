@@ -103,6 +103,15 @@ offset_right = 400.0
 offset_bottom = 340.0
 text = "Bots: 0 | Rate: $0.00/sec"
 
+[node name="TokensLabel" type="Label" parent="." unique_id=400000010]
+visible = false
+layout_mode = 0
+offset_left = 20.0
+offset_top = 350.0
+offset_right = 300.0
+offset_bottom = 375.0
+text = "Tokens: 0"
+
 [node name="ShopPanel" type="VBoxContainer" parent="." unique_id=210934857]
 layout_mode = 0
 anchor_left = 1.0
@@ -138,6 +147,28 @@ text = "Buy x1 ($10)"
 layout_mode = 2
 text = "Buy x10 ($100)"
 
+[node name="TokenPackItem" type="VBoxContainer" parent="ShopPanel" unique_id=400000011]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TokenPackNameLabel" type="Label" parent="ShopPanel/TokenPackItem" unique_id=400000012]
+layout_mode = 2
+text = "Token Pack"
+
+[node name="TokenPackDescLabel" type="Label" parent="ShopPanel/TokenPackItem" unique_id=400000013]
+layout_mode = 2
+text = "100 tokens — $20"
+autowrap_mode = 3
+
+[node name="BuyTokenX1Button" type="Button" parent="ShopPanel/TokenPackItem" unique_id=400000014]
+layout_mode = 2
+text = "Buy x1 ($20)"
+
+[node name="BuyTokenX10Button" type="Button" parent="ShopPanel/TokenPackItem" unique_id=400000015]
+layout_mode = 2
+text = "Buy x10 ($200)"
+
 [node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
 position = Vector2(576, 530)
 
@@ -147,3 +178,5 @@ position = Vector2(576, 530)
 [connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
 [connection signal="pressed" from="ShopPanel/CatFoodItem/BuyCatFoodX1Button" to="." method="_on_buy_cat_food_x1_button_pressed"]
 [connection signal="pressed" from="ShopPanel/CatFoodItem/BuyCatFoodX10Button" to="." method="_on_buy_cat_food_x10_button_pressed"]
+[connection signal="pressed" from="ShopPanel/TokenPackItem/BuyTokenX1Button" to="." method="_on_buy_token_x1_button_pressed"]
+[connection signal="pressed" from="ShopPanel/TokenPackItem/BuyTokenX10Button" to="." method="_on_buy_token_x10_button_pressed"]

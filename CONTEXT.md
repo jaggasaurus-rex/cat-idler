@@ -58,13 +58,19 @@ Main (Control, full-rect)             ← Main.gd
 │   └── InfoLabel (Label)             ← static info text, autowrap enabled
 ├── ManagerBotButton (Button)         ← hidden until bot_shop_unlocked; label shows live cost; disabled when unaffordable
 ├── BotsRateLabel (Label)             ← shown with ManagerBotButton; "Bots: X" updates every frame
+├── TokensLabel (Label)               ← hidden until tokens_shop_unlocked; "Tokens: X" updates every frame
 ├── ShopPanel (VBoxContainer)         ← right-anchored, always visible; offset_left=-380, offset_right=-10 (370px wide)
 │   ├── ShopLabel (Label "Shop")
-│   └── CatFoodItem (VBoxContainer)
-│       ├── CatFoodNameLabel (Label "Cat Food Pack")
-│       ├── CatFoodDescLabel (Label "100 cat food — $10", autowrap_mode=3)
-│       ├── BuyCatFoodX1Button (Button "Buy x1 ($10)")  ← calls buy_cat_food_pack(1); disabled when money < 10
-│       └── BuyCatFoodX10Button (Button "Buy x10 ($100)") ← calls buy_cat_food_pack(10); disabled when money < 10
+│   ├── CatFoodItem (VBoxContainer)   ← always visible
+│   │   ├── CatFoodNameLabel (Label "Cat Food Pack")
+│   │   ├── CatFoodDescLabel (Label "100 cat food — $10", autowrap_mode=3)
+│   │   ├── BuyCatFoodX1Button (Button "Buy x1 ($10)")  ← calls buy_cat_food_pack(1); disabled when money < 10
+│   │   └── BuyCatFoodX10Button (Button "Buy x10 ($100)") ← calls buy_cat_food_pack(10); disabled when money < 10
+│   └── TokenPackItem (VBoxContainer) ← hidden until tokens_shop_unlocked; one-way latch in _process()
+│       ├── TokenPackNameLabel (Label "Token Pack")
+│       ├── TokenPackDescLabel (Label "100 tokens — $20", autowrap_mode=3)
+│       ├── BuyTokenX1Button (Button "Buy x1 ($20)")   ← calls buy_tokens(1); disabled when money < 20
+│       └── BuyTokenX10Button (Button "Buy x10 ($200)") ← calls buy_tokens(10); disabled when money < 20
 └── CatContainer (Node2D)             ← pos (576, 530); purchased cats added here, auto-recentred
 ```
 
@@ -93,6 +99,9 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `cat_cost_growth_rate` | `float` | `1.5` | Multiplier applied to `next_cat_cost` each purchase; reduced to 1.25 by breeder contract |
 | `breeder_purchased` | `bool` | `false` | One-way latch; set by `buy_breeder_contract()` |
 | `cat_trees_purchased` | `bool` | `false` | One-way latch; set by `buy_cat_trees()` |
+| `tokens` | `float` | `0.0` | Token supply; drains at `manager_bots * token_drain_per_bot` per second; never below 0 |
+| `token_drain_per_bot` | `float` | `1.0` | Tuning variable for per-bot token drain rate |
+| `tokens_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots >= 1` |
 
 | Signal | Description |
 |---|---|
@@ -101,12 +110,13 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | Method | Signature | Description |
 |---|---|---|
 | `_ready` | `() -> void` | Sets `process_mode = PROCESS_MODE_ALWAYS` so income ticks even while tree is paused |
-| `_process` | `(delta) -> void` | Always drains `cat_food` by `(cats / 10.0) * delta` (clamped to 0); if `onlypaws_active`: earns `paws_income_rate * delta` |
+| `_process` | `(delta) -> void` | Always drains `cat_food` by `(cats / 10.0) * delta` (clamped to 0); drains `tokens` by `(manager_bots * token_drain_per_bot) * delta` (clamped to 0); if `onlypaws_active`: earns `paws_income_rate * delta` |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `onlypaws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
-| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
+| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
 | `get_cat_food_packs_affordable` | `() -> int` | Returns `int(money / 10.0)` |
 | `buy_cat_food_pack` | `(quantity: int) -> void` | Guards `money >= 10.0 * quantity`; deducts cost; adds `100.0 * quantity` to `cat_food` |
+| `buy_tokens` | `(quantity: int) -> void` | Guards `money >= 20.0 * quantity`; deducts cost; adds `100.0 * quantity` to `tokens` |
 | `buy_breeder_contract` | `() -> void` | Guards `money >= 2000 and not breeder_purchased`; sets `cat_cost_growth_rate = 1.25`; retroactively recalculates `next_cat_cost = 5.0 * pow(1.25, cats)` |
 | `buy_cat_trees` | `() -> void` | Guards `money >= 4000 and not cat_trees_purchased`; deducts cost; sets `cat_trees_purchased = true` |
 | `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats / 3) * pow(2.0, manager_bots)` |
@@ -151,6 +161,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | `_on_cat_purchased()` | Instantiates `CatCharacter` at scale 0.4, adds to `CatContainer`, calls `_reposition_cats()` |
 | `_on_buy_cat_food_x1_button_pressed()` | Calls `GameState.buy_cat_food_pack(1)` |
 | `_on_buy_cat_food_x10_button_pressed()` | Calls `GameState.buy_cat_food_pack(10)` |
+| `_on_buy_token_x1_button_pressed()` | Calls `GameState.buy_tokens(1)` |
+| `_on_buy_token_x10_button_pressed()` | Calls `GameState.buy_tokens(10)` |
 | `_reposition_cats()` | Spaces all `CatContainer` children evenly (72 px) and re-centres the row around the container origin |
 
 ---
@@ -173,6 +185,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Shop panel always visible** — `ShopPanel` is shown from game start; no unlock gate
 - [x] **Cat food** — `cat_food` starts at 1000; drains at `cats / 10` per second (always, not gated); clamped to 0; `CatFoodLabel` shows `floor(cat_food)` in the HUD
 - [x] **Cat Food Pack shop item** — buy x1 ($10, +100 food) or x10 ($100, +1000 food); both buttons disabled when `money < 10`
+- [x] **Token system** — `tokens` drains at `manager_bots * token_drain_per_bot` per second (clamped to 0); `TokensLabel` shows `floor(tokens)` in HUD; unlocks alongside Token Pack shop item on first bot purchase
+- [x] **Token Pack shop item** — hidden until `tokens_shop_unlocked`; buy x1 ($20, +100 tokens) or x10 ($200, +1000 tokens); both buttons disabled when `money < 20`
 
 ---
 
