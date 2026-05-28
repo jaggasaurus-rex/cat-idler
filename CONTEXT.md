@@ -58,16 +58,16 @@ Main (Control, full-rect)             ← Main.gd
 ├── ManagerBotButton (Button)         ← hidden until bot_shop_unlocked; label shows live cost; disabled when unaffordable
 ├── BotsRateLabel (Label)             ← shown with ManagerBotButton; "Bots: X | Rate: $X.XX/sec" updates every frame
 ├── AttritionLabel (Label)            ← shown when manager_bots >= 2; "Cat Attrition: X cats/min" updates every frame
-├── ShopPanel (VBoxContainer)         ← right-anchored, hidden until shop_unlocked_bots (manager_bots == 4)
+├── ShopPanel (VBoxContainer)         ← right-anchored, hidden until shop_unlocked_bots (manager_bots == 4); offset_left=-380, offset_right=-10 (370px wide)
 │   ├── ShopLabel (Label "Shop")
 │   ├── BreederItem (VBoxContainer)
 │   │   ├── BreederButton (Button)    ← calls buy_breeder_contract(); green+disabled after purchase
 │   │   ├── BreederCostLabel (Label "($2,000)")
-│   │   └── BreederDescLabel (Label, description)
+│   │   └── BreederDescLabel (Label, description, autowrap_mode=3)
 │   └── CatTreesItem (VBoxContainer)
 │       ├── CatTreesButton (Button)   ← calls buy_cat_trees(); green+disabled after purchase
 │       ├── CatTreesCostLabel (Label "($4,000)")
-│       └── CatTreesDescLabel (Label, description)
+│       └── CatTreesDescLabel (Label, description, autowrap_mode=3)
 ├── TheftWarningLayer (CanvasLayer)   ← layer=10; hidden by default; shown + tree paused when manager_bots reaches 2 (first_bot_purchased)
 │   └── TheftWarningPanel (PanelContainer) ← centered (~520×180px)
 │       └── VBoxContainer

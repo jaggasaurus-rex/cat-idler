@@ -147,7 +147,7 @@ visible = false
 layout_mode = 0
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -260.0
+offset_left = -380.0
 offset_top = 20.0
 offset_right = -10.0
 offset_bottom = 400.0
@@ -171,7 +171,8 @@ text = "($2,000)"
 
 [node name="BreederDescLabel" type="Label" parent="ShopPanel/BreederItem" unique_id=847362910]
 layout_mode = 2
-text = "Halves the cost growth rate of new cats"
+text = "The CostCo of cats. They'll be cheaper...quality is dubious."
+autowrap_mode = 3
 
 [node name="CatTreesItem" type="VBoxContainer" parent="ShopPanel" unique_id=956473021]
 layout_mode = 2
@@ -187,7 +188,8 @@ text = "($4,000)"
 
 [node name="CatTreesDescLabel" type="Label" parent="ShopPanel/CatTreesItem" unique_id=329104857]
 layout_mode = 2
-text = "Halves the attrition rate increase per bot"
+text = "Get those cats up high and they'll be harder to steal!"
+autowrap_mode = 3
 
 [node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
 position = Vector2(576, 530)
