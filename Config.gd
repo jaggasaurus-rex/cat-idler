@@ -29,3 +29,6 @@ const bot_cost_multiplier: float = 2.0
 const breeder_contract_cost: float = 2000.0
 const breeder_contract_growth_rate: float = 1.25
 const cat_trees_cost: float = 4000.0
+const bot_manager_cost: float = 1000000.0
+const bot_manager_unlock_bots: int = 10
+const bot_manager_token_threshold: float = 1.0

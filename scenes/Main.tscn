@@ -169,6 +169,24 @@ text = "Buy x1 ($20)"
 layout_mode = 2
 text = "Buy x10 ($200)"
 
+[node name="BotManagerItem" type="VBoxContainer" parent="ShopPanel" unique_id=400000020]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="BotManagerNameLabel" type="Label" parent="ShopPanel/BotManagerItem" unique_id=400000021]
+layout_mode = 2
+text = "Manager-bot Manager"
+
+[node name="BotManagerDescLabel" type="Label" parent="ShopPanel/BotManagerItem" unique_id=400000022]
+layout_mode = 2
+text = "Might as well pay someone to keep your tokens topped up for you! (Automatically purchases more tokens when you run out)"
+autowrap_mode = 3
+
+[node name="BuyBotManagerButton" type="Button" parent="ShopPanel/BotManagerItem" unique_id=400000023]
+layout_mode = 2
+text = "Buy ($1,000,000)"
+
 [node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
 position = Vector2(576, 530)
 
@@ -180,3 +198,4 @@ position = Vector2(576, 530)
 [connection signal="pressed" from="ShopPanel/CatFoodItem/BuyCatFoodX10Button" to="." method="_on_buy_cat_food_x10_button_pressed"]
 [connection signal="pressed" from="ShopPanel/TokenPackItem/BuyTokenX1Button" to="." method="_on_buy_token_x1_button_pressed"]
 [connection signal="pressed" from="ShopPanel/TokenPackItem/BuyTokenX10Button" to="." method="_on_buy_token_x10_button_pressed"]
+[connection signal="pressed" from="ShopPanel/BotManagerItem/BuyBotManagerButton" to="." method="_on_buy_bot_manager_button_pressed"]

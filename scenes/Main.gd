@@ -18,6 +18,8 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var token_pack_item: VBoxContainer = $ShopPanel/TokenPackItem
 @onready var buy_token_x1_button: Button = $ShopPanel/TokenPackItem/BuyTokenX1Button
 @onready var buy_token_x10_button: Button = $ShopPanel/TokenPackItem/BuyTokenX10Button
+@onready var bot_manager_item: VBoxContainer = $ShopPanel/BotManagerItem
+@onready var buy_bot_manager_button: Button = $ShopPanel/BotManagerItem/BuyBotManagerButton
 
 
 func _ready() -> void:
@@ -55,6 +57,17 @@ func _process(_delta: float) -> void:
 	tokens_label.text = "Tokens: " + Util.format_number(GameState.tokens)
 	buy_token_x1_button.disabled = GameState.money < Config.token_pack_cost
 	buy_token_x10_button.disabled = GameState.money < Config.token_pack_cost
+
+	# One-way latch — bot manager shop item appears when unlocked
+	if GameState.bot_manager_unlocked and not bot_manager_item.visible:
+		bot_manager_item.visible = true
+
+	if GameState.bot_manager_purchased:
+		buy_bot_manager_button.disabled = true
+		buy_bot_manager_button.modulate = Color(0.4, 1.0, 0.4)
+	else:
+		buy_bot_manager_button.disabled = GameState.money < Config.bot_manager_cost
+		buy_bot_manager_button.modulate = Color(1.0, 1.0, 1.0)
 
 	# Onlypaws toggle state — green tint when active, default when inactive
 	if GameState.onlypaws_active:
@@ -100,6 +113,10 @@ func _on_buy_token_x1_button_pressed() -> void:
 
 func _on_buy_token_x10_button_pressed() -> void:
 	GameState.buy_tokens(10)
+
+
+func _on_buy_bot_manager_button_pressed() -> void:
+	GameState.buy_bot_manager()
 
 
 func _on_cat_purchased() -> void:

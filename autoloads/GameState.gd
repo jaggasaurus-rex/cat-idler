@@ -20,6 +20,8 @@ var cat_trees_purchased: bool = false
 var tokens: float = Config.token_start
 var bots_active: bool = true
 var tokens_shop_unlocked: bool = false
+var bot_manager_unlocked: bool = false
+var bot_manager_purchased: bool = false
 
 
 func _ready() -> void:
@@ -35,6 +37,11 @@ func _process(delta: float) -> void:
 		if tokens <= 0.0:
 			tokens = 0.0
 			bots_active = false
+	if not bot_manager_unlocked:
+		if tokens <= 0.0 or manager_bots >= Config.bot_manager_unlock_bots:
+			bot_manager_unlocked = true
+	if bot_manager_purchased and tokens <= Config.bot_manager_token_threshold:
+		buy_tokens(1)
 	if onlypaws_active and bots_active:
 		money += paws_income_rate * delta
 
@@ -108,6 +115,15 @@ func buy_tokens(quantity: int) -> void:
 	tokens += Config.token_pack_amount * float(quantity)
 	if tokens > 0.0:
 		bots_active = true
+
+
+## Purchases the bot manager upgrade: automatically buys token packs when tokens
+## fall to or below Config.bot_manager_token_threshold.
+func buy_bot_manager() -> void:
+	if money < Config.bot_manager_cost or bot_manager_purchased:
+		return
+	money -= Config.bot_manager_cost
+	bot_manager_purchased = true
 
 
 ## Purchases cat trees upgrade.
