@@ -103,53 +103,6 @@ offset_right = 400.0
 offset_bottom = 340.0
 text = "Bots: 0 | Rate: $0.00/sec"
 
-[node name="AttritionLabel" type="Label" parent="." unique_id=773410285]
-visible = false
-layout_mode = 0
-offset_left = 20.0
-offset_top = 350.0
-offset_right = 420.0
-offset_bottom = 375.0
-text = "Cat Attrition: 0.00 cats/min"
-
-[node name="TheftWarningLayer" type="CanvasLayer" parent="." unique_id=556173042]
-layer = 10
-visible = false
-
-[node name="TheftWarningPanel" type="PanelContainer" parent="TheftWarningLayer" unique_id=119283746]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -260.0
-offset_top = -90.0
-offset_right = 260.0
-offset_bottom = 90.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="TheftWarningLayer/TheftWarningPanel" unique_id=334892015]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="CloseRow" type="HBoxContainer" parent="TheftWarningLayer/TheftWarningPanel/VBoxContainer" unique_id=201938476]
-layout_mode = 2
-
-[node name="Spacer" type="Control" parent="TheftWarningLayer/TheftWarningPanel/VBoxContainer/CloseRow" unique_id=488612903]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CloseButton" type="Button" parent="TheftWarningLayer/TheftWarningPanel/VBoxContainer/CloseRow" unique_id=857341920]
-process_mode = 3
-layout_mode = 2
-text = "X"
-
-[node name="WarningLabel" type="Label" parent="TheftWarningLayer/TheftWarningPanel/VBoxContainer" unique_id=662749381]
-layout_mode = 2
-text = "Your cats are so popular on OnlyPaws that people have started stealing them!"
-autowrap_mode = 3
-
 [node name="ShopPanel" type="VBoxContainer" parent="." unique_id=210934857]
 layout_mode = 0
 anchor_left = 1.0
@@ -192,6 +145,5 @@ position = Vector2(576, 530)
 [connection signal="pressed" from="PurchaseCatButton" to="." method="_on_purchase_cat_button_pressed"]
 [connection signal="pressed" from="OnlypawsButton" to="." method="_on_onlypaws_button_pressed"]
 [connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
-[connection signal="pressed" from="TheftWarningLayer/TheftWarningPanel/VBoxContainer/CloseRow/CloseButton" to="." method="_on_theft_warning_close_pressed"]
 [connection signal="pressed" from="ShopPanel/CatFoodItem/BuyCatFoodX1Button" to="." method="_on_buy_cat_food_x1_button_pressed"]
 [connection signal="pressed" from="ShopPanel/CatFoodItem/BuyCatFoodX10Button" to="." method="_on_buy_cat_food_x10_button_pressed"]
