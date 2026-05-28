@@ -6,6 +6,7 @@ signal first_bot_purchased
 
 var money: float = 0.0
 var cats: int = 0
+var cat_food: float = 1000.0
 var next_cat_cost: float = 5.0
 var shop_unlocked: bool = false
 var onlypaws_unlocked: bool = false
@@ -31,6 +32,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	cat_food = max(0.0, cat_food - (float(cats) / 10.0) * delta)
 	if onlypaws_active:
 		money += paws_income_rate * delta
 		# Attrition is time-based and only activates at 2+ bots.
@@ -94,6 +96,19 @@ func buy_breeder_contract() -> void:
 	breeder_purchased = true
 	cat_cost_growth_rate = 1.25
 	next_cat_cost = 5.0 * pow(cat_cost_growth_rate, float(cats))
+
+
+## Returns how many cat food packs ($10 each) the player can currently afford.
+func get_cat_food_packs_affordable() -> int:
+	return int(money / 10.0)
+
+
+## Purchases quantity cat food packs at $10 each, adding 100 cat food per pack.
+func buy_cat_food_pack(quantity: int) -> void:
+	if money < 10.0 * float(quantity):
+		return
+	money -= 10.0 * float(quantity)
+	cat_food += 100.0 * float(quantity)
 
 
 ## Purchases cat trees: halves attrition_rate_per_bot from 0.5 to 0.25,

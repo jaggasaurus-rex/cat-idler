@@ -14,8 +14,9 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var theft_warning_layer: CanvasLayer = $TheftWarningLayer
 @onready var close_button: Button = $TheftWarningLayer/TheftWarningPanel/VBoxContainer/CloseRow/CloseButton
 @onready var shop_panel: VBoxContainer = $ShopPanel
-@onready var breeder_button: Button = $ShopPanel/BreederItem/BreederButton
-@onready var cat_trees_button: Button = $ShopPanel/CatTreesItem/CatTreesButton
+@onready var cat_food_label: Label = $CatFoodLabel
+@onready var buy_cat_food_x1_button: Button = $ShopPanel/CatFoodItem/BuyCatFoodX1Button
+@onready var buy_cat_food_x10_button: Button = $ShopPanel/CatFoodItem/BuyCatFoodX10Button
 
 
 func _ready() -> void:
@@ -47,17 +48,9 @@ func _process(_delta: float) -> void:
 		manager_bot_button.visible = true
 		bots_rate_label.visible = true
 
-	# One-way latch — attrition-reduction shop appears at 4 bots
-	if GameState.shop_unlocked_bots and not shop_panel.visible:
-		shop_panel.visible = true
-
-	# Purchased state: green + disabled (checked every frame; cheap bool read)
-	if GameState.breeder_purchased:
-		breeder_button.modulate = Color(0.4, 1.0, 0.4)
-		breeder_button.disabled = true
-	if GameState.cat_trees_purchased:
-		cat_trees_button.modulate = Color(0.4, 1.0, 0.4)
-		cat_trees_button.disabled = true
+	cat_food_label.text = "Cat Food: %d" % int(GameState.cat_food)
+	buy_cat_food_x1_button.disabled = GameState.money < 10.0
+	buy_cat_food_x10_button.disabled = GameState.money < 10.0
 
 	# Onlypaws toggle state — green tint when active, default when inactive
 	if GameState.onlypaws_active:
@@ -90,12 +83,12 @@ func _on_manager_bot_button_pressed() -> void:
 	GameState.buy_bot()
 
 
-func _on_breeder_button_pressed() -> void:
-	GameState.buy_breeder_contract()
+func _on_buy_cat_food_x1_button_pressed() -> void:
+	GameState.buy_cat_food_pack(1)
 
 
-func _on_cat_trees_button_pressed() -> void:
-	GameState.buy_cat_trees()
+func _on_buy_cat_food_x10_button_pressed() -> void:
+	GameState.buy_cat_food_pack(10)
 
 
 func _on_cat_purchased() -> void:

@@ -27,39 +27,47 @@ offset_right = 300.0
 offset_bottom = 85.0
 text = "Cats: 0"
 
+[node name="CatFoodLabel" type="Label" parent="." unique_id=400000001]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 90.0
+offset_right = 300.0
+offset_bottom = 120.0
+text = "Cat Food: 1000"
+
 [node name="EarnMoneyButton" type="Button" parent="." unique_id=1094360717]
 layout_mode = 0
 offset_left = 20.0
-offset_top = 95.0
+offset_top = 130.0
 offset_right = 185.0
-offset_bottom = 125.0
+offset_bottom = 160.0
 text = "Earn Money"
 
 [node name="PurchaseCatButton" type="Button" parent="." unique_id=375900732]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 135.0
+offset_top = 170.0
 offset_right = 275.0
-offset_bottom = 165.0
+offset_bottom = 200.0
 text = "Purchase Cat ($5)"
 
 [node name="OnlypawsButton" type="Button" parent="." unique_id=519044290]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 175.0
+offset_top = 210.0
 offset_right = 275.0
-offset_bottom = 205.0
+offset_bottom = 240.0
 text = "Sell pics on Onlypaws"
 
 [node name="OnlypawsIncomeLabel" type="Label" parent="." unique_id=1013931731]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 210.0
+offset_top = 245.0
 offset_right = 350.0
-offset_bottom = 235.0
+offset_bottom = 270.0
 text = "Onlypaws: $0/sec"
 
 [node name="OnlypawsInfoPanel" type="PanelContainer" parent="." unique_id=820538870]
@@ -81,27 +89,27 @@ autowrap_mode = 3
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 245.0
+offset_top = 280.0
 offset_right = 360.0
-offset_bottom = 275.0
+offset_bottom = 310.0
 text = "Onlypaws Manager-Bot ($50.00)"
 
 [node name="BotsRateLabel" type="Label" parent="." unique_id=982341620]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 280.0
+offset_top = 315.0
 offset_right = 400.0
-offset_bottom = 305.0
+offset_bottom = 340.0
 text = "Bots: 0 | Rate: $0.00/sec"
 
 [node name="AttritionLabel" type="Label" parent="." unique_id=773410285]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 315.0
+offset_top = 350.0
 offset_right = 420.0
-offset_bottom = 340.0
+offset_bottom = 375.0
 text = "Cat Attrition: 0.00 cats/min"
 
 [node name="TheftWarningLayer" type="CanvasLayer" parent="." unique_id=556173042]
@@ -143,7 +151,6 @@ text = "Your cats are so popular on OnlyPaws that people have started stealing t
 autowrap_mode = 3
 
 [node name="ShopPanel" type="VBoxContainer" parent="." unique_id=210934857]
-visible = false
 layout_mode = 0
 anchor_left = 1.0
 anchor_right = 1.0
@@ -157,39 +164,26 @@ theme_override_constants/separation = 12
 layout_mode = 2
 text = "Shop"
 
-[node name="BreederItem" type="VBoxContainer" parent="ShopPanel" unique_id=519283740]
+[node name="CatFoodItem" type="VBoxContainer" parent="ShopPanel" unique_id=400000002]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="BreederButton" type="Button" parent="ShopPanel/BreederItem" unique_id=628374910]
+[node name="CatFoodNameLabel" type="Label" parent="ShopPanel/CatFoodItem" unique_id=400000003]
 layout_mode = 2
-text = "Contract w/ a Breeder"
+text = "Cat Food Pack"
 
-[node name="BreederCostLabel" type="Label" parent="ShopPanel/BreederItem" unique_id=738291045]
+[node name="CatFoodDescLabel" type="Label" parent="ShopPanel/CatFoodItem" unique_id=400000004]
 layout_mode = 2
-text = "($2,000)"
-
-[node name="BreederDescLabel" type="Label" parent="ShopPanel/BreederItem" unique_id=847362910]
-layout_mode = 2
-text = "The CostCo of cats. They'll be cheaper...quality is dubious."
+text = "100 cat food — $10"
 autowrap_mode = 3
 
-[node name="CatTreesItem" type="VBoxContainer" parent="ShopPanel" unique_id=956473021]
+[node name="BuyCatFoodX1Button" type="Button" parent="ShopPanel/CatFoodItem" unique_id=400000005]
 layout_mode = 2
-theme_override_constants/separation = 2
+text = "Buy x1 ($10)"
 
-[node name="CatTreesButton" type="Button" parent="ShopPanel/CatTreesItem" unique_id=103948275]
+[node name="BuyCatFoodX10Button" type="Button" parent="ShopPanel/CatFoodItem" unique_id=400000006]
 layout_mode = 2
-text = "Purchase Cat Trees"
-
-[node name="CatTreesCostLabel" type="Label" parent="ShopPanel/CatTreesItem" unique_id=217384950]
-layout_mode = 2
-text = "($4,000)"
-
-[node name="CatTreesDescLabel" type="Label" parent="ShopPanel/CatTreesItem" unique_id=329104857]
-layout_mode = 2
-text = "Get those cats up high and they'll be harder to steal!"
-autowrap_mode = 3
+text = "Buy x10 ($100)"
 
 [node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
 position = Vector2(576, 530)
@@ -199,5 +193,5 @@ position = Vector2(576, 530)
 [connection signal="pressed" from="OnlypawsButton" to="." method="_on_onlypaws_button_pressed"]
 [connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
 [connection signal="pressed" from="TheftWarningLayer/TheftWarningPanel/VBoxContainer/CloseRow/CloseButton" to="." method="_on_theft_warning_close_pressed"]
-[connection signal="pressed" from="ShopPanel/BreederItem/BreederButton" to="." method="_on_breeder_button_pressed"]
-[connection signal="pressed" from="ShopPanel/CatTreesItem/CatTreesButton" to="." method="_on_cat_trees_button_pressed"]
+[connection signal="pressed" from="ShopPanel/CatFoodItem/BuyCatFoodX1Button" to="." method="_on_buy_cat_food_x1_button_pressed"]
+[connection signal="pressed" from="ShopPanel/CatFoodItem/BuyCatFoodX10Button" to="." method="_on_buy_cat_food_x10_button_pressed"]
