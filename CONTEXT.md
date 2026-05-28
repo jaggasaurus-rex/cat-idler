@@ -101,7 +101,8 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `cat_cost_growth_rate` | `float` | `Config.cat_cost_growth_rate` | Multiplier applied to `next_cat_cost` each purchase; reduced to `Config.breeder_contract_growth_rate` by breeder contract |
 | `breeder_purchased` | `bool` | `false` | One-way latch; set by `buy_breeder_contract()` |
 | `cat_trees_purchased` | `bool` | `false` | One-way latch; set by `buy_cat_trees()` |
-| `tokens` | `float` | `0.0` | Token supply; drains at `manager_bots * Config.token_drain_per_bot` per second; never below 0 |
+| `tokens` | `float` | `Config.token_start` | Token supply; drains at `manager_bots * Config.token_drain_per_bot` per second while `bots_active`; never below 0 |
+| `bots_active` | `bool` | `true` | Set to `false` when tokens reach 0; re-enabled by `buy_tokens()` if tokens > 0 after purchase; gates token drain and bot income |
 | `tokens_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots >= 1` |
 
 | Signal | Description |
@@ -111,13 +112,13 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | Method | Signature | Description |
 |---|---|---|
 | `_ready` | `() -> void` | Sets `process_mode = PROCESS_MODE_ALWAYS` so income ticks even while tree is paused |
-| `_process` | `(delta) -> void` | Always drains `cat_food` by `(cats / 10.0) * delta` (clamped to 0); drains `tokens` by `(manager_bots * token_drain_per_bot) * delta` (clamped to 0); if `onlypaws_active`: earns `paws_income_rate * delta` |
+| `_process` | `(delta) -> void` | Always drains `cat_food`; if `bots_active`: drains tokens, sets `bots_active = false` when tokens reach 0; if `onlypaws_active and bots_active`: earns `paws_income_rate * delta` |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `onlypaws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
 | `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
 | `get_cat_food_packs_affordable` | `() -> int` | Returns `int(money / 10.0)` |
 | `buy_cat_food_pack` | `(quantity: int) -> void` | Guards `money >= 10.0 * quantity`; deducts cost; adds `100.0 * quantity` to `cat_food` |
-| `buy_tokens` | `(quantity: int) -> void` | Guards `money >= 20.0 * quantity`; deducts cost; adds `100.0 * quantity` to `tokens` |
+| `buy_tokens` | `(quantity: int) -> void` | Guards `money >= Config.token_pack_cost * quantity`; deducts cost; adds `Config.token_pack_amount * quantity` to `tokens`; sets `bots_active = true` if `tokens > 0` |
 | `buy_breeder_contract` | `() -> void` | Guards `money >= 2000 and not breeder_purchased`; sets `cat_cost_growth_rate = 1.25`; retroactively recalculates `next_cat_cost = 5.0 * pow(1.25, cats)` |
 | `buy_cat_trees` | `() -> void` | Guards `money >= 4000 and not cat_trees_purchased`; deducts cost; sets `cat_trees_purchased = true` |
 | `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats / 3) * pow(2.0, manager_bots)` |
@@ -132,6 +133,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `cat_food_drain_rate` | `float` | `0.1` | Food drained per cat per second |
 | `cat_food_pack_cost` | `float` | `10.0` | Cost per cat food pack |
 | `cat_food_pack_amount` | `float` | `100.0` | Food added per cat food pack |
+| `token_start` | `float` | `1000.0` | Initial token supply |
 | `token_drain_per_bot` | `float` | `1.0` | Tokens drained per bot per second |
 | `token_pack_cost` | `float` | `20.0` | Cost per token pack |
 | `token_pack_amount` | `float` | `100.0` | Tokens added per token pack |

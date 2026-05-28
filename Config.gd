@@ -9,6 +9,7 @@ const cat_food_pack_cost: float = 10.0
 const cat_food_pack_amount: float = 100.0
 
 # Tokens
+const token_start: float = 1000.0
 const token_drain_per_bot: float = 1.0  # tokens drained per bot per second
 const token_pack_cost: float = 20.0
 const token_pack_amount: float = 100.0

@@ -17,7 +17,8 @@ var shop_unlocked_bots: bool = false
 var cat_cost_growth_rate: float = Config.cat_cost_growth_rate
 var breeder_purchased: bool = false
 var cat_trees_purchased: bool = false
-var tokens: float = 0.0
+var tokens: float = Config.token_start
+var bots_active: bool = true
 var tokens_shop_unlocked: bool = false
 
 
@@ -29,8 +30,12 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	cat_food = max(0.0, cat_food - float(cats) * Config.cat_food_drain_rate * delta)
-	tokens = max(0.0, tokens - float(manager_bots) * Config.token_drain_per_bot * delta)
-	if onlypaws_active:
+	if bots_active:
+		tokens -= float(manager_bots) * Config.token_drain_per_bot * delta
+		if tokens <= 0.0:
+			tokens = 0.0
+			bots_active = false
+	if onlypaws_active and bots_active:
 		money += paws_income_rate * delta
 
 
@@ -101,6 +106,8 @@ func buy_tokens(quantity: int) -> void:
 		return
 	money -= Config.token_pack_cost * float(quantity)
 	tokens += Config.token_pack_amount * float(quantity)
+	if tokens > 0.0:
+		bots_active = true
 
 
 ## Purchases cat trees upgrade.
