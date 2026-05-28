@@ -44,8 +44,8 @@ func _process(_delta: float) -> void:
 		bots_rate_label.visible = true
 
 	cat_food_label.text = "Cat Food: %d" % int(GameState.cat_food)
-	buy_cat_food_x1_button.disabled = GameState.money < 10.0
-	buy_cat_food_x10_button.disabled = GameState.money < 10.0
+	buy_cat_food_x1_button.disabled = GameState.money < Config.cat_food_pack_cost
+	buy_cat_food_x10_button.disabled = GameState.money < Config.cat_food_pack_cost
 
 	# One-way latch — tokens label and token shop item appear on first bot purchase
 	if GameState.tokens_shop_unlocked and not tokens_label.visible:
@@ -53,8 +53,8 @@ func _process(_delta: float) -> void:
 		token_pack_item.visible = true
 
 	tokens_label.text = "Tokens: %d" % int(GameState.tokens)
-	buy_token_x1_button.disabled = GameState.money < 20.0
-	buy_token_x10_button.disabled = GameState.money < 20.0
+	buy_token_x1_button.disabled = GameState.money < Config.token_pack_cost
+	buy_token_x10_button.disabled = GameState.money < Config.token_pack_cost
 
 	# Onlypaws toggle state — green tint when active, default when inactive
 	if GameState.onlypaws_active:

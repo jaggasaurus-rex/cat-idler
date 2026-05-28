@@ -31,6 +31,7 @@ cat-idler/
 │   └── Main.tscn           # Root scene
 ├── scripts/
 │   └── CatCharacter.gd     # Cat draw + bob animation
+├── Config.gd               # Autoloaded singleton; all static tuning constants
 ├── CONTEXT.md              # This file
 ├── ROADMAP.md              # Phase plan and design intent
 └── project.godot
@@ -40,6 +41,7 @@ cat-idler/
 
 | Singleton name | Path | Purpose |
 |---|---|---|
+| `Config` | `res://Config.gd` | Static tuning constants; no mutable state; referenced by GameState and Main |
 | `GameState` | `res://autoloads/GameState.gd` | Holds all persistent game state; the single source of truth for currency and rates |
 
 ### Scene structure
@@ -86,21 +88,20 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 |---|---|---|---|
 | `money` | `float` | `0.0` | Current money (primary currency) |
 | `cats` | `int` | `0` | Number of cats purchased |
-| `cat_food` | `float` | `1000.0` | Cat food supply; each cat drains 1 unit per 10 sec; never goes below 0 |
-| `next_cat_cost` | `float` | `5.0` | Cost of the next cat; multiplied by `cat_cost_growth_rate` after each purchase |
+| `cat_food` | `float` | `Config.cat_food_start` | Cat food supply; drains at `cats * Config.cat_food_drain_rate` per second; never goes below 0 |
+| `next_cat_cost` | `float` | `Config.cat_cost_base` | Cost of the next cat; multiplied by `cat_cost_growth_rate` after each purchase |
 | `shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `click()` the first time `money >= next_cat_cost` |
 | `onlypaws_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 3` |
 | `paws_income_rate` | `float` | `0.0` | Passive $/sec; recalculated by `_update_paws_rate()` after each cat purchase or bot purchase |
 | `manager_bots` | `int` | `0` | Number of Manager-Bots purchased; each one doubles total Onlypaws output |
-| `next_bot_cost` | `float` | `50.0` | Cost of the next bot; doubles after every successful purchase |
+| `next_bot_cost` | `float` | `Config.bot_cost_base` | Cost of the next bot; multiplied by `Config.bot_cost_multiplier` after every successful purchase |
 | `bot_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 6` |
 | `shop_unlocked_bots` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots == 4`; reveals the attrition-reduction shop |
 | `onlypaws_active` | `bool` | `false` | Player-toggled; income only ticks when `true` |
-| `cat_cost_growth_rate` | `float` | `1.5` | Multiplier applied to `next_cat_cost` each purchase; reduced to 1.25 by breeder contract |
+| `cat_cost_growth_rate` | `float` | `Config.cat_cost_growth_rate` | Multiplier applied to `next_cat_cost` each purchase; reduced to `Config.breeder_contract_growth_rate` by breeder contract |
 | `breeder_purchased` | `bool` | `false` | One-way latch; set by `buy_breeder_contract()` |
 | `cat_trees_purchased` | `bool` | `false` | One-way latch; set by `buy_cat_trees()` |
-| `tokens` | `float` | `0.0` | Token supply; drains at `manager_bots * token_drain_per_bot` per second; never below 0 |
-| `token_drain_per_bot` | `float` | `1.0` | Tuning variable for per-bot token drain rate |
+| `tokens` | `float` | `0.0` | Token supply; drains at `manager_bots * Config.token_drain_per_bot` per second; never below 0 |
 | `tokens_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots >= 1` |
 
 | Signal | Description |
@@ -120,6 +121,32 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `buy_breeder_contract` | `() -> void` | Guards `money >= 2000 and not breeder_purchased`; sets `cat_cost_growth_rate = 1.25`; retroactively recalculates `next_cat_cost = 5.0 * pow(1.25, cats)` |
 | `buy_cat_trees` | `() -> void` | Guards `money >= 4000 and not cat_trees_purchased`; deducts cost; sets `cat_trees_purchased = true` |
 | `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats / 3) * pow(2.0, manager_bots)` |
+
+### Config (`res://Config.gd`)
+
+Autoloaded singleton containing only `const` tuning values. No mutable state. Loaded before `GameState`.
+
+| Constant | Type | Value | Description |
+|---|---|---|---|
+| `cat_food_start` | `float` | `1000.0` | Initial cat food supply |
+| `cat_food_drain_rate` | `float` | `0.1` | Food drained per cat per second |
+| `cat_food_pack_cost` | `float` | `10.0` | Cost per cat food pack |
+| `cat_food_pack_amount` | `float` | `100.0` | Food added per cat food pack |
+| `token_drain_per_bot` | `float` | `1.0` | Tokens drained per bot per second |
+| `token_pack_cost` | `float` | `20.0` | Cost per token pack |
+| `token_pack_amount` | `float` | `100.0` | Tokens added per token pack |
+| `cat_cost_base` | `float` | `5.0` | Starting cost of the first cat |
+| `cat_cost_growth_rate` | `float` | `1.5` | Default multiplier applied to cat cost after each purchase |
+| `onlypaws_unlock_cats` | `int` | `3` | Cat count that unlocks Onlypaws |
+| `onlypaws_cats_per_tier` | `int` | `3` | Cats per $1/sec Onlypaws income tier |
+| `bot_shop_unlock_cats` | `int` | `6` | Cat count that unlocks the bot shop |
+| `bot_cost_base` | `float` | `50.0` | Starting cost of the first bot |
+| `bot_cost_multiplier` | `float` | `2.0` | Multiplier applied to bot cost after each purchase |
+| `breeder_contract_cost` | `float` | `2000.0` | Cost of the breeder contract upgrade |
+| `breeder_contract_growth_rate` | `float` | `1.25` | Cat cost growth rate after breeder contract |
+| `cat_trees_cost` | `float` | `4000.0` | Cost of the cat trees upgrade |
+
+---
 
 ### CatCharacter (`res://scripts/CatCharacter.gd`)
 
