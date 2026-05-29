@@ -202,7 +202,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | Method | Description |
 |---|---|
 | `_ready()` | Connects `cat_purchased` → `_on_cat_purchased` |
-| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `onlypaws_unlocked`, `bot_shop_unlocked`; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlypawsButton` label and modulate |
+| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `onlypaws_unlocked`, `bot_shop_unlocked`; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlypawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()` |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
 | `_on_onlypaws_button_pressed()` | Flips `GameState.onlypaws_active` |

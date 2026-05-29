@@ -29,7 +29,7 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	money_label.text = "Money: $" + Util.format_number(GameState.money)
 	cats_label.text = "Cats: " + Util.format_number(GameState.cats)
-	purchase_cat_button.text = "Purchase Cat ($%.2f)" % GameState.next_cat_cost
+	purchase_cat_button.text = "Purchase Cat ($" + Util.format_number(GameState.next_cat_cost) + ")"
 	onlypaws_income_label.text = "Onlypaws: $%.2f/sec" % GameState.paws_income_rate
 
 	if GameState.shop_unlocked and not purchase_cat_button.visible:
@@ -77,7 +77,7 @@ func _process(_delta: float) -> void:
 		onlypaws_button.text = "Onlypaws: OFF"
 		onlypaws_button.modulate = Color(1.0, 1.0, 1.0)
 
-	manager_bot_button.text = "Onlypaws Manager-Bot ($%.2f)" % GameState.next_bot_cost
+	manager_bot_button.text = "Onlypaws Manager-Bot ($" + Util.format_number(GameState.next_bot_cost) + ")"
 	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
 	bots_rate_label.text = "Bots: " + Util.format_number(GameState.manager_bots)
 
