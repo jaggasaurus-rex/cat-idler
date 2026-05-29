@@ -77,7 +77,7 @@ Main (Control, full-rect)             ← Main.gd
 │   │   └── BuyTokenX10Button (Button "Buy x10 ($200)") ← calls buy_tokens(10); disabled when money < 20
 │   └── BotManagerItem (VBoxContainer) ← hidden until bot_manager_unlocked; one-way latch in _process()
 │       ├── BotManagerNameLabel (Label "Manager-bot Manager")
-│       ├── BotManagerDescLabel (Label, autowrap_mode=3)
+│       ├── BotManagerDescLabel (Label, autowrap_mode=3) ← hidden in _process() when bot_manager_purchased
 │       └── BuyBotManagerButton (Button "Buy ($1,000,000)") ← calls buy_bot_manager(); disabled when unaffordable; green + disabled when purchased
 └── CatContainer (Node2D)             ← pos (576, 530); purchased cats added here, auto-recentred
 ```

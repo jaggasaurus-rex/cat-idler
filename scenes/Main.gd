@@ -19,6 +19,7 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var buy_token_x1_button: Button = $ShopPanel/TokenPackItem/BuyTokenX1Button
 @onready var buy_token_x10_button: Button = $ShopPanel/TokenPackItem/BuyTokenX10Button
 @onready var bot_manager_item: VBoxContainer = $ShopPanel/BotManagerItem
+@onready var bot_manager_desc_label: Label = $ShopPanel/BotManagerItem/BotManagerDescLabel
 @onready var buy_bot_manager_button: Button = $ShopPanel/BotManagerItem/BuyBotManagerButton
 
 
@@ -65,6 +66,7 @@ func _process(_delta: float) -> void:
 	if GameState.bot_manager_purchased:
 		buy_bot_manager_button.disabled = true
 		buy_bot_manager_button.modulate = Color(0.4, 1.0, 0.4)
+		bot_manager_desc_label.visible = false
 	else:
 		buy_bot_manager_button.disabled = GameState.money < Config.bot_manager_cost
 		buy_bot_manager_button.modulate = Color(1.0, 1.0, 1.0)
