@@ -43,7 +43,8 @@ func _process(delta: float) -> void:
 	if bot_manager_purchased and tokens <= Config.bot_manager_token_threshold:
 		buy_tokens(1)
 	if onlypaws_active and bots_active:
-		money += paws_income_rate * delta
+		if cat_food > 0.0:
+			money += paws_income_rate * delta
 
 
 func click() -> void:
