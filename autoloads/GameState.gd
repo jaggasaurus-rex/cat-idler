@@ -168,11 +168,13 @@ func buy_cat_trees() -> void:
 
 
 ## Returns cat happiness as a percentage (0–100).
-## Formula: clamp(1 - cats/happiness_max_cats, 0, 1) * 100.
-## Assumption: cats >= happiness_max_cats clamps at 0% — overcrowding cannot
-## be recovered by buying even more cats, so 0% is the floor for all higher counts.
+## Formula: clamp(1 - cats/max_cats, 0, 1) * 100.
+## max_cats is Config.happiness_max_cats (20) until cat_trees_purchased,
+## then Config.cat_trees_happiness_max_cats (30). Recalculates immediately on purchase.
+## Assumption: cats >= max_cats clamps at 0% — overcrowding has no floor-escape.
 func get_happiness() -> float:
-	return clamp(1.0 - float(cats) / float(Config.happiness_max_cats), 0.0, 1.0) * 100.0
+	var max_cats: int = Config.cat_trees_happiness_max_cats if cat_trees_purchased else Config.happiness_max_cats
+	return clamp(1.0 - float(cats) / float(max_cats), 0.0, 1.0) * 100.0
 
 
 # Base tier: floor(cats / 3) $/sec (0-2 cats=$0, 3-5=$1, 6-8=$2, …).

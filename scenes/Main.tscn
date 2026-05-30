@@ -152,91 +152,130 @@ anchor_right = 1.0
 offset_left = -380.0
 offset_top = 20.0
 offset_right = -10.0
-offset_bottom = 400.0
-theme_override_constants/separation = 12
+offset_bottom = 500.0
+theme_override_constants/separation = 8
 
 [node name="ShopLabel" type="Label" parent="ShopPanel" unique_id=304719283]
 layout_mode = 2
 text = "Shop"
 
-[node name="CatFoodItem" type="VBoxContainer" parent="ShopPanel" unique_id=400000002]
+[node name="TabBar" type="HBoxContainer" parent="ShopPanel" unique_id=400000080]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="CurrencyTabButton" type="Button" parent="ShopPanel/TabBar" unique_id=400000081]
+layout_mode = 2
+text = "Currency"
+
+[node name="HomeTabButton" type="Button" parent="ShopPanel/TabBar" unique_id=400000082]
+visible = false
+layout_mode = 2
+text = "Home"
+
+[node name="CurrencyTabContent" type="VBoxContainer" parent="ShopPanel" unique_id=400000083]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CatFoodItem" type="VBoxContainer" parent="ShopPanel/CurrencyTabContent" unique_id=400000002]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="CatFoodNameLabel" type="Label" parent="ShopPanel/CatFoodItem" unique_id=400000003]
+[node name="CatFoodNameLabel" type="Label" parent="ShopPanel/CurrencyTabContent/CatFoodItem" unique_id=400000003]
 layout_mode = 2
 text = "Cat Food Pack"
 
-[node name="CatFoodDescLabel" type="Label" parent="ShopPanel/CatFoodItem" unique_id=400000004]
+[node name="CatFoodDescLabel" type="Label" parent="ShopPanel/CurrencyTabContent/CatFoodItem" unique_id=400000004]
 layout_mode = 2
 text = "100 cat food — $10"
 autowrap_mode = 3
 
-[node name="BuyCatFoodX1Button" type="Button" parent="ShopPanel/CatFoodItem" unique_id=400000005]
+[node name="BuyCatFoodX1Button" type="Button" parent="ShopPanel/CurrencyTabContent/CatFoodItem" unique_id=400000005]
 layout_mode = 2
 text = "Buy x1 ($10)"
 
-[node name="BuyCatFoodX10Button" type="Button" parent="ShopPanel/CatFoodItem" unique_id=400000006]
+[node name="BuyCatFoodX10Button" type="Button" parent="ShopPanel/CurrencyTabContent/CatFoodItem" unique_id=400000006]
 layout_mode = 2
 text = "Buy x10 ($100)"
 
-[node name="TokenPackItem" type="VBoxContainer" parent="ShopPanel" unique_id=400000011]
+[node name="TokenPackItem" type="VBoxContainer" parent="ShopPanel/CurrencyTabContent" unique_id=400000011]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TokenPackNameLabel" type="Label" parent="ShopPanel/TokenPackItem" unique_id=400000012]
+[node name="TokenPackNameLabel" type="Label" parent="ShopPanel/CurrencyTabContent/TokenPackItem" unique_id=400000012]
 layout_mode = 2
 text = "Token Pack"
 
-[node name="TokenPackDescLabel" type="Label" parent="ShopPanel/TokenPackItem" unique_id=400000013]
+[node name="TokenPackDescLabel" type="Label" parent="ShopPanel/CurrencyTabContent/TokenPackItem" unique_id=400000013]
 layout_mode = 2
 text = "100 tokens — $20"
 autowrap_mode = 3
 
-[node name="BuyTokenX1Button" type="Button" parent="ShopPanel/TokenPackItem" unique_id=400000014]
+[node name="BuyTokenX1Button" type="Button" parent="ShopPanel/CurrencyTabContent/TokenPackItem" unique_id=400000014]
 layout_mode = 2
 text = "Buy x1 ($20)"
 
-[node name="BuyTokenX10Button" type="Button" parent="ShopPanel/TokenPackItem" unique_id=400000015]
+[node name="BuyTokenX10Button" type="Button" parent="ShopPanel/CurrencyTabContent/TokenPackItem" unique_id=400000015]
 layout_mode = 2
 text = "Buy x10 ($200)"
 
-[node name="BotManagerItem" type="VBoxContainer" parent="ShopPanel" unique_id=400000020]
+[node name="BotManagerItem" type="VBoxContainer" parent="ShopPanel/CurrencyTabContent" unique_id=400000020]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="BotManagerNameLabel" type="Label" parent="ShopPanel/BotManagerItem" unique_id=400000021]
+[node name="BotManagerNameLabel" type="Label" parent="ShopPanel/CurrencyTabContent/BotManagerItem" unique_id=400000021]
 layout_mode = 2
 text = "Manager-bot Manager"
 
-[node name="BotManagerDescLabel" type="Label" parent="ShopPanel/BotManagerItem" unique_id=400000022]
+[node name="BotManagerDescLabel" type="Label" parent="ShopPanel/CurrencyTabContent/BotManagerItem" unique_id=400000022]
 layout_mode = 2
 text = "Might as well pay someone to keep your tokens topped up for you! (Automatically purchases more tokens when you run out)"
 autowrap_mode = 3
 
-[node name="BuyBotManagerButton" type="Button" parent="ShopPanel/BotManagerItem" unique_id=400000023]
+[node name="BuyBotManagerButton" type="Button" parent="ShopPanel/CurrencyTabContent/BotManagerItem" unique_id=400000023]
 layout_mode = 2
 text = "Buy ($1,000,000)"
 
-[node name="AutoFeederItem" type="VBoxContainer" parent="ShopPanel" unique_id=400000030]
+[node name="AutoFeederItem" type="VBoxContainer" parent="ShopPanel/CurrencyTabContent" unique_id=400000030]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="AutoFeederNameLabel" type="Label" parent="ShopPanel/AutoFeederItem" unique_id=400000031]
+[node name="AutoFeederNameLabel" type="Label" parent="ShopPanel/CurrencyTabContent/AutoFeederItem" unique_id=400000031]
 layout_mode = 2
 text = "Auto-Feeder"
 
-[node name="AutoFeederDescLabel" type="Label" parent="ShopPanel/AutoFeederItem" unique_id=400000032]
+[node name="AutoFeederDescLabel" type="Label" parent="ShopPanel/CurrencyTabContent/AutoFeederItem" unique_id=400000032]
 layout_mode = 2
 text = "I'm a lazy fuck, and now you can be too! This will make sure your precious kitties never run out of food!"
 autowrap_mode = 3
 
-[node name="BuyAutoFeederButton" type="Button" parent="ShopPanel/AutoFeederItem" unique_id=400000033]
+[node name="BuyAutoFeederButton" type="Button" parent="ShopPanel/CurrencyTabContent/AutoFeederItem" unique_id=400000033]
 layout_mode = 2
 text = "Buy ($2,000,000)"
+
+[node name="HomeTabContent" type="VBoxContainer" parent="ShopPanel" unique_id=400000084]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CatTreesItem" type="VBoxContainer" parent="ShopPanel/HomeTabContent" unique_id=400000085]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="CatTreesNameLabel" type="Label" parent="ShopPanel/HomeTabContent/CatTreesItem" unique_id=400000086]
+layout_mode = 2
+text = "Cat Trees"
+
+[node name="CatTreesDescLabel" type="Label" parent="ShopPanel/HomeTabContent/CatTreesItem" unique_id=400000087]
+layout_mode = 2
+text = "Move, in this economy? Fuck that! Just create some vertical space, they have claws. They'll figure it out."
+autowrap_mode = 3
+
+[node name="BuyCatTreesButton" type="Button" parent="ShopPanel/HomeTabContent/CatTreesItem" unique_id=400000088]
+layout_mode = 2
+text = "Buy ($10,000)"
 
 [node name="OnlyPawsPopup" type="ColorRect" parent="." unique_id=400000040]
 visible = false
@@ -353,12 +392,15 @@ position = Vector2(576, 530)
 [connection signal="pressed" from="PurchaseCatButton" to="." method="_on_purchase_cat_button_pressed"]
 [connection signal="pressed" from="OnlyPawsButton" to="." method="_on_only_paws_button_pressed"]
 [connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
-[connection signal="pressed" from="ShopPanel/CatFoodItem/BuyCatFoodX1Button" to="." method="_on_buy_cat_food_x1_button_pressed"]
-[connection signal="pressed" from="ShopPanel/CatFoodItem/BuyCatFoodX10Button" to="." method="_on_buy_cat_food_x10_button_pressed"]
-[connection signal="pressed" from="ShopPanel/TokenPackItem/BuyTokenX1Button" to="." method="_on_buy_token_x1_button_pressed"]
-[connection signal="pressed" from="ShopPanel/TokenPackItem/BuyTokenX10Button" to="." method="_on_buy_token_x10_button_pressed"]
-[connection signal="pressed" from="ShopPanel/BotManagerItem/BuyBotManagerButton" to="." method="_on_buy_bot_manager_button_pressed"]
-[connection signal="pressed" from="ShopPanel/AutoFeederItem/BuyAutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
+[connection signal="pressed" from="ShopPanel/TabBar/CurrencyTabButton" to="." method="_on_currency_tab_button_pressed"]
+[connection signal="pressed" from="ShopPanel/TabBar/HomeTabButton" to="." method="_on_home_tab_button_pressed"]
+[connection signal="pressed" from="ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX1Button" to="." method="_on_buy_cat_food_x1_button_pressed"]
+[connection signal="pressed" from="ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX10Button" to="." method="_on_buy_cat_food_x10_button_pressed"]
+[connection signal="pressed" from="ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX1Button" to="." method="_on_buy_token_x1_button_pressed"]
+[connection signal="pressed" from="ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX10Button" to="." method="_on_buy_token_x10_button_pressed"]
+[connection signal="pressed" from="ShopPanel/CurrencyTabContent/BotManagerItem/BuyBotManagerButton" to="." method="_on_buy_bot_manager_button_pressed"]
+[connection signal="pressed" from="ShopPanel/CurrencyTabContent/AutoFeederItem/BuyAutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
+[connection signal="pressed" from="ShopPanel/HomeTabContent/CatTreesItem/BuyCatTreesButton" to="." method="_on_buy_cat_trees_button_pressed"]
 [connection signal="pressed" from="OnlyPawsPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_only_paws_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessCrampedPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_cramped_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessRiotPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_riot_popup_ok_pressed"]

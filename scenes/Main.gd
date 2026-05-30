@@ -12,19 +12,25 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var manager_bot_button: Button = $ManagerBotButton
 @onready var bots_rate_label: Label = $BotsRateLabel
 @onready var shop_panel: VBoxContainer = $ShopPanel
+@onready var currency_tab_button: Button = $ShopPanel/TabBar/CurrencyTabButton
+@onready var home_tab_button: Button = $ShopPanel/TabBar/HomeTabButton
+@onready var currency_tab_content: VBoxContainer = $ShopPanel/CurrencyTabContent
+@onready var home_tab_content: VBoxContainer = $ShopPanel/HomeTabContent
 @onready var cat_food_label: Label = $CatFoodLabel
-@onready var buy_cat_food_x1_button: Button = $ShopPanel/CatFoodItem/BuyCatFoodX1Button
-@onready var buy_cat_food_x10_button: Button = $ShopPanel/CatFoodItem/BuyCatFoodX10Button
+@onready var buy_cat_food_x1_button: Button = $ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX1Button
+@onready var buy_cat_food_x10_button: Button = $ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX10Button
 @onready var tokens_label: Label = $TokensLabel
-@onready var token_pack_item: VBoxContainer = $ShopPanel/TokenPackItem
-@onready var buy_token_x1_button: Button = $ShopPanel/TokenPackItem/BuyTokenX1Button
-@onready var buy_token_x10_button: Button = $ShopPanel/TokenPackItem/BuyTokenX10Button
-@onready var bot_manager_item: VBoxContainer = $ShopPanel/BotManagerItem
-@onready var bot_manager_desc_label: Label = $ShopPanel/BotManagerItem/BotManagerDescLabel
-@onready var buy_bot_manager_button: Button = $ShopPanel/BotManagerItem/BuyBotManagerButton
-@onready var auto_feeder_item: VBoxContainer = $ShopPanel/AutoFeederItem
-@onready var auto_feeder_desc_label: Label = $ShopPanel/AutoFeederItem/AutoFeederDescLabel
-@onready var buy_auto_feeder_button: Button = $ShopPanel/AutoFeederItem/BuyAutoFeederButton
+@onready var token_pack_item: VBoxContainer = $ShopPanel/CurrencyTabContent/TokenPackItem
+@onready var buy_token_x1_button: Button = $ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX1Button
+@onready var buy_token_x10_button: Button = $ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX10Button
+@onready var bot_manager_item: VBoxContainer = $ShopPanel/CurrencyTabContent/BotManagerItem
+@onready var bot_manager_desc_label: Label = $ShopPanel/CurrencyTabContent/BotManagerItem/BotManagerDescLabel
+@onready var buy_bot_manager_button: Button = $ShopPanel/CurrencyTabContent/BotManagerItem/BuyBotManagerButton
+@onready var auto_feeder_item: VBoxContainer = $ShopPanel/CurrencyTabContent/AutoFeederItem
+@onready var auto_feeder_desc_label: Label = $ShopPanel/CurrencyTabContent/AutoFeederItem/AutoFeederDescLabel
+@onready var buy_auto_feeder_button: Button = $ShopPanel/CurrencyTabContent/AutoFeederItem/BuyAutoFeederButton
+@onready var cat_trees_desc_label: Label = $ShopPanel/HomeTabContent/CatTreesItem/CatTreesDescLabel
+@onready var buy_cat_trees_button: Button = $ShopPanel/HomeTabContent/CatTreesItem/BuyCatTreesButton
 @onready var happiness_bar: ProgressBar = $HappinessBarContainer/HappinessRow/HappinessBar
 @onready var happiness_cramped_popup: ColorRect = $HappinessCrampedPopup
 @onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
@@ -34,6 +40,7 @@ var _only_paws_popup_shown: bool = false
 var _happiness_cramped_popup_shown: bool = false
 var _happiness_riot_popup_shown: bool = false
 var _happiness_fill_style: StyleBoxFlat
+var _home_tab_active: bool = false
 
 
 func _ready() -> void:
@@ -48,6 +55,7 @@ func _ready() -> void:
 	_happiness_fill_style = StyleBoxFlat.new()
 	_happiness_fill_style.bg_color = Color.GREEN
 	happiness_bar.add_theme_stylebox_override("fill", _happiness_fill_style)
+	_switch_tab(false)
 
 
 func _process(_delta: float) -> void:
@@ -127,6 +135,10 @@ func _process(_delta: float) -> void:
 		happiness_riot_popup.visible = true
 		get_tree().paused = true
 
+	# One-way latch — Home tab reveals when home_shop_unlocked
+	if GameState.home_shop_unlocked and not home_tab_button.visible:
+		home_tab_button.visible = true
+
 	# One-way latch — auto feeder shop item appears when unlocked
 	if GameState.auto_feeder_unlocked and not auto_feeder_item.visible:
 		auto_feeder_item.visible = true
@@ -138,6 +150,14 @@ func _process(_delta: float) -> void:
 	else:
 		buy_auto_feeder_button.disabled = GameState.money < Config.auto_feeder_cost
 		buy_auto_feeder_button.modulate = Color(1.0, 1.0, 1.0)
+
+	if GameState.cat_trees_purchased:
+		buy_cat_trees_button.disabled = true
+		buy_cat_trees_button.modulate = Color(0.4, 1.0, 0.4)
+		cat_trees_desc_label.visible = false
+	else:
+		buy_cat_trees_button.disabled = GameState.money < Config.cat_trees_cost
+		buy_cat_trees_button.modulate = Color(1.0, 1.0, 1.0)
 
 
 func _on_earn_money_button_pressed() -> void:
@@ -190,6 +210,18 @@ func _on_buy_auto_feeder_button_pressed() -> void:
 	GameState.buy_auto_feeder()
 
 
+func _on_currency_tab_button_pressed() -> void:
+	_switch_tab(false)
+
+
+func _on_home_tab_button_pressed() -> void:
+	_switch_tab(true)
+
+
+func _on_buy_cat_trees_button_pressed() -> void:
+	GameState.buy_cat_trees()
+
+
 func _on_happiness_cramped_popup_ok_pressed() -> void:
 	happiness_cramped_popup.visible = false
 	get_tree().paused = false
@@ -199,6 +231,14 @@ func _on_happiness_cramped_popup_ok_pressed() -> void:
 func _on_happiness_riot_popup_ok_pressed() -> void:
 	happiness_riot_popup.visible = false
 	get_tree().paused = false
+
+
+func _switch_tab(to_home: bool) -> void:
+	_home_tab_active = to_home
+	currency_tab_content.visible = not to_home
+	home_tab_content.visible = to_home
+	currency_tab_button.modulate = Color(1.0, 1.0, 1.0) if to_home else Color(0.4, 1.0, 0.4)
+	home_tab_button.modulate = Color(0.4, 1.0, 0.4) if to_home else Color(1.0, 1.0, 1.0)
 
 
 func _on_cat_purchased() -> void:

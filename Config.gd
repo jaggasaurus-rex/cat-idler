@@ -28,7 +28,8 @@ const bot_cost_multiplier: float = 2.0
 # Upgrades
 const breeder_contract_cost: float = 2000.0
 const breeder_contract_growth_rate: float = 1.25
-const cat_trees_cost: float = 4000.0
+const cat_trees_cost: float = 10000.0
+const cat_trees_happiness_max_cats: int = 30  # happiness_max_cats value after cat trees purchased
 const bot_manager_cost: float = 1000000.0
 const bot_manager_unlock_bots: int = 10
 const bot_manager_token_threshold: float = 1.0

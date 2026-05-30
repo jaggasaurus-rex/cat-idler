@@ -76,24 +76,33 @@ Main (Control, full-rect)             ← Main.gd
 ├── TokensLabel (Label)               ← hidden until tokens_shop_unlocked; "Tokens: X" updates every frame
 ├── ShopPanel (VBoxContainer)         ← right-anchored, always visible; offset_left=-380, offset_right=-10 (370px wide)
 │   ├── ShopLabel (Label "Shop")
-│   ├── CatFoodItem (VBoxContainer)   ← always visible
-│   │   ├── CatFoodNameLabel (Label "Cat Food Pack")
-│   │   ├── CatFoodDescLabel (Label "100 cat food — $10", autowrap_mode=3)
-│   │   ├── BuyCatFoodX1Button (Button "Buy x1 ($10)")  ← calls buy_cat_food_pack(1); disabled when money < 10
-│   │   └── BuyCatFoodX10Button (Button "Buy x10 ($100)") ← calls buy_cat_food_pack(10); disabled when money < 10
-│   ├── TokenPackItem (VBoxContainer) ← hidden until tokens_shop_unlocked; one-way latch in _process()
-│   │   ├── TokenPackNameLabel (Label "Token Pack")
-│   │   ├── TokenPackDescLabel (Label "100 tokens — $20", autowrap_mode=3)
-│   │   ├── BuyTokenX1Button (Button "Buy x1 ($20)")   ← calls buy_tokens(1); disabled when money < 20
-│   │   └── BuyTokenX10Button (Button "Buy x10 ($200)") ← calls buy_tokens(10); disabled when money < 20
-│   └── BotManagerItem (VBoxContainer) ← hidden until bot_manager_unlocked; one-way latch in _process()
-│       ├── BotManagerNameLabel (Label "Manager-bot Manager")
-│       ├── BotManagerDescLabel (Label, autowrap_mode=3) ← hidden in _process() when bot_manager_purchased
-│       └── BuyBotManagerButton (Button "Buy ($1,000,000)") ← calls buy_bot_manager(); disabled when unaffordable; green + disabled when purchased
-│   └── AutoFeederItem (VBoxContainer) ← hidden until auto_feeder_unlocked; one-way latch in _process()
-│       ├── AutoFeederNameLabel (Label "Auto-Feeder")
-│       ├── AutoFeederDescLabel (Label, autowrap_mode=3) ← hidden in _process() when auto_feeder_purchased
-│       └── BuyAutoFeederButton (Button "Buy ($2,000,000)") ← calls buy_auto_feeder(); disabled when unaffordable; green + disabled when purchased
+│   ├── TabBar (HBoxContainer)         ← tab buttons; active tab has green modulate
+│   │   ├── CurrencyTabButton (Button "Currency") ← switches to Currency tab; green when active
+│   │   └── HomeTabButton (Button "Home") ← hidden until home_shop_unlocked; switches to Home tab; green when active
+│   ├── CurrencyTabContent (VBoxContainer) ← visible when Currency tab active (default)
+│   │   ├── CatFoodItem (VBoxContainer)   ← always visible
+│   │   │   ├── CatFoodNameLabel (Label "Cat Food Pack")
+│   │   │   ├── CatFoodDescLabel (Label "100 cat food — $10", autowrap_mode=3)
+│   │   │   ├── BuyCatFoodX1Button (Button "Buy x1 ($10)")  ← calls buy_cat_food_pack(1); disabled when money < 10
+│   │   │   └── BuyCatFoodX10Button (Button "Buy x10 ($100)") ← calls buy_cat_food_pack(10); disabled when money < 10
+│   │   ├── TokenPackItem (VBoxContainer) ← hidden until tokens_shop_unlocked; one-way latch in _process()
+│   │   │   ├── TokenPackNameLabel (Label "Token Pack")
+│   │   │   ├── TokenPackDescLabel (Label "100 tokens — $20", autowrap_mode=3)
+│   │   │   ├── BuyTokenX1Button (Button "Buy x1 ($20)")   ← calls buy_tokens(1); disabled when money < 20
+│   │   │   └── BuyTokenX10Button (Button "Buy x10 ($200)") ← calls buy_tokens(10); disabled when money < 20
+│   │   ├── BotManagerItem (VBoxContainer) ← hidden until bot_manager_unlocked; one-way latch in _process()
+│   │   │   ├── BotManagerNameLabel (Label "Manager-bot Manager")
+│   │   │   ├── BotManagerDescLabel (Label, autowrap_mode=3) ← hidden in _process() when bot_manager_purchased
+│   │   │   └── BuyBotManagerButton (Button "Buy ($1,000,000)") ← calls buy_bot_manager(); disabled when unaffordable; green + disabled when purchased
+│   │   └── AutoFeederItem (VBoxContainer) ← hidden until auto_feeder_unlocked; one-way latch in _process()
+│   │       ├── AutoFeederNameLabel (Label "Auto-Feeder")
+│   │       ├── AutoFeederDescLabel (Label, autowrap_mode=3) ← hidden in _process() when auto_feeder_purchased
+│   │       └── BuyAutoFeederButton (Button "Buy ($2,000,000)") ← calls buy_auto_feeder(); disabled when unaffordable; green + disabled when purchased
+│   └── HomeTabContent (VBoxContainer) ← visible when Home tab active; hidden until _switch_tab(true)
+│       └── CatTreesItem (VBoxContainer) ← always visible within Home tab
+│           ├── CatTreesNameLabel (Label "Cat Trees")
+│           ├── CatTreesDescLabel (Label, autowrap_mode=3) ← hidden in _process() when cat_trees_purchased
+│           └── BuyCatTreesButton (Button "Buy ($10,000)") ← calls buy_cat_trees(); disabled when unaffordable; green + disabled when purchased
 ├── HappinessCrampedPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_cramped_triggered first sets (cats>=10); on dismiss sets home_shop_unlocked=true; pauses tree
 │   └── DialogPanel (PanelContainer)  ← centered 500×200 dialog
 │       └── VBoxContainer
@@ -131,7 +140,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `only_paws_active` | `bool` | `false` | Player-toggled; income only ticks when `true`; toggling OFF also sets `bots_active = false`; toggling ON re-enables bots if tokens > 0 |
 | `cat_cost_growth_rate` | `float` | `Config.cat_cost_growth_rate` | Multiplier applied to `next_cat_cost` each purchase; reduced to `Config.breeder_contract_growth_rate` by breeder contract |
 | `breeder_purchased` | `bool` | `false` | One-way latch; set by `buy_breeder_contract()` |
-| `cat_trees_purchased` | `bool` | `false` | One-way latch; set by `buy_cat_trees()` |
+| `cat_trees_purchased` | `bool` | `false` | One-way latch; set by `buy_cat_trees()`; also switches `get_happiness()` to use `Config.cat_trees_happiness_max_cats` (30) |
 | `tokens` | `float` | `Config.token_start` | Token supply; drains at `manager_bots * Config.token_drain_per_bot` per second while `bots_active`; never below 0 |
 | `bots_active` | `bool` | `true` | Set to `false` when tokens reach 0; re-enabled by `buy_tokens()` if tokens > 0 after purchase; gates token drain and bot income |
 | `tokens_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots >= 1` |
@@ -161,7 +170,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `buy_bot_manager` | `() -> void` | Guards `money >= Config.bot_manager_cost and not bot_manager_purchased`; deducts cost; sets `bot_manager_purchased = true` |
 | `buy_auto_feeder` | `() -> void` | Guards `money >= Config.auto_feeder_cost and not auto_feeder_purchased`; deducts cost; sets `auto_feeder_purchased = true` |
 | `buy_breeder_contract` | `() -> void` | Guards `money >= 2000 and not breeder_purchased`; sets `cat_cost_growth_rate = 1.25`; retroactively recalculates `next_cat_cost = 5.0 * pow(1.25, cats)` |
-| `buy_cat_trees` | `() -> void` | Guards `money >= 4000 and not cat_trees_purchased`; deducts cost; sets `cat_trees_purchased = true` |
+| `buy_cat_trees` | `() -> void` | Guards `money >= Config.cat_trees_cost (10000) and not cat_trees_purchased`; deducts cost; sets `cat_trees_purchased = true`; happiness recalculates immediately via `get_happiness()` |
 | `get_happiness` | `() -> float` | Returns happiness as a percentage (0–100). Formula: `clamp(1 - cats/20, 0, 1) * 100`. Cats ≥ 20 clamp at 0% |
 | `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats / 3) * pow(2.0, manager_bots)` |
 
@@ -188,7 +197,8 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `bot_cost_multiplier` | `float` | `2.0` | Multiplier applied to bot cost after each purchase |
 | `breeder_contract_cost` | `float` | `2000.0` | Cost of the breeder contract upgrade |
 | `breeder_contract_growth_rate` | `float` | `1.25` | Cat cost growth rate after breeder contract |
-| `cat_trees_cost` | `float` | `4000.0` | Cost of the cat trees upgrade |
+| `cat_trees_cost` | `float` | `10000.0` | Cost of the Cat Trees shop upgrade |
+| `cat_trees_happiness_max_cats` | `int` | `30` | Happiness max-cats threshold after Cat Trees is purchased; replaces `happiness_max_cats` in `get_happiness()` |
 | `bot_manager_cost` | `float` | `1000000.0` | Cost of the Manager-bot Manager upgrade |
 | `bot_manager_unlock_bots` | `int` | `10` | Bot count that unlocks the Manager-bot Manager shop item |
 | `bot_manager_token_threshold` | `float` | `1.0` | Token level at or below which the bot manager auto-buys a token pack |
@@ -239,7 +249,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | Method | Description |
 |---|---|
 | `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`; styles `CatsLabel` as hero stat (bold `SystemFont` + `1.3×` font size relative to `MoneyLabel` base) |
-| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`; shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); shows `HappinessRiotPopup` and pauses tree the first time `happiness_riot_triggered` is set |
+| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`, `home_shop_unlocked` (reveals HomeTabButton); shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); shows cramped/riot popups when triggered; updates CatTrees button state |
+| `_switch_tab` | `(to_home: bool) -> void` | Toggles `CurrencyTabContent`/`HomeTabContent` visibility; sets green modulate on active tab button, white on inactive |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
 | `_on_only_paws_button_pressed()` | Flips `GameState.only_paws_active`; turning OFF sets `bots_active = false`; turning ON re-enables bots if `tokens > 0` |
@@ -270,7 +281,9 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Procedural cat character** — drawn with `_draw()` primitives (body, head, ears, eyes, nose, tail); smooth vertical bob animation via sine wave
 - [x] **OnlyPaws Manager-Bot** — unlocks at 6 cats; costs $50 (doubles each purchase); each bot doubles total OnlyPaws income rate; button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count and current rate
 - [x] **OnlyPaws ON/OFF toggle** — `OnlyPawsButton` flips `only_paws_active`; income only runs while active; toggling OFF also sets `bots_active = false` stopping token drain; toggling ON re-enables bots if tokens > 0; button label and green modulate reflect state
-- [x] **Upgrade stubs (GameState only)** — `buy_breeder_contract()` and `buy_cat_trees()` exist in GameState (`cat_trees_purchased` flag retained) but are not wired to any UI
+- [x] **Upgrade stubs (GameState only)** — `buy_breeder_contract()` exists in GameState but is not wired to any UI
+- [x] **Tabbed shop** — ShopPanel split into "Currency" tab (all existing items) and "Home" tab (hidden until `home_shop_unlocked`); active tab has green modulate; defaults to Currency on load
+- [x] **Cat Trees shop item** — in Home tab; $10,000 one-time purchase; increases happiness max-cats threshold from 20 → 30, immediately recalculating happiness; desc hides after purchase; button turns green
 - [x] **Shop panel always visible** — `ShopPanel` is shown from game start; no unlock gate
 - [x] **Cat food** — `cat_food` starts at 1000; drains at `cats / 10` per second (always, not gated); clamped to 0; `CatFoodLabel` shows `floor(cat_food)` in the HUD
 - [x] **Cat Food Pack shop item** — buy x1 ($10, +100 food) or x10 ($100, +1000 food); both buttons disabled when `money < 10`
