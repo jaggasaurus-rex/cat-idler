@@ -25,7 +25,9 @@ var bot_manager_purchased: bool = false
 var food_hit_zero: bool = false
 var auto_feeder_unlocked: bool = false
 var auto_feeder_purchased: bool = false
+var happiness_cramped_triggered: bool = false
 var happiness_riot_triggered: bool = false
+var home_shop_unlocked: bool = false
 
 
 func _ready() -> void:
@@ -53,6 +55,8 @@ func _process(delta: float) -> void:
 			bot_manager_unlocked = true
 	if bot_manager_purchased and tokens <= Config.bot_manager_token_threshold:
 		buy_tokens(1)
+	if not happiness_cramped_triggered and get_happiness() <= 50.0:
+		happiness_cramped_triggered = true
 	if not happiness_riot_triggered and get_happiness() <= 0.0:
 		happiness_riot_triggered = true
 	if only_paws_active and bots_active:

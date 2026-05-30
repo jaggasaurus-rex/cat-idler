@@ -26,10 +26,12 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var auto_feeder_desc_label: Label = $ShopPanel/AutoFeederItem/AutoFeederDescLabel
 @onready var buy_auto_feeder_button: Button = $ShopPanel/AutoFeederItem/BuyAutoFeederButton
 @onready var happiness_bar: ProgressBar = $HappinessBarContainer/HappinessRow/HappinessBar
+@onready var happiness_cramped_popup: ColorRect = $HappinessCrampedPopup
 @onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
 
 
 var _only_paws_popup_shown: bool = false
+var _happiness_cramped_popup_shown: bool = false
 var _happiness_riot_popup_shown: bool = false
 var _happiness_fill_style: StyleBoxFlat
 
@@ -115,6 +117,11 @@ func _process(_delta: float) -> void:
 	var t: float = happiness / 100.0
 	_happiness_fill_style.bg_color = Color.RED.lerp(Color.GREEN, t)
 
+	if GameState.happiness_cramped_triggered and not _happiness_cramped_popup_shown:
+		_happiness_cramped_popup_shown = true
+		happiness_cramped_popup.visible = true
+		get_tree().paused = true
+
 	if GameState.happiness_riot_triggered and not _happiness_riot_popup_shown:
 		_happiness_riot_popup_shown = true
 		happiness_riot_popup.visible = true
@@ -181,6 +188,12 @@ func _on_buy_bot_manager_button_pressed() -> void:
 
 func _on_buy_auto_feeder_button_pressed() -> void:
 	GameState.buy_auto_feeder()
+
+
+func _on_happiness_cramped_popup_ok_pressed() -> void:
+	happiness_cramped_popup.visible = false
+	get_tree().paused = false
+	GameState.home_shop_unlocked = true
 
 
 func _on_happiness_riot_popup_ok_pressed() -> void:

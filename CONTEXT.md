@@ -94,6 +94,11 @@ Main (Control, full-rect)             ← Main.gd
 │       ├── AutoFeederNameLabel (Label "Auto-Feeder")
 │       ├── AutoFeederDescLabel (Label, autowrap_mode=3) ← hidden in _process() when auto_feeder_purchased
 │       └── BuyAutoFeederButton (Button "Buy ($2,000,000)") ← calls buy_auto_feeder(); disabled when unaffordable; green + disabled when purchased
+├── HappinessCrampedPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_cramped_triggered first sets (cats>=10); on dismiss sets home_shop_unlocked=true; pauses tree
+│   └── DialogPanel (PanelContainer)  ← centered 500×200 dialog
+│       └── VBoxContainer
+│           ├── PopupLabel (Label)    ← cramped message, autowrap
+│           └── OKButton (Button)     ← hides popup, unpauses, sets home_shop_unlocked=true
 ├── HappinessRiotPopup (ColorRect)    ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_riot_triggered first sets; pauses tree
 │   └── DialogPanel (PanelContainer)  ← centered 500×200 dialog
 │       └── VBoxContainer
@@ -135,7 +140,9 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `food_hit_zero` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `cat_food <= 0`; used as second unlock trigger for Auto-Feeder |
 | `auto_feeder_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `cats >= 30` or `food_hit_zero` |
 | `auto_feeder_purchased` | `bool` | `false` | One-way latch; set by `buy_auto_feeder()`; enables auto-food-purchase in `_process()` |
+| `happiness_cramped_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 50.0` (cats >= 10); used by Main.gd to show the cramped popup once |
 | `happiness_riot_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 0.0` (cats >= 20); used by Main.gd to show the riot popup once |
+| `home_shop_unlocked` | `bool` | `false` | Set to `true` in Main.gd when the cramped popup is dismissed; reserved for a future shop section |
 
 | Signal | Description |
 |---|---|
@@ -272,6 +279,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 10 bots owned); one-time $1,000,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
 - [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (30+ cats or food has ever hit 0); one-time $2,000,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
 - [x] **Cat Happiness** — reactive value 0–100% derived from cat count (`clamp(1 - cats/20, 0, 1) * 100`); always-visible progress bar at top-centre of screen with "0%" / "100%" end labels; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0% (cats ≥ 20), sets `happiness_riot_triggered` flag for future shop item use
+- [x] **Cramped popup** — shown once when happiness first drops to ≤ 50% (cats = 10); pauses game loop; on dismiss sets `home_shop_unlocked = true` (reserved for future home shop section)
 
 ---
 
