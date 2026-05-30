@@ -55,11 +55,16 @@ Main (Control, full-rect)             ← Main.gd
 ├── CatFoodLabel (Label)              ← "Cat Food: X" where X = floor(cat_food); updated every frame
 ├── EarnMoneyButton (Button)          ← pressed → GameState.click()
 ├── PurchaseCatButton (Button)        ← permanently shown once shop_unlocked; label updates every frame
-├── OnlypawsButton (Button)           ← permanently shown once onlypaws_unlocked; toggles onlypaws_active;
-│                                       label = "Onlypaws: ON/OFF"; green modulate when active
-├── OnlypawsIncomeLabel (Label)       ← shown with OnlypawsButton; "Onlypaws: $X.XX/sec" updates every frame
-├── OnlypawsInfoPanel (PanelContainer)← hidden permanently (legacy node, not wired to button anymore)
+├── OnlyPawsButton (Button)           ← permanently shown once only_paws_unlocked; toggles only_paws_active;
+│                                       label = "OnlyPaws: ON/OFF"; green modulate when active
+├── OnlyPawsIncomeLabel (Label)       ← shown with OnlyPawsButton; "OnlyPaws: $X.XX/sec" updates every frame
+├── OnlyPawsInfoPanel (PanelContainer)← hidden permanently (legacy node, not wired to button anymore)
 │   └── InfoLabel (Label)             ← static info text, autowrap enabled
+├── OnlyPawsPopup (ColorRect)         ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when only_paws_unlocked first triggers; pauses tree
+│   └── DialogPanel (PanelContainer)  ← centered 450×180 dialog
+│       └── VBoxContainer
+│           ├── PopupLabel (Label)    ← unlock message, autowrap
+│           └── OKButton (Button)     ← hides popup and unpauses tree
 ├── ManagerBotButton (Button)         ← hidden until bot_shop_unlocked; label shows live cost; disabled when unaffordable
 ├── BotsRateLabel (Label)             ← shown with ManagerBotButton; "Bots: X" updates every frame
 ├── TokensLabel (Label)               ← hidden until tokens_shop_unlocked; "Tokens: X" updates every frame
@@ -101,13 +106,13 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `cat_food` | `float` | `Config.cat_food_start` | Cat food supply; drains at `cats * Config.cat_food_drain_rate` per second; never goes below 0 |
 | `next_cat_cost` | `float` | `Config.cat_cost_base` | Cost of the next cat; multiplied by `cat_cost_growth_rate` after each purchase |
 | `shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `click()` the first time `money >= next_cat_cost` |
-| `onlypaws_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 3` |
+| `only_paws_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 3` |
 | `paws_income_rate` | `float` | `0.0` | Passive $/sec; recalculated by `_update_paws_rate()` after each cat purchase or bot purchase |
-| `manager_bots` | `int` | `0` | Number of Manager-Bots purchased; each one doubles total Onlypaws output |
+| `manager_bots` | `int` | `0` | Number of Manager-Bots purchased; each one doubles total OnlyPaws output |
 | `next_bot_cost` | `float` | `Config.bot_cost_base` | Cost of the next bot; multiplied by `Config.bot_cost_multiplier` after every successful purchase |
 | `bot_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 6` |
 | `shop_unlocked_bots` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots == 4`; reveals the attrition-reduction shop |
-| `onlypaws_active` | `bool` | `false` | Player-toggled; income only ticks when `true` |
+| `only_paws_active` | `bool` | `false` | Player-toggled; income only ticks when `true`; toggling OFF also sets `bots_active = false`; toggling ON re-enables bots if tokens > 0 |
 | `cat_cost_growth_rate` | `float` | `Config.cat_cost_growth_rate` | Multiplier applied to `next_cat_cost` each purchase; reduced to `Config.breeder_contract_growth_rate` by breeder contract |
 | `breeder_purchased` | `bool` | `false` | One-way latch; set by `buy_breeder_contract()` |
 | `cat_trees_purchased` | `bool` | `false` | One-way latch; set by `buy_cat_trees()` |
@@ -127,9 +132,9 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | Method | Signature | Description |
 |---|---|---|
 | `_ready` | `() -> void` | Sets `process_mode = PROCESS_MODE_ALWAYS` so income ticks even while tree is paused |
-| `_process` | `(delta) -> void` | Always drains `cat_food`; sets `food_hit_zero` the first time food reaches 0; checks and sets `auto_feeder_unlocked`; if `auto_feeder_purchased` and food low: calls `buy_cat_food_pack(1)`; if `bots_active`: drains tokens, sets `bots_active = false` when tokens reach 0; checks and sets `bot_manager_unlocked`; if `bot_manager_purchased` and tokens low: calls `buy_tokens(1)`; if `onlypaws_active and bots_active and cat_food > 0`: earns `paws_income_rate * delta` (income pauses when cat food runs out; resumes instantly on restock) |
+| `_process` | `(delta) -> void` | Always drains `cat_food`; sets `food_hit_zero` the first time food reaches 0; checks and sets `auto_feeder_unlocked`; if `auto_feeder_purchased` and food low: calls `buy_cat_food_pack(1)`; if `bots_active`: drains tokens, sets `bots_active = false` when tokens reach 0; checks and sets `bot_manager_unlocked`; if `bot_manager_purchased` and tokens low: calls `buy_tokens(1)`; if `only_paws_active and bots_active and cat_food > 0`: earns `paws_income_rate * delta` (income pauses when cat food runs out; resumes instantly on restock) |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
-| `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `onlypaws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
+| `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `only_paws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
 | `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
 | `get_cat_food_packs_affordable` | `() -> int` | Returns `int(money / 10.0)` |
 | `buy_cat_food_pack` | `(quantity: int) -> void` | Guards `money >= 10.0 * quantity`; deducts cost; adds `100.0 * quantity` to `cat_food` |
@@ -156,8 +161,8 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `token_pack_amount` | `float` | `100.0` | Tokens added per token pack |
 | `cat_cost_base` | `float` | `5.0` | Starting cost of the first cat |
 | `cat_cost_growth_rate` | `float` | `1.5` | Default multiplier applied to cat cost after each purchase |
-| `onlypaws_unlock_cats` | `int` | `3` | Cat count that unlocks Onlypaws |
-| `onlypaws_cats_per_tier` | `int` | `3` | Cats per $1/sec Onlypaws income tier |
+| `only_paws_unlock_cats` | `int` | `3` | Cat count that unlocks OnlyPaws |
+| `only_paws_cats_per_tier` | `int` | `3` | Cats per $1/sec OnlyPaws income tier |
 | `bot_shop_unlock_cats` | `int` | `6` | Cat count that unlocks the bot shop |
 | `bot_cost_base` | `float` | `50.0` | Starting cost of the first bot |
 | `bot_cost_multiplier` | `float` | `2.0` | Multiplier applied to bot cost after each purchase |
@@ -213,10 +218,11 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | Method | Description |
 |---|---|
 | `_ready()` | Connects `cat_purchased` → `_on_cat_purchased` |
-| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `onlypaws_unlocked`, `bot_shop_unlocked`; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlypawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()` |
+| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`; shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()` |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
-| `_on_onlypaws_button_pressed()` | Flips `GameState.onlypaws_active` |
+| `_on_only_paws_button_pressed()` | Flips `GameState.only_paws_active`; turning OFF sets `bots_active = false`; turning ON re-enables bots if `tokens > 0` |
+| `_on_only_paws_popup_ok_pressed()` | Hides `OnlyPawsPopup` and unpauses tree |
 | `_on_manager_bot_button_pressed()` | Calls `GameState.buy_bot()` |
 | `_on_cat_purchased()` | Instantiates `CatCharacter` at scale 0.4, adds to `CatContainer`, calls `_reposition_cats()` |
 | `_on_buy_cat_food_x1_button_pressed()` | Calls `GameState.buy_cat_food_pack(1)` |
@@ -233,15 +239,16 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **"Work at McPawnalds" button** — manual click adds $1.0 to `money`
 - [x] **Money counter** — label refreshes every frame, displayed to 2 decimal places (`$X.XX`)
 - [x] **Cats counter** — label refreshes every frame showing total purchased cats
-- [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `onlypaws_unlocked`, `paws_income_rate`; emits `cat_purchased`
+- [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `only_paws_unlocked`, `paws_income_rate`; emits `cat_purchased`
 - [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.5, reduced to 1.25 by breeder contract)
-- [x] **Onlypaws passive income** — unlocks at 3 cats; base rate `floor(cats/3)` $/sec; each Manager-Bot doubles total output via `pow(2, manager_bots)`
-- [x] **Onlypaws button + income label** — revealed together when `onlypaws_unlocked`; button toggles info panel popup
-- [x] **Onlypaws info panel** — PanelContainer with static description text; shown/hidden by button press; positioned above button
+- [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `floor(cats/3)` $/sec; each Manager-Bot doubles total output via `pow(2, manager_bots)`
+- [x] **OnlyPaws button + income label** — revealed together when `only_paws_unlocked`; first reveal shows modal popup (pauses tree) explaining the feature
+- [x] **OnlyPaws info panel** — PanelContainer with static description text (legacy node, permanently hidden)
+- [x] **OnlyPaws unlock popup** — modal overlay shown once when `only_paws_unlocked` first triggers; pauses game loop; dismissed with OK button
 - [x] **Cat spawning** — each purchase instances `CatCharacter` at scale 0.4 into `CatContainer`; row auto-centres as it grows
 - [x] **Procedural cat character** — drawn with `_draw()` primitives (body, head, ears, eyes, nose, tail); smooth vertical bob animation via sine wave
-- [x] **Onlypaws Manager-Bot** — unlocks at 6 cats; costs $50 (doubles each purchase); each bot doubles total Onlypaws income rate; button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count and current rate
-- [x] **Onlypaws ON/OFF toggle** — `OnlypawsButton` flips `onlypaws_active`; income only runs while active; button label and green modulate reflect state
+- [x] **OnlyPaws Manager-Bot** — unlocks at 6 cats; costs $50 (doubles each purchase); each bot doubles total OnlyPaws income rate; button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count and current rate
+- [x] **OnlyPaws ON/OFF toggle** — `OnlyPawsButton` flips `only_paws_active`; income only runs while active; toggling OFF also sets `bots_active = false` stopping token drain; toggling ON re-enables bots if tokens > 0; button label and green modulate reflect state
 - [x] **Upgrade stubs (GameState only)** — `buy_breeder_contract()` and `buy_cat_trees()` exist in GameState (`cat_trees_purchased` flag retained) but are not wired to any UI
 - [x] **Shop panel always visible** — `ShopPanel` is shown from game start; no unlock gate
 - [x] **Cat food** — `cat_food` starts at 1000; drains at `cats / 10` per second (always, not gated); clamped to 0; `CatFoodLabel` shows `floor(cat_food)` in the HUD
@@ -258,11 +265,11 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 ### Phase 1 — Core Click Loop *(in progress)*
 - [x] "Work at McPawnalds" button with money counter
 - [x] Purchase Cat button (gated at $100) with cat spawning
-- [x] Idle/passive income (Onlypaws: `floor(cats/3)` $/sec, unlocks at 3 cats)
+- [x] Idle/passive income (OnlyPaws: `floor(cats/3)` $/sec, unlocks at 3 cats)
 - [ ] Basic UI polish (centered layout, styled labels & buttons)
 
 ### Phase 1 — Core Click Loop (continued)
-- [x] Onlypaws Manager-Bot (doubling multiplier, unlocks at 6 cats)
+- [x] OnlyPaws Manager-Bot (doubling multiplier, unlocks at 6 cats)
 
 ### Phase 2 — Upgrades
 - [ ] Upgrade: increase click value (e.g. "Better Petting Technique")

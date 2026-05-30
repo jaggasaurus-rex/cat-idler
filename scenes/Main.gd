@@ -6,8 +6,9 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var cats_label: Label = $CatsLabel
 @onready var purchase_cat_button: Button = $PurchaseCatButton
 @onready var cat_container: Node2D = $CatContainer
-@onready var onlypaws_button: Button = $OnlypawsButton
-@onready var onlypaws_income_label: Label = $OnlypawsIncomeLabel
+@onready var only_paws_button: Button = $OnlyPawsButton
+@onready var only_paws_income_label: Label = $OnlyPawsIncomeLabel
+@onready var only_paws_popup: ColorRect = $OnlyPawsPopup
 @onready var manager_bot_button: Button = $ManagerBotButton
 @onready var bots_rate_label: Label = $BotsRateLabel
 @onready var shop_panel: VBoxContainer = $ShopPanel
@@ -26,6 +27,9 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var buy_auto_feeder_button: Button = $ShopPanel/AutoFeederItem/BuyAutoFeederButton
 
 
+var _only_paws_popup_shown: bool = false
+
+
 func _ready() -> void:
 	GameState.cat_purchased.connect(_on_cat_purchased)
 
@@ -34,15 +38,20 @@ func _process(_delta: float) -> void:
 	money_label.text = "Money: $" + Util.format_number(GameState.money)
 	cats_label.text = "Cats: " + Util.format_number(GameState.cats)
 	purchase_cat_button.text = "Purchase Cat ($" + Util.format_number(GameState.next_cat_cost) + ")"
-	onlypaws_income_label.text = "Onlypaws: $%.2f/sec" % GameState.paws_income_rate
+	only_paws_income_label.text = "OnlyPaws: $%.2f/sec" % GameState.paws_income_rate
 
 	if GameState.shop_unlocked and not purchase_cat_button.visible:
 		purchase_cat_button.visible = true
 
-	# One-way latch — Onlypaws button and income label appear together
-	if GameState.onlypaws_unlocked and not onlypaws_button.visible:
-		onlypaws_button.visible = true
-		onlypaws_income_label.visible = true
+	# One-way latch — OnlyPaws button and income label appear together
+	if GameState.only_paws_unlocked and not only_paws_button.visible:
+		only_paws_button.visible = true
+		only_paws_income_label.visible = true
+
+	if GameState.only_paws_unlocked and not _only_paws_popup_shown:
+		_only_paws_popup_shown = true
+		only_paws_popup.visible = true
+		get_tree().paused = true
 
 	# One-way latch — bot button and status label appear together
 	if GameState.bot_shop_unlocked and not manager_bot_button.visible:
@@ -74,15 +83,15 @@ func _process(_delta: float) -> void:
 		buy_bot_manager_button.disabled = GameState.money < Config.bot_manager_cost
 		buy_bot_manager_button.modulate = Color(1.0, 1.0, 1.0)
 
-	# Onlypaws toggle state — green tint when active, default when inactive
-	if GameState.onlypaws_active:
-		onlypaws_button.text = "Onlypaws: ON"
-		onlypaws_button.modulate = Color(0.4, 1.0, 0.4)
+	# OnlyPaws toggle state — green tint when active, default when inactive
+	if GameState.only_paws_active:
+		only_paws_button.text = "OnlyPaws: ON"
+		only_paws_button.modulate = Color(0.4, 1.0, 0.4)
 	else:
-		onlypaws_button.text = "Onlypaws: OFF"
-		onlypaws_button.modulate = Color(1.0, 1.0, 1.0)
+		only_paws_button.text = "OnlyPaws: OFF"
+		only_paws_button.modulate = Color(1.0, 1.0, 1.0)
 
-	manager_bot_button.text = "Onlypaws Manager-Bot ($" + Util.format_number(GameState.next_bot_cost) + ")"
+	manager_bot_button.text = "OnlyPaws Manager-Bot ($" + Util.format_number(GameState.next_bot_cost) + ")"
 	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
 	bots_rate_label.text = "Bots: " + Util.format_number(GameState.manager_bots)
 
@@ -107,9 +116,13 @@ func _on_purchase_cat_button_pressed() -> void:
 	GameState.buy_cat()
 
 
-# Toggles Onlypaws passive income on/off.
-func _on_onlypaws_button_pressed() -> void:
-	GameState.onlypaws_active = not GameState.onlypaws_active
+# Toggles OnlyPaws passive income on/off. Turning off also deactivates bots.
+func _on_only_paws_button_pressed() -> void:
+	GameState.only_paws_active = not GameState.only_paws_active
+	if not GameState.only_paws_active:
+		GameState.bots_active = false
+	elif GameState.tokens > 0.0:
+		GameState.bots_active = true
 
 
 func _on_manager_bot_button_pressed() -> void:
@@ -130,6 +143,11 @@ func _on_buy_token_x1_button_pressed() -> void:
 
 func _on_buy_token_x10_button_pressed() -> void:
 	GameState.buy_tokens(10)
+
+
+func _on_only_paws_popup_ok_pressed() -> void:
+	only_paws_popup.visible = false
+	get_tree().paused = false
 
 
 func _on_buy_bot_manager_button_pressed() -> void:

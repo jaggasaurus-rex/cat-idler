@@ -17,8 +17,8 @@ const token_pack_amount: float = 100.0
 # Cats
 const cat_cost_base: float = 5.0
 const cat_cost_growth_rate: float = 1.5
-const onlypaws_unlock_cats: int = 3
-const onlypaws_cats_per_tier: int = 3  # floor(cats / N) = base Onlypaws income tier
+const only_paws_unlock_cats: int = 3
+const only_paws_cats_per_tier: int = 3  # floor(cats / N) = base OnlyPaws income tier
 const bot_shop_unlock_cats: int = 6
 
 # Bots

@@ -7,8 +7,8 @@ var cats: int = 0
 var cat_food: float = Config.cat_food_start
 var next_cat_cost: float = Config.cat_cost_base
 var shop_unlocked: bool = false
-var onlypaws_unlocked: bool = false
-var onlypaws_active: bool = false
+var only_paws_unlocked: bool = false
+var only_paws_active: bool = false
 var paws_income_rate: float = 0.0
 var manager_bots: int = 0
 var next_bot_cost: float = Config.bot_cost_base
@@ -52,7 +52,7 @@ func _process(delta: float) -> void:
 			bot_manager_unlocked = true
 	if bot_manager_purchased and tokens <= Config.bot_manager_token_threshold:
 		buy_tokens(1)
-	if onlypaws_active and bots_active:
+	if only_paws_active and bots_active:
 		if cat_food > 0.0:
 			money += paws_income_rate * delta
 
@@ -69,8 +69,8 @@ func buy_cat() -> void:
 	money -= next_cat_cost
 	cats += 1
 	next_cat_cost *= cat_cost_growth_rate
-	if not onlypaws_unlocked and cats >= Config.onlypaws_unlock_cats:
-		onlypaws_unlocked = true
+	if not only_paws_unlocked and cats >= Config.only_paws_unlock_cats:
+		only_paws_unlocked = true
 	if not bot_shop_unlocked and cats >= Config.bot_shop_unlock_cats:
 		bot_shop_unlocked = true
 	_update_paws_rate()
@@ -157,4 +157,4 @@ func buy_cat_trees() -> void:
 # Base tier: floor(cats / 3) $/sec (0-2 cats=$0, 3-5=$1, 6-8=$2, …).
 # Each manager bot doubles the entire output: total = base * 2^manager_bots.
 func _update_paws_rate() -> void:
-	paws_income_rate = float(cats / Config.onlypaws_cats_per_tier) * pow(2.0, manager_bots)
+	paws_income_rate = float(cats / Config.only_paws_cats_per_tier) * pow(2.0, manager_bots)

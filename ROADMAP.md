@@ -22,7 +22,7 @@
 ### Phase 1 — Core click loop ✅
 - Manual earn button → money counter
 - Cat purchase (escalating cost)
-- Passive income via Onlypaws (floor(cats/3) $/sec, unlocks at 3 cats)
+- Passive income via OnlyPaws (floor(cats/3) $/sec, unlocks at 3 cats)
 - Procedural cat character with bob animation
 
 ### Phase 2 — Automation & attrition ✅ *(current phase)*
@@ -32,7 +32,7 @@ Introduce Manager-Bots as an income multiplier that brings a meaningful downside
 | Milestone | Trigger | Effect |
 |---|---|---|
 | Bot shop unlocks | `cats >= 6` | Player can buy bots |
-| Onlypaws toggle | Always visible once Onlypaws unlocked | Player can pause income + attrition |
+| OnlyPaws toggle | Always visible once OnlyPaws unlocked | Player can pause income + attrition |
 | Attrition begins | `manager_bots == 2` | Theft warning popup; 0.5 cats/min stolen per additional bot |
 | Attrition-reduction shop | `manager_bots == 4` | Two one-time countermeasures unlock |
 
@@ -57,7 +57,7 @@ After Cat Trees: 0.5 cat/min per additional bot.
 - Upgrade cost system with disabled state when unaffordable
 
 ### Phase 4 — Generators / additional passive income *(planned)*
-- Cat generator objects (produce $/sec independently of Onlypaws)
+- Cat generator objects (produce $/sec independently of OnlyPaws)
 - Generator data resource (`res://resources/GeneratorData.gd`)
 - Generator list UI panel
 
