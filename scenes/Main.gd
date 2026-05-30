@@ -36,7 +36,7 @@ func _ready() -> void:
 	var base_size: int = money_label.get_theme_font_size("font_size")
 	cats_label.add_theme_font_size_override("font_size", roundi(float(base_size) * 1.3))
 	var bold_font := SystemFont.new()
-	bold_font.font_bold = true
+	bold_font.font_weight = 700
 	cats_label.add_theme_font_override("font", bold_font)
 
 
