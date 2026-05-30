@@ -32,6 +32,12 @@ var _only_paws_popup_shown: bool = false
 
 func _ready() -> void:
 	GameState.cat_purchased.connect(_on_cat_purchased)
+	# Hero stat: bold + 30% larger than the base metric font size
+	var base_size: int = money_label.get_theme_font_size("font_size")
+	cats_label.add_theme_font_size_override("font_size", roundi(float(base_size) * 1.3))
+	var bold_font := SystemFont.new()
+	bold_font.font_bold = true
+	cats_label.add_theme_font_override("font", bold_font)
 
 
 func _process(_delta: float) -> void:

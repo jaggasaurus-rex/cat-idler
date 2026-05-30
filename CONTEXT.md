@@ -50,8 +50,8 @@ cat-idler/
 
 ```
 Main (Control, full-rect)             ← Main.gd
+├── CatsLabel (Label)                 ← hero stat; positioned first (top=20); bold + 1.3× font size applied in _ready(); updated every _process() frame
 ├── MoneyLabel (Label)                ← updated every _process() frame
-├── CatsLabel (Label)                 ← updated every _process() frame
 ├── CatFoodLabel (Label)              ← "Cat Food: X" where X = floor(cat_food); updated every frame
 ├── EarnMoneyButton (Button)          ← pressed → GameState.click()
 ├── PurchaseCatButton (Button)        ← permanently shown once shop_unlocked; label updates every frame
@@ -217,7 +217,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 
 | Method | Description |
 |---|---|
-| `_ready()` | Connects `cat_purchased` → `_on_cat_purchased` |
+| `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`; styles `CatsLabel` as hero stat (bold `SystemFont` + `1.3×` font size relative to `MoneyLabel` base) |
 | `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`; shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()` |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
