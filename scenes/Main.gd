@@ -21,6 +21,9 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var bot_manager_item: VBoxContainer = $ShopPanel/BotManagerItem
 @onready var bot_manager_desc_label: Label = $ShopPanel/BotManagerItem/BotManagerDescLabel
 @onready var buy_bot_manager_button: Button = $ShopPanel/BotManagerItem/BuyBotManagerButton
+@onready var auto_feeder_item: VBoxContainer = $ShopPanel/AutoFeederItem
+@onready var auto_feeder_desc_label: Label = $ShopPanel/AutoFeederItem/AutoFeederDescLabel
+@onready var buy_auto_feeder_button: Button = $ShopPanel/AutoFeederItem/BuyAutoFeederButton
 
 
 func _ready() -> void:
@@ -83,6 +86,18 @@ func _process(_delta: float) -> void:
 	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
 	bots_rate_label.text = "Bots: " + Util.format_number(GameState.manager_bots)
 
+	# One-way latch — auto feeder shop item appears when unlocked
+	if GameState.auto_feeder_unlocked and not auto_feeder_item.visible:
+		auto_feeder_item.visible = true
+
+	if GameState.auto_feeder_purchased:
+		buy_auto_feeder_button.disabled = true
+		buy_auto_feeder_button.modulate = Color(0.4, 1.0, 0.4)
+		auto_feeder_desc_label.visible = false
+	else:
+		buy_auto_feeder_button.disabled = GameState.money < Config.auto_feeder_cost
+		buy_auto_feeder_button.modulate = Color(1.0, 1.0, 1.0)
+
 
 func _on_earn_money_button_pressed() -> void:
 	GameState.click()
@@ -119,6 +134,10 @@ func _on_buy_token_x10_button_pressed() -> void:
 
 func _on_buy_bot_manager_button_pressed() -> void:
 	GameState.buy_bot_manager()
+
+
+func _on_buy_auto_feeder_button_pressed() -> void:
+	GameState.buy_auto_feeder()
 
 
 func _on_cat_purchased() -> void:

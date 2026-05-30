@@ -22,6 +22,9 @@ var bots_active: bool = true
 var tokens_shop_unlocked: bool = false
 var bot_manager_unlocked: bool = false
 var bot_manager_purchased: bool = false
+var food_hit_zero: bool = false
+var auto_feeder_unlocked: bool = false
+var auto_feeder_purchased: bool = false
 
 
 func _ready() -> void:
@@ -32,6 +35,13 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	cat_food = max(0.0, cat_food - float(cats) * Config.cat_food_drain_rate * delta)
+	if not food_hit_zero and cat_food <= 0.0:
+		food_hit_zero = true
+	if not auto_feeder_unlocked:
+		if cats >= Config.auto_feeder_unlock_cats or food_hit_zero:
+			auto_feeder_unlocked = true
+	if auto_feeder_purchased and cat_food <= Config.auto_feeder_food_threshold:
+		buy_cat_food_pack(1)
 	if bots_active:
 		tokens -= float(manager_bots) * Config.token_drain_per_bot * delta
 		if tokens <= 0.0:
@@ -125,6 +135,15 @@ func buy_bot_manager() -> void:
 		return
 	money -= Config.bot_manager_cost
 	bot_manager_purchased = true
+
+
+## Purchases the auto-feeder upgrade: automatically buys cat food packs when
+## food falls to or below Config.auto_feeder_food_threshold.
+func buy_auto_feeder() -> void:
+	if money < Config.auto_feeder_cost or auto_feeder_purchased:
+		return
+	money -= Config.auto_feeder_cost
+	auto_feeder_purchased = true
 
 
 ## Purchases cat trees upgrade.

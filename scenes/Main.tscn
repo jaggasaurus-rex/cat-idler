@@ -187,6 +187,24 @@ autowrap_mode = 3
 layout_mode = 2
 text = "Buy ($1,000,000)"
 
+[node name="AutoFeederItem" type="VBoxContainer" parent="ShopPanel" unique_id=400000030]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="AutoFeederNameLabel" type="Label" parent="ShopPanel/AutoFeederItem" unique_id=400000031]
+layout_mode = 2
+text = "Auto-Feeder"
+
+[node name="AutoFeederDescLabel" type="Label" parent="ShopPanel/AutoFeederItem" unique_id=400000032]
+layout_mode = 2
+text = "I'm a lazy fuck, and now you can be too! This will make sure your precious kitties never run out of food!"
+autowrap_mode = 3
+
+[node name="BuyAutoFeederButton" type="Button" parent="ShopPanel/AutoFeederItem" unique_id=400000033]
+layout_mode = 2
+text = "Buy ($2,000,000)"
+
 [node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
 position = Vector2(576, 530)
 
@@ -199,3 +217,4 @@ position = Vector2(576, 530)
 [connection signal="pressed" from="ShopPanel/TokenPackItem/BuyTokenX1Button" to="." method="_on_buy_token_x1_button_pressed"]
 [connection signal="pressed" from="ShopPanel/TokenPackItem/BuyTokenX10Button" to="." method="_on_buy_token_x10_button_pressed"]
 [connection signal="pressed" from="ShopPanel/BotManagerItem/BuyBotManagerButton" to="." method="_on_buy_bot_manager_button_pressed"]
+[connection signal="pressed" from="ShopPanel/AutoFeederItem/BuyAutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
