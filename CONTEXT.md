@@ -50,7 +50,7 @@ cat-idler/
 
 ```
 Main (Control, full-rect)             ← Main.gd
-├── CatsLabel (Label)                 ← hero stat; positioned first (top=20); bold + 1.3× font size applied in _ready(); updated every _process() frame
+├── CatsLabel (Label)                 ← hero stat; positioned first (top=20); bold + 1.3× font size applied in _ready(); updated every _process() frame; text format "Cats: X/MAX" where MAX = happiness threshold; modulate = RED when cats > MAX, WHITE otherwise
 ├── MoneyLabel (Label)                ← updated every _process() frame
 ├── CatFoodLabel (Label)              ← "Cat Food: X" where X = floor(cat_food); updated every frame
 ├── EarnMoneyButton (Button)          ← pressed → GameState.click()
@@ -65,6 +65,7 @@ Main (Control, full-rect)             ← Main.gd
 │   └── HappinessRow (HBoxContainer)
 │       ├── HappinessMinLabel (Label "0%")
 │       ├── HappinessBar (ProgressBar) ← min=0 max=100; fill colour interpolated red→green each frame via _happiness_fill_style StyleBoxFlat
+│       │   └── CatLossMarker (ColorRect) ← 2px red vertical line; anchor_left=anchor_right=0.2 positions it at 20% of bar width; hidden until cat_crusher_unlocked; sits above fill layer as a child Control
 │       └── HappinessMaxLabel (Label "100%")
 ├── OnlyPawsPopup (ColorRect)         ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when only_paws_unlocked first triggers; pauses tree
 │   └── DialogPanel (PanelContainer)  ← centered 450×180 dialog
@@ -78,6 +79,7 @@ Main (Control, full-rect)             ← Main.gd
 │   ├── ShopLabel (Label "Shop")
 │   ├── TabBar (HBoxContainer)         ← tab buttons; active tab has green modulate
 │   │   ├── CurrencyTabButton (Button "Currency") ← switches to Currency tab; green when active
+│   │   ├── UpgradesTabButton (Button "Upgrades") ← hidden until bot_manager_unlocked OR auto_feeder_unlocked; switches to Upgrades tab; green when active
 │   │   └── HomeTabButton (Button "Home") ← hidden until home_shop_unlocked; switches to Home tab; green when active
 │   ├── CurrencyTabContent (VBoxContainer) ← visible when Currency tab active (default)
 │   │   ├── CatFoodItem (VBoxContainer)   ← always visible
@@ -85,11 +87,12 @@ Main (Control, full-rect)             ← Main.gd
 │   │   │   ├── CatFoodDescLabel (Label "100 cat food — $10", autowrap_mode=3)
 │   │   │   ├── BuyCatFoodX1Button (Button "Buy x1 ($10)")  ← calls buy_cat_food_pack(1); disabled when money < 10
 │   │   │   └── BuyCatFoodX10Button (Button "Buy x10 ($100)") ← calls buy_cat_food_pack(10); disabled when money < 10
-│   │   ├── TokenPackItem (VBoxContainer) ← hidden until tokens_shop_unlocked; one-way latch in _process()
-│   │   │   ├── TokenPackNameLabel (Label "Token Pack")
-│   │   │   ├── TokenPackDescLabel (Label "100 tokens — $20", autowrap_mode=3)
-│   │   │   ├── BuyTokenX1Button (Button "Buy x1 ($20)")   ← calls buy_tokens(1); disabled when money < 20
-│   │   │   └── BuyTokenX10Button (Button "Buy x10 ($200)") ← calls buy_tokens(10); disabled when money < 20
+│   │   └── TokenPackItem (VBoxContainer) ← hidden until tokens_shop_unlocked; one-way latch in _process()
+│   │       ├── TokenPackNameLabel (Label "Token Pack")
+│   │       ├── TokenPackDescLabel (Label "100 tokens — $20", autowrap_mode=3)
+│   │       ├── BuyTokenX1Button (Button "Buy x1 ($20)")   ← calls buy_tokens(1); disabled when money < 20
+│   │       └── BuyTokenX10Button (Button "Buy x10 ($200)") ← calls buy_tokens(10); disabled when money < 20
+│   ├── UpgradesTabContent (VBoxContainer) ← visible when Upgrades tab active; hidden until tab button reveals
 │   │   ├── BotManagerItem (VBoxContainer) ← hidden until bot_manager_unlocked; one-way latch in _process()
 │   │   │   ├── BotManagerNameLabel (Label "Manager-bot Manager")
 │   │   │   ├── BotManagerDescLabel (Label, autowrap_mode=3) ← hidden in _process() when bot_manager_purchased
@@ -98,7 +101,7 @@ Main (Control, full-rect)             ← Main.gd
 │   │       ├── AutoFeederNameLabel (Label "Auto-Feeder")
 │   │       ├── AutoFeederDescLabel (Label, autowrap_mode=3) ← hidden in _process() when auto_feeder_purchased
 │   │       └── BuyAutoFeederButton (Button "Buy ($2,000,000)") ← calls buy_auto_feeder(); disabled when unaffordable; green + disabled when purchased
-│   └── HomeTabContent (VBoxContainer) ← visible when Home tab active; hidden until _switch_tab(true)
+│   └── HomeTabContent (VBoxContainer) ← visible when Home tab active; hidden until tab button reveals
 │       └── CatTreesItem (VBoxContainer) ← always visible within Home tab
 │           ├── CatTreesNameLabel (Label "Cat Trees")
 │           ├── CatTreesDescLabel (Label, autowrap_mode=3) ← hidden in _process() when cat_trees_purchased
@@ -113,6 +116,16 @@ Main (Control, full-rect)             ← Main.gd
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← riot message, autowrap
 │           └── OKButton (Button)     ← hides popup and unpauses tree
+├── UpgradesTabPopup (ColorRect)      ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when bot_manager_unlocked OR auto_feeder_unlocked first becomes true (gated by GameState.upgrades_tab_popup_shown); pauses tree; dismiss unpauses only
+│   └── DialogPanel (PanelContainer)  ← centered 600×260 dialog
+│       └── VBoxContainer
+│           ├── PopupLabel (Label)    ← "NEW ACHIEVEMENT! ADHD Cat Parent" message, autowrap
+│           └── OKButton (Button)     ← hides popup and unpauses tree
+├── CatCrusherPopup (ColorRect)       ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when cat_crusher_triggered first sets (happiness hits 0% a second time); pauses tree; on dismiss sets cat_crusher_unlocked=true
+│   └── DialogPanel (PanelContainer)  ← centered 600×260 dialog
+│       └── VBoxContainer
+│           ├── PopupLabel (Label)    ← "NEW ACHIEVEMENT: Cat Crusher!" message, autowrap
+│           └── OKButton (Button)     ← hides popup, unpauses tree, sets cat_crusher_unlocked=true
 └── CatContainer (Node2D)             ← pos (576, 530); purchased cats added here, auto-recentred
 ```
 
@@ -149,18 +162,27 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `food_hit_zero` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `cat_food <= 0`; used as second unlock trigger for Auto-Feeder |
 | `auto_feeder_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `cats >= 30` or `food_hit_zero` |
 | `auto_feeder_purchased` | `bool` | `false` | One-way latch; set by `buy_auto_feeder()`; enables auto-food-purchase in `_process()` |
-| `happiness_cramped_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 50.0` (cats >= 10); used by Main.gd to show the cramped popup once |
-| `happiness_riot_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 0.0` (cats >= 20); used by Main.gd to show the riot popup once |
+| `happiness_cramped_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 50.0` (4 over max, e.g. cats = 24 with default max 20); used by Main.gd to show the cramped popup once |
+| `happiness_riot_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 0.0` (6 over max, e.g. cats = 26 with default max 20); used by Main.gd to show the riot popup once |
+| `happiness_zero_count` | `int` | `0` | Counts distinct edge-transitions into happiness=0% (i.e. increments each time happiness drops from >0 to 0, tracked via `_happiness_was_zero`); used to gate `cat_crusher_triggered` on count >= 2 |
+| `cat_crusher_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `happiness_zero_count >= 2`; used by Main.gd to show the Cat Crusher popup once |
+| `cat_crusher_unlocked` | `bool` | `false` | Set to `true` in Main.gd when the Cat Crusher popup is dismissed; activates cat loss drain and the HappinessBar 20% marker |
+| `_happiness_was_zero` | `bool` | `false` | Private edge-detection helper; holds whether the previous frame had happiness <= 0; used to count distinct transitions for `happiness_zero_count` |
+| `_cat_loss_active` | `bool` | `false` | Private; `true` while the cat loss drain is running; set to `true` when `cat_crusher_unlocked AND happiness <= 20%`; cleared when `happiness > 80%` |
+| `_cat_loss_timer` | `float` | `0.0` | Private accumulator; seconds elapsed since last cat loss tick; resets on drain start/stop and each 10-second fire |
 | `home_shop_unlocked` | `bool` | `false` | Set to `true` in Main.gd when the cramped popup is dismissed; reserved for a future shop section |
+| `upgrades_tab_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_manager_unlocked OR auto_feeder_unlocked`; gates the Upgrades tab achievement popup so it fires exactly once |
 
 | Signal | Description |
 |---|---|
 | `cat_purchased` | Emitted by `buy_cat()` after a successful purchase |
+| `cat_lost` | Emitted by `_lose_cat()` each time a cat is removed by the drain; Main.gd removes the last CatCharacter node from CatContainer |
 
 | Method | Signature | Description |
 |---|---|---|
 | `_ready` | `() -> void` | Sets `process_mode = PROCESS_MODE_ALWAYS` so income ticks even while tree is paused |
-| `_process` | `(delta) -> void` | Always drains `cat_food`; sets `food_hit_zero` the first time food reaches 0; checks and sets `auto_feeder_unlocked`; if `auto_feeder_purchased` and food low: calls `buy_cat_food_pack(1)`; if `bots_active`: drains tokens, sets `bots_active = false` when tokens reach 0; checks and sets `bot_manager_unlocked`; if `bot_manager_purchased` and tokens low: calls `buy_tokens(1)`; sets `happiness_riot_triggered` the first time `get_happiness() <= 0`; if `only_paws_active and bots_active and cat_food > 0`: earns `paws_income_rate * happiness_multiplier * delta` (happiness < 10% → ×0.50; happiness < 50% → ×0.80; else ×1.0) |
+| `_process` | `(delta) -> void` | Always drains `cat_food`; sets `food_hit_zero` the first time food reaches 0; checks and sets `auto_feeder_unlocked`; if `auto_feeder_purchased` and food low: calls `buy_cat_food_pack(1)`; if `bots_active`: drains tokens, sets `bots_active = false` when tokens reach 0; checks and sets `bot_manager_unlocked`; if `bot_manager_purchased` and tokens low: calls `buy_tokens(1)`; sets `happiness_riot_triggered` the first time `get_happiness() <= 0`; tracks `happiness_zero_count` via edge detection and sets `cat_crusher_triggered` on count >= 2; runs cat loss drain when `cat_crusher_unlocked` (activates at happiness ≤ 20%, fires immediately then every 10s, deactivates at happiness > 80%); if `only_paws_active and bots_active and cat_food > 0`: earns `paws_income_rate * happiness_multiplier * delta` where `happiness_multiplier = 0.30 + (happiness / 100.0) * 0.70` |
+| `_lose_cat` | `() -> void` | Private; decrements `cats` (clamped, no-ops at 0), calls `_update_paws_rate()`, emits `cat_lost` |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `only_paws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
 | `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
@@ -171,7 +193,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `buy_auto_feeder` | `() -> void` | Guards `money >= Config.auto_feeder_cost and not auto_feeder_purchased`; deducts cost; sets `auto_feeder_purchased = true` |
 | `buy_breeder_contract` | `() -> void` | Guards `money >= 2000 and not breeder_purchased`; sets `cat_cost_growth_rate = 1.25`; retroactively recalculates `next_cat_cost = 5.0 * pow(1.25, cats)` |
 | `buy_cat_trees` | `() -> void` | Guards `money >= Config.cat_trees_cost (10000) and not cat_trees_purchased`; deducts cost; sets `cat_trees_purchased = true`; happiness recalculates immediately via `get_happiness()` |
-| `get_happiness` | `() -> float` | Returns happiness as a percentage (0–100). Formula: `clamp(1 - cats/20, 0, 1) * 100`. Cats ≥ 20 clamp at 0% |
+| `get_happiness` | `() -> float` | Returns happiness as a percentage (0–100). At or under max_cats: 100%. Over max: proportional quadratic decay — `clamp(100 - overage_pct^2 * Config.happiness_decay_scale, 0, 100)` where `overage_pct = (cats - max_cats) / max_cats`. At 50% over max → ~75%; at 100% over max (double max) → 0% |
 | `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats / 3) * pow(2.0, manager_bots)` |
 
 ### Config (`res://Config.gd`)
@@ -206,6 +228,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `auto_feeder_unlock_cats` | `int` | `30` | Cat count that unlocks the Auto-Feeder shop item |
 | `auto_feeder_food_threshold` | `float` | `1.0` | Food level at or below which the auto feeder buys a cat food pack |
 | `happiness_max_cats` | `int` | `20` | Cat count at which happiness reaches 0%; higher counts clamp there |
+| `happiness_decay_scale` | `float` | `100.0` | Multiplier on `overage_pct^2` in `get_happiness()`; at 100.0 the curve hits 0% when cats exactly double max_cats |
 
 ### Util (`res://autoloads/Util.gd`)
 
@@ -249,8 +272,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | Method | Description |
 |---|---|
 | `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`; styles `CatsLabel` as hero stat (bold `SystemFont` + `1.3×` font size relative to `MoneyLabel` base) |
-| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`, `home_shop_unlocked` (reveals HomeTabButton); shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); shows cramped/riot popups when triggered; updates CatTrees button state |
-| `_switch_tab` | `(to_home: bool) -> void` | Toggles `CurrencyTabContent`/`HomeTabContent` visibility; sets green modulate on active tab button, white on inactive |
+| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`, `home_shop_unlocked` (reveals HomeTabButton), and `bot_manager_unlocked OR auto_feeder_unlocked` (reveals UpgradesTabButton); shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); shows cramped/riot popups when triggered; updates CatTrees button state |
+| `_switch_tab` | `(tab: Tab) -> void` | Shows only the content VBox for the given `Tab` enum value; sets green modulate on the active tab button, white on the others |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
 | `_on_only_paws_button_pressed()` | Flips `GameState.only_paws_active`; turning OFF sets `bots_active = false`; turning ON re-enables bots if `tokens > 0` |
@@ -270,7 +293,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 
 - [x] **"Work at McPawnalds" button** — manual click adds $1.0 to `money`
 - [x] **Money counter** — label refreshes every frame, displayed to 2 decimal places (`$X.XX`)
-- [x] **Cats counter** — label refreshes every frame showing total purchased cats
+- [x] **Cats counter** — label refreshes every frame showing `X/MAX` (e.g. `0/20`); MAX mirrors the happiness threshold (`Config.happiness_max_cats` or `Config.cat_trees_happiness_max_cats` after Cat Trees); turns red when cats exceed MAX
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `only_paws_unlocked`, `paws_income_rate`; emits `cat_purchased`
 - [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.5, reduced to 1.25 by breeder contract)
 - [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `floor(cats/3)` $/sec; each Manager-Bot doubles total output via `pow(2, manager_bots)`
@@ -282,7 +305,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **OnlyPaws Manager-Bot** — unlocks at 6 cats; costs $50 (doubles each purchase); each bot doubles total OnlyPaws income rate; button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count and current rate
 - [x] **OnlyPaws ON/OFF toggle** — `OnlyPawsButton` flips `only_paws_active`; income only runs while active; toggling OFF also sets `bots_active = false` stopping token drain; toggling ON re-enables bots if tokens > 0; button label and green modulate reflect state
 - [x] **Upgrade stubs (GameState only)** — `buy_breeder_contract()` exists in GameState but is not wired to any UI
-- [x] **Tabbed shop** — ShopPanel split into "Currency" tab (all existing items) and "Home" tab (hidden until `home_shop_unlocked`); active tab has green modulate; defaults to Currency on load
+- [x] **Tabbed shop** — ShopPanel has three tabs in order: Currency | Upgrades | Home; active tab has green modulate; defaults to Currency on load; Upgrades tab hidden until `bot_manager_unlocked OR auto_feeder_unlocked`; Home tab hidden until `home_shop_unlocked`; tab switching via `Tab` enum in `Main.gd`
 - [x] **Cat Trees shop item** — in Home tab; $10,000 one-time purchase; increases happiness max-cats threshold from 20 → 30, immediately recalculating happiness; desc hides after purchase; button turns green
 - [x] **Shop panel always visible** — `ShopPanel` is shown from game start; no unlock gate
 - [x] **Cat food** — `cat_food` starts at 1000; drains at `cats / 10` per second (always, not gated); clamped to 0; `CatFoodLabel` shows `floor(cat_food)` in the HUD
@@ -291,8 +314,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Token Pack shop item** — hidden until `tokens_shop_unlocked`; buy x1 ($20, +100 tokens) or x10 ($200, +1000 tokens); both buttons disabled when `money < 20`
 - [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 10 bots owned); one-time $1,000,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
 - [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (30+ cats or food has ever hit 0); one-time $2,000,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
-- [x] **Cat Happiness** — reactive value 0–100% derived from cat count (`clamp(1 - cats/20, 0, 1) * 100`); always-visible progress bar at top-centre of screen with "0%" / "100%" end labels; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0% (cats ≥ 20), sets `happiness_riot_triggered` flag for future shop item use
-- [x] **Cramped popup** — shown once when happiness first drops to ≤ 50% (cats = 10); pauses game loop; on dismiss sets `home_shop_unlocked = true` (reserved for future home shop section)
+- [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: proportional quadratic decay `100 - overage_pct^2 * 100` where `overage_pct = (cats - max_cats) / max_cats` (clamped 0–100); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0% (cats double max), sets `happiness_riot_triggered`
+- [x] **Cramped popup** — shown once when happiness first drops to ≤ 50% (4 over max, cats = 24 with default max 20); pauses game loop; on dismiss sets `home_shop_unlocked = true`
 
 ---
 

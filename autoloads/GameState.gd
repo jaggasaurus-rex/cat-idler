@@ -1,6 +1,7 @@
 extends Node
 
 signal cat_purchased
+signal cat_lost
 
 var money: float = 0.0
 var cats: int = 0
@@ -27,7 +28,14 @@ var auto_feeder_unlocked: bool = false
 var auto_feeder_purchased: bool = false
 var happiness_cramped_triggered: bool = false
 var happiness_riot_triggered: bool = false
+var happiness_zero_count: int = 0
+var cat_crusher_triggered: bool = false
+var cat_crusher_unlocked: bool = false
+var _happiness_was_zero: bool = false
+var _cat_loss_active: bool = false
+var _cat_loss_timer: float = 0.0
 var home_shop_unlocked: bool = false
+var upgrades_tab_popup_shown: bool = false
 
 
 func _ready() -> void:
@@ -59,14 +67,36 @@ func _process(delta: float) -> void:
 		happiness_cramped_triggered = true
 	if not happiness_riot_triggered and get_happiness() <= 0.0:
 		happiness_riot_triggered = true
+	# Count distinct transitions into 0% happiness; second transition triggers Cat Crusher
+	var _now_zero: bool = get_happiness() <= 0.0
+	if _now_zero and not _happiness_was_zero:
+		happiness_zero_count += 1
+		if happiness_zero_count >= 2 and not cat_crusher_triggered:
+			cat_crusher_triggered = true
+	_happiness_was_zero = _now_zero
+	# Cat loss drain: starts when cat_crusher_unlocked and happiness <= 20%.
+	# Activating immediately loses one cat; further cats lost every 10 seconds.
+	# Drain stops when happiness rises above 80% (naturally includes cats == 0,
+	# since 0 cats → 100% happiness, which exceeds 80% and deactivates the drain).
+	if cat_crusher_unlocked:
+		var drain_happiness: float = get_happiness()
+		if _cat_loss_active and drain_happiness > 80.0:
+			_cat_loss_active = false
+			_cat_loss_timer = 0.0
+		elif not _cat_loss_active and drain_happiness <= 20.0:
+			_cat_loss_active = true
+			_lose_cat()
+			_cat_loss_timer = 0.0
+		if _cat_loss_active:
+			_cat_loss_timer += delta
+			if _cat_loss_timer >= 10.0:
+				_cat_loss_timer -= 10.0
+				_lose_cat()
 	if only_paws_active and bots_active:
 		if cat_food > 0.0:
 			var happiness: float = get_happiness()
-			var happiness_multiplier: float = 1.0
-			if happiness < 10.0:
-				happiness_multiplier = 0.50
-			elif happiness < 50.0:
-				happiness_multiplier = 0.80
+			# Linear map: 0% happiness → ×0.30, 100% happiness → ×1.00
+			var happiness_multiplier: float = 0.30 + (happiness / 100.0) * 0.70
 			money += paws_income_rate * happiness_multiplier * delta
 
 
@@ -168,16 +198,32 @@ func buy_cat_trees() -> void:
 
 
 ## Returns cat happiness as a percentage (0–100).
-## Formula: clamp(1 - cats/max_cats, 0, 1) * 100.
+## At or under max_cats: always 100%.
+## Over max_cats: proportional quadratic decay keyed on ratio of overage to max_cats.
+##   overage_pct = (cats - max_cats) / max_cats
+##   happiness = 100 - overage_pct^2 * Config.happiness_decay_scale
+## At 50% overage → ~75%, at 100% overage (double max) → 0%.
 ## max_cats is Config.happiness_max_cats (20) until cat_trees_purchased,
-## then Config.cat_trees_happiness_max_cats (30). Recalculates immediately on purchase.
-## Assumption: cats >= max_cats clamps at 0% — overcrowding has no floor-escape.
+## then Config.cat_trees_happiness_max_cats (30).
 func get_happiness() -> float:
 	var max_cats: int = Config.cat_trees_happiness_max_cats if cat_trees_purchased else Config.happiness_max_cats
-	return clamp(1.0 - float(cats) / float(max_cats), 0.0, 1.0) * 100.0
+	if cats <= max_cats:
+		return 100.0
+	var overage_pct: float = float(cats - max_cats) / float(max_cats)
+	return clamp(100.0 - overage_pct * overage_pct * Config.happiness_decay_scale, 0.0, 100.0)
 
 
 # Base tier: floor(cats / 3) $/sec (0-2 cats=$0, 3-5=$1, 6-8=$2, …).
 # Each manager bot doubles the entire output: total = base * 2^manager_bots.
 func _update_paws_rate() -> void:
 	paws_income_rate = float(cats / Config.only_paws_cats_per_tier) * pow(2.0, manager_bots)
+
+
+# Removes one cat from the count, recalculates paws rate, and signals Main.gd
+# to remove the corresponding CatCharacter node from CatContainer.
+func _lose_cat() -> void:
+	if cats <= 0:
+		return
+	cats -= 1
+	_update_paws_rate()
+	cat_lost.emit()

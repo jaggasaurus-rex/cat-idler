@@ -41,3 +41,6 @@ const auto_feeder_food_threshold: float = 1.0
 
 # Cat Happiness
 const happiness_max_cats: int = 20  # cat count at which happiness reaches 0%
+# Controls how steeply happiness falls per unit of proportional overage (overage_pct^2 * scale).
+# At 100.0 the curve hits 0% when cats exactly double max_cats (overage_pct = 1.0).
+const happiness_decay_scale: float = 100.0
