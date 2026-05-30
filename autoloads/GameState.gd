@@ -25,6 +25,7 @@ var bot_manager_purchased: bool = false
 var food_hit_zero: bool = false
 var auto_feeder_unlocked: bool = false
 var auto_feeder_purchased: bool = false
+var happiness_riot_triggered: bool = false
 
 
 func _ready() -> void:
@@ -52,9 +53,17 @@ func _process(delta: float) -> void:
 			bot_manager_unlocked = true
 	if bot_manager_purchased and tokens <= Config.bot_manager_token_threshold:
 		buy_tokens(1)
+	if not happiness_riot_triggered and get_happiness() <= 0.0:
+		happiness_riot_triggered = true
 	if only_paws_active and bots_active:
 		if cat_food > 0.0:
-			money += paws_income_rate * delta
+			var happiness: float = get_happiness()
+			var happiness_multiplier: float = 1.0
+			if happiness < 10.0:
+				happiness_multiplier = 0.50
+			elif happiness < 50.0:
+				happiness_multiplier = 0.80
+			money += paws_income_rate * happiness_multiplier * delta
 
 
 func click() -> void:
@@ -152,6 +161,14 @@ func buy_cat_trees() -> void:
 		return
 	money -= Config.cat_trees_cost
 	cat_trees_purchased = true
+
+
+## Returns cat happiness as a percentage (0–100).
+## Formula: clamp(1 - cats/happiness_max_cats, 0, 1) * 100.
+## Assumption: cats >= happiness_max_cats clamps at 0% — overcrowding cannot
+## be recovered by buying even more cats, so 0% is the floor for all higher counts.
+func get_happiness() -> float:
+	return clamp(1.0 - float(cats) / float(Config.happiness_max_cats), 0.0, 1.0) * 100.0
 
 
 # Base tier: floor(cats / 3) $/sec (0-2 cats=$0, 3-5=$1, 6-8=$2, …).

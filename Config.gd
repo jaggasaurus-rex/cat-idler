@@ -37,3 +37,6 @@ const bot_manager_token_threshold: float = 1.0
 const auto_feeder_cost: float = 2000000.0
 const auto_feeder_unlock_cats: int = 30
 const auto_feeder_food_threshold: float = 1.0
+
+# Cat Happiness
+const happiness_max_cats: int = 20  # cat count at which happiness reaches 0%

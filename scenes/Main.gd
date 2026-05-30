@@ -25,9 +25,13 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 @onready var auto_feeder_item: VBoxContainer = $ShopPanel/AutoFeederItem
 @onready var auto_feeder_desc_label: Label = $ShopPanel/AutoFeederItem/AutoFeederDescLabel
 @onready var buy_auto_feeder_button: Button = $ShopPanel/AutoFeederItem/BuyAutoFeederButton
+@onready var happiness_bar: ProgressBar = $HappinessBarContainer/HappinessRow/HappinessBar
+@onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
 
 
 var _only_paws_popup_shown: bool = false
+var _happiness_riot_popup_shown: bool = false
+var _happiness_fill_style: StyleBoxFlat
 
 
 func _ready() -> void:
@@ -38,6 +42,10 @@ func _ready() -> void:
 	var bold_font := SystemFont.new()
 	bold_font.font_weight = 700
 	cats_label.add_theme_font_override("font", bold_font)
+	# Dynamic fill colour for the happiness bar; updated in _process()
+	_happiness_fill_style = StyleBoxFlat.new()
+	_happiness_fill_style.bg_color = Color.GREEN
+	happiness_bar.add_theme_stylebox_override("fill", _happiness_fill_style)
 
 
 func _process(_delta: float) -> void:
@@ -101,6 +109,17 @@ func _process(_delta: float) -> void:
 	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
 	bots_rate_label.text = "Bots: " + Util.format_number(GameState.manager_bots)
 
+	# Happiness bar: colour transitions smoothly from red (0%) to green (100%)
+	var happiness: float = GameState.get_happiness()
+	happiness_bar.value = happiness
+	var t: float = happiness / 100.0
+	_happiness_fill_style.bg_color = Color.RED.lerp(Color.GREEN, t)
+
+	if GameState.happiness_riot_triggered and not _happiness_riot_popup_shown:
+		_happiness_riot_popup_shown = true
+		happiness_riot_popup.visible = true
+		get_tree().paused = true
+
 	# One-way latch — auto feeder shop item appears when unlocked
 	if GameState.auto_feeder_unlocked and not auto_feeder_item.visible:
 		auto_feeder_item.visible = true
@@ -162,6 +181,11 @@ func _on_buy_bot_manager_button_pressed() -> void:
 
 func _on_buy_auto_feeder_button_pressed() -> void:
 	GameState.buy_auto_feeder()
+
+
+func _on_happiness_riot_popup_ok_pressed() -> void:
+	happiness_riot_popup.visible = false
+	get_tree().paused = false
 
 
 func _on_cat_purchased() -> void:
