@@ -32,6 +32,9 @@ var food_hit_zero: bool = false
 var auto_feeder_unlocked: bool = false
 var auto_feeder_purchased: bool = false
 var first_cat_popup_shown: bool = false
+var starvation_count: int = 0
+var starvation_active: bool = false
+var starvation_cats_lost: int = 0
 var happiness_cramped_triggered: bool = false
 var happiness_riot_triggered: bool = false
 var happiness_zero_count: int = 0
@@ -59,6 +62,15 @@ func _process(delta: float) -> void:
 			auto_feeder_unlocked = true
 	if auto_feeder_purchased and cat_food <= Config.auto_feeder_food_threshold:
 		buy_cat_food_pack(1)
+	# Starvation: food depleted and player cannot afford a food pack.
+	# starvation_active debounces so count only increments once per contiguous window.
+	# Resets when cat_food > 0 OR money >= cat_food_pack_cost.
+	var _starving: bool = cat_food <= 0.0 and money < Config.cat_food_pack_cost
+	if _starving and not starvation_active:
+		starvation_active = true
+		starvation_count += 1
+	elif not _starving and starvation_active:
+		starvation_active = false
 	if bots_active:
 		tokens -= float(manager_bots) * Config.token_drain_per_bot * delta
 		if tokens <= 0.0:
@@ -157,6 +169,12 @@ func buy_breeder_contract() -> void:
 ## Returns how many cat food packs ($10 each) the player can currently afford.
 func get_cat_food_packs_affordable() -> int:
 	return int(money / Config.cat_food_pack_cost)
+
+
+## Grants one cat food pack worth of food without charging the player.
+## Used only for the first-starvation pity reward.
+func grant_cat_food_pack() -> void:
+	cat_food += Config.cat_food_pack_amount
 
 
 ## Purchases quantity cat food packs, adding cat_food_pack_amount per pack.

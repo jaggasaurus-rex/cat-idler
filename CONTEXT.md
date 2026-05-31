@@ -67,6 +67,11 @@ Main (Control, full-rect)             ← Main.gd
 │       ├── HappinessBar (ProgressBar) ← min=0 max=100; fill colour interpolated red→green each frame via _happiness_fill_style StyleBoxFlat
 │       │   └── CatLossMarker (ColorRect) ← 2px red vertical line; anchor_left=anchor_right=0.2 positions it at 20% of bar width; hidden until cat_crusher_unlocked; sits above fill layer as a child Control
 │       └── HappinessMaxLabel (Label "100%")
+├── StarvationPopup (ColorRect)        ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when starvation_count first reaches 1; pauses tree; on dismiss calls GameState.grant_cat_food_pack(); gated by _starvation_popup_shown (Main.gd local)
+│   └── DialogPanel (PanelContainer)  ← centered 600×280 dialog
+│       └── VBoxContainer
+│           ├── PopupLabel (Label)    ← "NEW ACHIEVEMENT: Fasting Never Hurt Anyone" message, autowrap
+│           └── OKButton (Button)     ← hides popup, unpauses tree, grants free food pack
 ├── FirstCatPopup (ColorRect)          ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when cats first reaches 1; pauses tree; gated by GameState.first_cat_popup_shown
 │   └── DialogPanel (PanelContainer)  ← centered 600×260 dialog
 │       └── VBoxContainer
@@ -171,6 +176,9 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `auto_feeder_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `cats >= 30` or `food_hit_zero` |
 | `auto_feeder_purchased` | `bool` | `false` | One-way latch; set by `buy_auto_feeder()`; enables auto-food-purchase in `_process()` |
 | `first_cat_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `cats >= 1`; gates the first-cat achievement popup so it fires exactly once |
+| `starvation_count` | `int` | `0` | Increments each time the starvation condition transitions from inactive to active (cat_food <= 0 AND money < 10) |
+| `starvation_active` | `bool` | `false` | Frame-level debounce; `true` while the starvation condition persists; resets when cat_food > 0 or money >= 10 |
+| `starvation_cats_lost` | `int` | `0` | Tracks cats lost specifically via the starvation mechanic (reserved for future game-over logic) |
 | `happiness_cramped_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 50.0` (4 over max, e.g. cats = 24 with default max 20); used by Main.gd to show the cramped popup once |
 | `happiness_riot_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 0.0` (6 over max, e.g. cats = 26 with default max 20); used by Main.gd to show the riot popup once |
 | `happiness_zero_count` | `int` | `0` | Counts distinct edge-transitions into happiness=0% (i.e. increments each time happiness drops from >0 to 0, tracked via `_happiness_was_zero`); used to gate `cat_crusher_triggered` on count >= 2 |
@@ -196,6 +204,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `only_paws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
 | `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
 | `get_cat_food_packs_affordable` | `() -> int` | Returns `int(money / 10.0)` |
+| `grant_cat_food_pack` | `() -> void` | Adds `Config.cat_food_pack_amount` food at no cost; used only for the first-starvation pity reward |
 | `buy_cat_food_pack` | `(quantity: int) -> void` | Guards `money >= 10.0 * quantity`; deducts cost; adds `100.0 * quantity` to `cat_food` |
 | `buy_tokens` | `(quantity: int) -> void` | Guards `money >= Config.token_pack_cost * quantity`; deducts cost; adds `Config.token_pack_amount * quantity` to `tokens`; sets `bots_active = true` if `tokens > 0` |
 | `buy_bot_manager` | `() -> void` | Guards `money >= Config.bot_manager_cost and not bot_manager_purchased`; deducts cost; sets `bot_manager_purchased = true` |

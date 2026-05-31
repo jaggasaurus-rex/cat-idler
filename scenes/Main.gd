@@ -46,12 +46,14 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 # the current fill level. Hidden until cat_crusher_unlocked.
 @onready var _cat_loss_marker: ColorRect = $HappinessBarContainer/HappinessRow/HappinessBar/CatLossMarker
 @onready var first_cat_popup: ColorRect = $FirstCatPopup
+@onready var starvation_popup: ColorRect = $StarvationPopup
 @onready var happiness_cramped_popup: ColorRect = $HappinessCrampedPopup
 @onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
 @onready var cat_crusher_popup: ColorRect = $CatCrusherPopup
 
 
 var _only_paws_popup_shown: bool = false
+var _starvation_popup_shown: bool = false
 var _happiness_cramped_popup_shown: bool = false
 var _happiness_riot_popup_shown: bool = false
 var _cat_crusher_popup_shown: bool = false
@@ -158,6 +160,11 @@ func _process(_delta: float) -> void:
 	var t: float = happiness / 100.0
 	_happiness_fill_style.bg_color = Color.RED.lerp(Color.GREEN, t)
 
+	if GameState.starvation_count >= 1 and not _starvation_popup_shown:
+		_starvation_popup_shown = true
+		starvation_popup.visible = true
+		get_tree().paused = true
+
 	if GameState.happiness_cramped_triggered and not _happiness_cramped_popup_shown:
 		_happiness_cramped_popup_shown = true
 		happiness_cramped_popup.visible = true
@@ -242,6 +249,12 @@ func _on_buy_token_x1_button_pressed() -> void:
 
 func _on_buy_token_x10_button_pressed() -> void:
 	GameState.buy_tokens(10)
+
+
+func _on_starvation_popup_ok_pressed() -> void:
+	starvation_popup.visible = false
+	get_tree().paused = false
+	GameState.grant_cat_food_pack()
 
 
 func _on_first_cat_popup_ok_pressed() -> void:
