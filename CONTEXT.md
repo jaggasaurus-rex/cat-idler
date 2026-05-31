@@ -67,6 +67,11 @@ Main (Control, full-rect)             ← Main.gd
 │       ├── HappinessBar (ProgressBar) ← min=0 max=100; fill colour interpolated red→green each frame via _happiness_fill_style StyleBoxFlat
 │       │   └── CatLossMarker (ColorRect) ← 2px red vertical line; anchor_left=anchor_right=0.2 positions it at 20% of bar width; hidden until cat_crusher_unlocked; sits above fill layer as a child Control
 │       └── HappinessMaxLabel (Label "100%")
+├── FirstCatPopup (ColorRect)          ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when cats first reaches 1; pauses tree; gated by GameState.first_cat_popup_shown
+│   └── DialogPanel (PanelContainer)  ← centered 600×260 dialog
+│       └── VBoxContainer
+│           ├── PopupLabel (Label)    ← "NEW ACHIEVEMENT: Cat" message, autowrap
+│           └── OKButton (Button)     ← hides popup and unpauses tree
 ├── OnlyPawsPopup (ColorRect)         ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when only_paws_unlocked first triggers; pauses tree
 │   └── DialogPanel (PanelContainer)  ← centered 450×180 dialog
 │       └── VBoxContainer
@@ -165,6 +170,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `food_hit_zero` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `cat_food <= 0`; used as second unlock trigger for Auto-Feeder |
 | `auto_feeder_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `cats >= 30` or `food_hit_zero` |
 | `auto_feeder_purchased` | `bool` | `false` | One-way latch; set by `buy_auto_feeder()`; enables auto-food-purchase in `_process()` |
+| `first_cat_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `cats >= 1`; gates the first-cat achievement popup so it fires exactly once |
 | `happiness_cramped_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 50.0` (4 over max, e.g. cats = 24 with default max 20); used by Main.gd to show the cramped popup once |
 | `happiness_riot_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 0.0` (6 over max, e.g. cats = 26 with default max 20); used by Main.gd to show the riot popup once |
 | `happiness_zero_count` | `int` | `0` | Counts distinct edge-transitions into happiness=0% (i.e. increments each time happiness drops from >0 to 0, tracked via `_happiness_was_zero`); used to gate `cat_crusher_triggered` on count >= 2 |

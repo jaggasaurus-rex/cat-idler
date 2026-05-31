@@ -45,6 +45,7 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 # sits above the fill layer and stays anchored at 20% of the bar's width regardless of
 # the current fill level. Hidden until cat_crusher_unlocked.
 @onready var _cat_loss_marker: ColorRect = $HappinessBarContainer/HappinessRow/HappinessBar/CatLossMarker
+@onready var first_cat_popup: ColorRect = $FirstCatPopup
 @onready var happiness_cramped_popup: ColorRect = $HappinessCrampedPopup
 @onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
 @onready var cat_crusher_popup: ColorRect = $CatCrusherPopup
@@ -84,6 +85,11 @@ func _process(_delta: float) -> void:
 
 	if GameState.shop_unlocked and not purchase_cat_button.visible:
 		purchase_cat_button.visible = true
+
+	if GameState.cats >= 1 and not GameState.first_cat_popup_shown:
+		GameState.first_cat_popup_shown = true
+		first_cat_popup.visible = true
+		get_tree().paused = true
 
 	# One-way latch — OnlyPaws button and income label appear together
 	if GameState.only_paws_unlocked and not only_paws_button.visible:
@@ -236,6 +242,11 @@ func _on_buy_token_x1_button_pressed() -> void:
 
 func _on_buy_token_x10_button_pressed() -> void:
 	GameState.buy_tokens(10)
+
+
+func _on_first_cat_popup_ok_pressed() -> void:
+	first_cat_popup.visible = false
+	get_tree().paused = false
 
 
 func _on_only_paws_popup_ok_pressed() -> void:

@@ -31,6 +31,7 @@ var bot_manager_purchased: bool = false
 var food_hit_zero: bool = false
 var auto_feeder_unlocked: bool = false
 var auto_feeder_purchased: bool = false
+var first_cat_popup_shown: bool = false
 var happiness_cramped_triggered: bool = false
 var happiness_riot_triggered: bool = false
 var happiness_zero_count: int = 0
