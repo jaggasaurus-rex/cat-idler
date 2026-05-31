@@ -526,6 +526,46 @@ autowrap_mode = 3
 layout_mode = 2
 text = "OK"
 
+[node name="Starvation2Popup" type="ColorRect" parent="." unique_id=400000320]
+process_mode = 2
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="DialogPanel" type="PanelContainer" parent="Starvation2Popup" unique_id=400000321]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -140.0
+offset_right = 300.0
+offset_bottom = 140.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Starvation2Popup/DialogPanel" unique_id=400000322]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PopupLabel" type="Label" parent="Starvation2Popup/DialogPanel/VBoxContainer" unique_id=400000323]
+layout_mode = 2
+text = "NEW ACHIEVEMENT: Third-World Dictator
+
+Oh, so you just want all these beautiful, loving creatures to work for free. Well, they gotta eat something.
+
+REWARD: You'll figure it out
+
+You are going to see some food appear in your inventory, but you will lose a cat. Don't worry about that, totally nothing bad happened to it."
+autowrap_mode = 3
+
+[node name="OKButton" type="Button" parent="Starvation2Popup/DialogPanel/VBoxContainer" unique_id=400000324]
+layout_mode = 2
+text = "OK"
+
 [node name="FirstCatPopup" type="ColorRect" parent="." unique_id=400000300]
 process_mode = 2
 visible = false
@@ -585,6 +625,7 @@ position = Vector2(576, 530)
 [connection signal="pressed" from="ShopPanel/UpgradesTabContent/AutoFeederItem/BuyAutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
 [connection signal="pressed" from="ShopPanel/HomeTabContent/NextHousingItem/BuyHousingButton" to="." method="_on_buy_housing_button_pressed"]
 [connection signal="pressed" from="StarvationPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_starvation_popup_ok_pressed"]
+[connection signal="pressed" from="Starvation2Popup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_starvation_2_popup_ok_pressed"]
 [connection signal="pressed" from="FirstCatPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_first_cat_popup_ok_pressed"]
 [connection signal="pressed" from="OnlyPawsPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_only_paws_popup_ok_pressed"]
 [connection signal="pressed" from="UpgradesTabPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_upgrades_tab_popup_ok_pressed"]

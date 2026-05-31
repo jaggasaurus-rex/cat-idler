@@ -68,6 +68,8 @@ Main (Control, full-rect)             ← Main.gd
 │       │   └── CatLossMarker (ColorRect) ← 2px red vertical line; anchor_left=anchor_right=0.2 positions it at 20% of bar width; hidden until cat_crusher_unlocked; sits above fill layer as a child Control
 │       └── HappinessMaxLabel (Label "100%")
 ├── StarvationPopup (ColorRect)        ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when starvation_count first reaches 1; pauses tree; on dismiss calls GameState.grant_cat_food_pack(); gated by _starvation_popup_shown (Main.gd local)
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Fasting Never Hurt Anyone"
+├── Starvation2Popup (ColorRect)       ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when starvation_count reaches 2; pauses tree; on dismiss grants free food then calls GameState.starvation_lose_cat(); gated by _starvation_2_popup_shown (Main.gd local)
 │   └── DialogPanel (PanelContainer)  ← centered 600×280 dialog
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← "NEW ACHIEVEMENT: Fasting Never Hurt Anyone" message, autowrap
@@ -204,7 +206,8 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `only_paws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
 | `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
 | `get_cat_food_packs_affordable` | `() -> int` | Returns `int(money / 10.0)` |
-| `grant_cat_food_pack` | `() -> void` | Adds `Config.cat_food_pack_amount` food at no cost; used only for the first-starvation pity reward |
+| `grant_cat_food_pack` | `() -> void` | Adds `Config.cat_food_pack_amount` food at no cost; used for starvation pity rewards |
+| `starvation_lose_cat` | `() -> void` | Removes one cat as a starvation penalty: decrements `cats` (clamped), calls `_update_paws_rate()`, increments `starvation_cats_lost`, emits `cat_lost` |
 | `buy_cat_food_pack` | `(quantity: int) -> void` | Guards `money >= 10.0 * quantity`; deducts cost; adds `100.0 * quantity` to `cat_food` |
 | `buy_tokens` | `(quantity: int) -> void` | Guards `money >= Config.token_pack_cost * quantity`; deducts cost; adds `Config.token_pack_amount * quantity` to `tokens`; sets `bots_active = true` if `tokens > 0` |
 | `buy_bot_manager` | `() -> void` | Guards `money >= Config.bot_manager_cost and not bot_manager_purchased`; deducts cost; sets `bot_manager_purchased = true` |

@@ -172,9 +172,21 @@ func get_cat_food_packs_affordable() -> int:
 
 
 ## Grants one cat food pack worth of food without charging the player.
-## Used only for the first-starvation pity reward.
+## Used for starvation pity rewards.
 func grant_cat_food_pack() -> void:
 	cat_food += Config.cat_food_pack_amount
+
+
+## Removes one cat as a starvation penalty: decrements cats (clamped to 0),
+## updates income rate, increments starvation_cats_lost, and emits cat_lost
+## so Main.gd removes the node and repositions the row.
+func starvation_lose_cat() -> void:
+	if cats <= 0:
+		return
+	cats -= 1
+	_update_paws_rate()
+	starvation_cats_lost += 1
+	cat_lost.emit()
 
 
 ## Purchases quantity cat food packs, adding cat_food_pack_amount per pack.

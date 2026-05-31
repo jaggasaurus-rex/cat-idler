@@ -47,6 +47,7 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 @onready var _cat_loss_marker: ColorRect = $HappinessBarContainer/HappinessRow/HappinessBar/CatLossMarker
 @onready var first_cat_popup: ColorRect = $FirstCatPopup
 @onready var starvation_popup: ColorRect = $StarvationPopup
+@onready var starvation_2_popup: ColorRect = $Starvation2Popup
 @onready var happiness_cramped_popup: ColorRect = $HappinessCrampedPopup
 @onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
 @onready var cat_crusher_popup: ColorRect = $CatCrusherPopup
@@ -54,6 +55,7 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 
 var _only_paws_popup_shown: bool = false
 var _starvation_popup_shown: bool = false
+var _starvation_2_popup_shown: bool = false
 var _happiness_cramped_popup_shown: bool = false
 var _happiness_riot_popup_shown: bool = false
 var _cat_crusher_popup_shown: bool = false
@@ -165,6 +167,11 @@ func _process(_delta: float) -> void:
 		starvation_popup.visible = true
 		get_tree().paused = true
 
+	if GameState.starvation_count >= 2 and not _starvation_2_popup_shown:
+		_starvation_2_popup_shown = true
+		starvation_2_popup.visible = true
+		get_tree().paused = true
+
 	if GameState.happiness_cramped_triggered and not _happiness_cramped_popup_shown:
 		_happiness_cramped_popup_shown = true
 		happiness_cramped_popup.visible = true
@@ -255,6 +262,13 @@ func _on_starvation_popup_ok_pressed() -> void:
 	starvation_popup.visible = false
 	get_tree().paused = false
 	GameState.grant_cat_food_pack()
+
+
+func _on_starvation_2_popup_ok_pressed() -> void:
+	starvation_2_popup.visible = false
+	get_tree().paused = false
+	GameState.grant_cat_food_pack()
+	GameState.starvation_lose_cat()
 
 
 func _on_first_cat_popup_ok_pressed() -> void:
