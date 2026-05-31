@@ -17,7 +17,12 @@ var bot_shop_unlocked: bool = false
 var shop_unlocked_bots: bool = false
 var cat_cost_growth_rate: float = Config.cat_cost_growth_rate
 var breeder_purchased: bool = false
-var cat_trees_purchased: bool = false
+# cat_trees_purchased removed — replaced by housing_tier_index >= 1.
+# All former reads of cat_trees_purchased were changed to housing_tier_index >= 1:
+#   get_happiness() now calls get_max_cats() which sums housing tier increases.
+#   Main.gd _process() max_cats line now calls GameState.get_max_cats().
+#   Main.gd cat trees @onready vars, button state block, and handler removed.
+var housing_tier_index: int = 0
 var tokens: float = Config.token_start
 var bots_active: bool = true
 var tokens_shop_unlocked: bool = false
@@ -189,12 +194,13 @@ func buy_auto_feeder() -> void:
 	auto_feeder_purchased = true
 
 
-## Purchases cat trees upgrade.
-func buy_cat_trees() -> void:
-	if money < Config.cat_trees_cost or cat_trees_purchased:
-		return
-	money -= Config.cat_trees_cost
-	cat_trees_purchased = true
+## Returns the current cat cap: base_max_cats plus max_cats_increase for each
+## purchased housing tier (tiers 1..housing_tier_index).
+func get_max_cats() -> int:
+	var total: int = Config.base_max_cats
+	for i: int in range(1, housing_tier_index + 1):
+		total += int(Config.housing_tiers[i]["max_cats_increase"])
+	return total
 
 
 ## Returns cat happiness as a percentage (0–100).
@@ -202,15 +208,27 @@ func buy_cat_trees() -> void:
 ## Over max_cats: proportional quadratic decay keyed on ratio of overage to max_cats.
 ##   overage_pct = (cats - max_cats) / max_cats
 ##   happiness = 100 - overage_pct^2 * Config.happiness_decay_scale
-## At 50% overage → ~75%, at 100% overage (double max) → 0%.
-## max_cats is Config.happiness_max_cats (20) until cat_trees_purchased,
-## then Config.cat_trees_happiness_max_cats (30).
+## At 50% over max → ~75%; at 100% over max (double max) → 0%.
+## max_cats is computed via get_max_cats() from the housing upgrade chain.
 func get_happiness() -> float:
-	var max_cats: int = Config.cat_trees_happiness_max_cats if cat_trees_purchased else Config.happiness_max_cats
+	var max_cats: int = get_max_cats()
 	if cats <= max_cats:
 		return 100.0
 	var overage_pct: float = float(cats - max_cats) / float(max_cats)
 	return clamp(100.0 - overage_pct * overage_pct * Config.happiness_decay_scale, 0.0, 100.0)
+
+
+## Purchases the next housing tier, increasing the max_cats threshold.
+## No-ops if already at the final tier or money is insufficient.
+func buy_housing_upgrade() -> void:
+	var next_index: int = housing_tier_index + 1
+	if next_index >= Config.housing_tiers.size():
+		return
+	var cost: float = float(Config.housing_tiers[next_index]["cost"])
+	if money < cost:
+		return
+	money -= cost
+	housing_tier_index = next_index
 
 
 # Base tier: floor(cats / 3) $/sec (0-2 cats=$0, 3-5=$1, 6-8=$2, …).

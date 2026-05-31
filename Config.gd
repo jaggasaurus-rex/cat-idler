@@ -28,8 +28,6 @@ const bot_cost_multiplier: float = 2.0
 # Upgrades
 const breeder_contract_cost: float = 2000.0
 const breeder_contract_growth_rate: float = 1.25
-const cat_trees_cost: float = 10000.0
-const cat_trees_happiness_max_cats: int = 30  # happiness_max_cats value after cat trees purchased
 const bot_manager_cost: float = 1000000.0
 const bot_manager_unlock_bots: int = 10
 const bot_manager_token_threshold: float = 1.0
@@ -40,7 +38,19 @@ const auto_feeder_unlock_cats: int = 30
 const auto_feeder_food_threshold: float = 1.0
 
 # Cat Happiness
-const happiness_max_cats: int = 20  # cat count at which happiness reaches 0%
+const base_max_cats: int = 20  # baseline cat cap before any housing upgrades
 # Controls how steeply happiness falls per unit of proportional overage (overage_pct^2 * scale).
 # At 100.0 the curve hits 0% when cats exactly double max_cats (overage_pct = 1.0).
 const happiness_decay_scale: float = 100.0
+
+# Housing upgrade chain — ordered from cheapest to most expensive.
+# cost[n] = sum(cost[0..n-1]) * 3  (verified: 0, 10k, 30k, 120k, 480k)
+# max_cats_increase is summed for tiers 1..housing_tier_index and added to base_max_cats.
+# Each entry: {id: String, label: String, cost: float, max_cats_increase: int}
+const housing_tiers: Array = [
+	{"id": "studio_basic",    "label": "Basic Studio",    "cost": 0.0,      "max_cats_increase": 0},
+	{"id": "studio_upgraded", "label": "Upgraded Studio", "cost": 10000.0,  "max_cats_increase": 10},
+	{"id": "bedroom_1",       "label": "1 Bedroom",       "cost": 30000.0,  "max_cats_increase": 10},
+	{"id": "bedroom_2",       "label": "2 Bedroom",       "cost": 120000.0, "max_cats_increase": 10},
+	{"id": "bedroom_3",       "label": "3 Bedroom",       "cost": 480000.0, "max_cats_increase": 10},
+]

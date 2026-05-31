@@ -133,13 +133,22 @@ layout_mode = 2
 text = "0%"
 
 [node name="HappinessBar" type="ProgressBar" parent="HappinessBarContainer/HappinessRow" unique_id=400000054]
+custom_minimum_size = Vector2(100, 22)
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(100, 22)
-min_value = 0.0
-max_value = 100.0
 value = 100.0
 show_percentage = false
+
+[node name="CatLossMarker" type="ColorRect" parent="HappinessBarContainer/HappinessRow/HappinessBar" unique_id=400000100]
+visible = false
+layout_mode = 1
+anchor_left = 0.2
+anchor_right = 0.2
+anchor_top = 0.0
+anchor_bottom = 1.0
+offset_left = -1.0
+offset_right = 1.0
+color = Color(1, 0, 0, 1)
 
 [node name="HappinessMaxLabel" type="Label" parent="HappinessBarContainer/HappinessRow" unique_id=400000055]
 layout_mode = 2
@@ -166,6 +175,11 @@ theme_override_constants/separation = 4
 [node name="CurrencyTabButton" type="Button" parent="ShopPanel/TabBar" unique_id=400000081]
 layout_mode = 2
 text = "Currency"
+
+[node name="UpgradesTabButton" type="Button" parent="ShopPanel/TabBar" unique_id=400000090]
+visible = false
+layout_mode = 2
+text = "Upgrades"
 
 [node name="HomeTabButton" type="Button" parent="ShopPanel/TabBar" unique_id=400000082]
 visible = false
@@ -219,39 +233,44 @@ text = "Buy x1 ($20)"
 layout_mode = 2
 text = "Buy x10 ($200)"
 
-[node name="BotManagerItem" type="VBoxContainer" parent="ShopPanel/CurrencyTabContent" unique_id=400000020]
+[node name="UpgradesTabContent" type="VBoxContainer" parent="ShopPanel" unique_id=400000091]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BotManagerItem" type="VBoxContainer" parent="ShopPanel/UpgradesTabContent" unique_id=400000020]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="BotManagerNameLabel" type="Label" parent="ShopPanel/CurrencyTabContent/BotManagerItem" unique_id=400000021]
+[node name="BotManagerNameLabel" type="Label" parent="ShopPanel/UpgradesTabContent/BotManagerItem" unique_id=400000021]
 layout_mode = 2
 text = "Manager-bot Manager"
 
-[node name="BotManagerDescLabel" type="Label" parent="ShopPanel/CurrencyTabContent/BotManagerItem" unique_id=400000022]
+[node name="BotManagerDescLabel" type="Label" parent="ShopPanel/UpgradesTabContent/BotManagerItem" unique_id=400000022]
 layout_mode = 2
 text = "Might as well pay someone to keep your tokens topped up for you! (Automatically purchases more tokens when you run out)"
 autowrap_mode = 3
 
-[node name="BuyBotManagerButton" type="Button" parent="ShopPanel/CurrencyTabContent/BotManagerItem" unique_id=400000023]
+[node name="BuyBotManagerButton" type="Button" parent="ShopPanel/UpgradesTabContent/BotManagerItem" unique_id=400000023]
 layout_mode = 2
 text = "Buy ($1,000,000)"
 
-[node name="AutoFeederItem" type="VBoxContainer" parent="ShopPanel/CurrencyTabContent" unique_id=400000030]
+[node name="AutoFeederItem" type="VBoxContainer" parent="ShopPanel/UpgradesTabContent" unique_id=400000030]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="AutoFeederNameLabel" type="Label" parent="ShopPanel/CurrencyTabContent/AutoFeederItem" unique_id=400000031]
+[node name="AutoFeederNameLabel" type="Label" parent="ShopPanel/UpgradesTabContent/AutoFeederItem" unique_id=400000031]
 layout_mode = 2
 text = "Auto-Feeder"
 
-[node name="AutoFeederDescLabel" type="Label" parent="ShopPanel/CurrencyTabContent/AutoFeederItem" unique_id=400000032]
+[node name="AutoFeederDescLabel" type="Label" parent="ShopPanel/UpgradesTabContent/AutoFeederItem" unique_id=400000032]
 layout_mode = 2
 text = "I'm a lazy fuck, and now you can be too! This will make sure your precious kitties never run out of food!"
 autowrap_mode = 3
 
-[node name="BuyAutoFeederButton" type="Button" parent="ShopPanel/CurrencyTabContent/AutoFeederItem" unique_id=400000033]
+[node name="BuyAutoFeederButton" type="Button" parent="ShopPanel/UpgradesTabContent/AutoFeederItem" unique_id=400000033]
 layout_mode = 2
 text = "Buy ($2,000,000)"
 
@@ -260,33 +279,44 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="CatTreesItem" type="VBoxContainer" parent="ShopPanel/HomeTabContent" unique_id=400000085]
+[node name="CurrentHousingItem" type="VBoxContainer" parent="ShopPanel/HomeTabContent" unique_id=400000200]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="CatTreesNameLabel" type="Label" parent="ShopPanel/HomeTabContent/CatTreesItem" unique_id=400000086]
+[node name="CurrentHousingLabel" type="Label" parent="ShopPanel/HomeTabContent/CurrentHousingItem" unique_id=400000201]
 layout_mode = 2
-text = "Cat Trees"
+text = "Current: Basic Studio"
 
-[node name="CatTreesDescLabel" type="Label" parent="ShopPanel/HomeTabContent/CatTreesItem" unique_id=400000087]
+[node name="NextHousingItem" type="VBoxContainer" parent="ShopPanel/HomeTabContent" unique_id=400000202]
 layout_mode = 2
-text = "Move, in this economy? Fuck that! Just create some vertical space, they have claws. They'll figure it out."
+theme_override_constants/separation = 2
+
+[node name="NextHousingNameLabel" type="Label" parent="ShopPanel/HomeTabContent/NextHousingItem" unique_id=400000203]
+layout_mode = 2
+text = "Upgraded Studio"
+
+[node name="NextHousingCostLabel" type="Label" parent="ShopPanel/HomeTabContent/NextHousingItem" unique_id=400000204]
+layout_mode = 2
+text = "Expand your cats' living space — $10,000"
 autowrap_mode = 3
 
-[node name="BuyCatTreesButton" type="Button" parent="ShopPanel/HomeTabContent/CatTreesItem" unique_id=400000088]
+[node name="BuyHousingButton" type="Button" parent="ShopPanel/HomeTabContent/NextHousingItem" unique_id=400000205]
 layout_mode = 2
 text = "Buy ($10,000)"
 
-[node name="OnlyPawsPopup" type="ColorRect" parent="." unique_id=400000040]
+[node name="MaxTierLabel" type="Label" parent="ShopPanel/HomeTabContent" unique_id=400000206]
 visible = false
+layout_mode = 2
+text = "Max Upgrade Reached"
+
+[node name="OnlyPawsPopup" type="ColorRect" parent="." unique_id=400000040]
 process_mode = 2
+visible = false
 layout_mode = 0
-anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 color = Color(0, 0, 0, 0.5)
 
 [node name="DialogPanel" type="PanelContainer" parent="OnlyPawsPopup" unique_id=400000041]
@@ -314,15 +344,13 @@ layout_mode = 2
 text = "OK"
 
 [node name="HappinessCrampedPopup" type="ColorRect" parent="." unique_id=400000070]
-visible = false
 process_mode = 2
+visible = false
 layout_mode = 0
-anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 color = Color(0, 0, 0, 0.5)
 
 [node name="DialogPanel" type="PanelContainer" parent="HappinessCrampedPopup" unique_id=400000071]
@@ -350,15 +378,13 @@ layout_mode = 2
 text = "OK"
 
 [node name="HappinessRiotPopup" type="ColorRect" parent="." unique_id=400000060]
-visible = false
 process_mode = 2
+visible = false
 layout_mode = 0
-anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 color = Color(0, 0, 0, 0.5)
 
 [node name="DialogPanel" type="PanelContainer" parent="HappinessRiotPopup" unique_id=400000061]
@@ -385,6 +411,81 @@ autowrap_mode = 3
 layout_mode = 2
 text = "OK"
 
+[node name="UpgradesTabPopup" type="ColorRect" parent="." unique_id=400000101]
+process_mode = 2
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="DialogPanel" type="PanelContainer" parent="UpgradesTabPopup" unique_id=400000102]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -130.0
+offset_right = 300.0
+offset_bottom = 130.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UpgradesTabPopup/DialogPanel" unique_id=400000103]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PopupLabel" type="Label" parent="UpgradesTabPopup/DialogPanel/VBoxContainer" unique_id=400000104]
+layout_mode = 2
+text = "NEW ACHIEVEMENT! ADHD Cat Parent
+
+You're just going about your day, hyperfocused on whatever hobby you chose this week. When BAM — you remembered you forgot to buy that important thing needed to keep you alive!
+
+REWARD: Upgrades
+You can now purchase upgrades to enable your lazine...I mean automate the tedious things in life. Go check out the Upgrades tab for more information!"
+autowrap_mode = 3
+
+[node name="OKButton" type="Button" parent="UpgradesTabPopup/DialogPanel/VBoxContainer" unique_id=400000105]
+layout_mode = 2
+text = "OK"
+
+[node name="CatCrusherPopup" type="ColorRect" parent="." unique_id=400000095]
+process_mode = 2
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="DialogPanel" type="PanelContainer" parent="CatCrusherPopup" unique_id=400000096]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -130.0
+offset_right = 300.0
+offset_bottom = 130.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CatCrusherPopup/DialogPanel" unique_id=400000097]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PopupLabel" type="Label" parent="CatCrusherPopup/DialogPanel/VBoxContainer" unique_id=400000098]
+layout_mode = 2
+text = "NEW ACHIEVEMENT: Cat Crusher!
+You managed to squeeze more cats into a space than was originally considered possible by all laws of physics. I guess cats really are liquid.
+REWARD: Your cats are now smart enough to devise escape plans. When happiness is low, they'll start looking for other hoarders to rule over...I mean love."
+autowrap_mode = 3
+
+[node name="OKButton" type="Button" parent="CatCrusherPopup/DialogPanel/VBoxContainer" unique_id=400000099]
+layout_mode = 2
+text = "OK"
+
 [node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
 position = Vector2(576, 530)
 
@@ -393,14 +494,17 @@ position = Vector2(576, 530)
 [connection signal="pressed" from="OnlyPawsButton" to="." method="_on_only_paws_button_pressed"]
 [connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
 [connection signal="pressed" from="ShopPanel/TabBar/CurrencyTabButton" to="." method="_on_currency_tab_button_pressed"]
+[connection signal="pressed" from="ShopPanel/TabBar/UpgradesTabButton" to="." method="_on_upgrades_tab_button_pressed"]
 [connection signal="pressed" from="ShopPanel/TabBar/HomeTabButton" to="." method="_on_home_tab_button_pressed"]
 [connection signal="pressed" from="ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX1Button" to="." method="_on_buy_cat_food_x1_button_pressed"]
 [connection signal="pressed" from="ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX10Button" to="." method="_on_buy_cat_food_x10_button_pressed"]
 [connection signal="pressed" from="ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX1Button" to="." method="_on_buy_token_x1_button_pressed"]
 [connection signal="pressed" from="ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX10Button" to="." method="_on_buy_token_x10_button_pressed"]
-[connection signal="pressed" from="ShopPanel/CurrencyTabContent/BotManagerItem/BuyBotManagerButton" to="." method="_on_buy_bot_manager_button_pressed"]
-[connection signal="pressed" from="ShopPanel/CurrencyTabContent/AutoFeederItem/BuyAutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
-[connection signal="pressed" from="ShopPanel/HomeTabContent/CatTreesItem/BuyCatTreesButton" to="." method="_on_buy_cat_trees_button_pressed"]
+[connection signal="pressed" from="ShopPanel/UpgradesTabContent/BotManagerItem/BuyBotManagerButton" to="." method="_on_buy_bot_manager_button_pressed"]
+[connection signal="pressed" from="ShopPanel/UpgradesTabContent/AutoFeederItem/BuyAutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
+[connection signal="pressed" from="ShopPanel/HomeTabContent/NextHousingItem/BuyHousingButton" to="." method="_on_buy_housing_button_pressed"]
 [connection signal="pressed" from="OnlyPawsPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_only_paws_popup_ok_pressed"]
+[connection signal="pressed" from="UpgradesTabPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_upgrades_tab_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessCrampedPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_cramped_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessRiotPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_riot_popup_ok_pressed"]
+[connection signal="pressed" from="CatCrusherPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_cat_crusher_popup_ok_pressed"]
