@@ -2,7 +2,7 @@ extends Node
 
 # Cat food
 const cat_food_start: float = 1000.0
-const cat_food_drain_rate: float = 0.1  # food drained per cat per second
+const cat_food_drain_rate: float = 0.2  # food drained per cat per second (was 0.1)
 
 # Cat food pack shop
 const cat_food_pack_cost: float = 10.0
@@ -10,7 +10,7 @@ const cat_food_pack_amount: float = 100.0
 
 # Tokens
 const token_start: float = 1000.0
-const token_drain_per_bot: float = 1.0  # tokens drained per bot per second
+const token_drain_per_bot: float = 2.0  # tokens drained per bot per second (was 1.0)
 const token_pack_cost: float = 20.0
 const token_pack_amount: float = 100.0
 
