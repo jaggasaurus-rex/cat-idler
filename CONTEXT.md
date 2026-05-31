@@ -69,7 +69,16 @@ Main (Control, full-rect)             ← Main.gd
 │       └── HappinessMaxLabel (Label "100%")
 ├── StarvationPopup (ColorRect)        ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when starvation_count first reaches 1; pauses tree; on dismiss calls GameState.grant_cat_food_pack(); gated by _starvation_popup_shown (Main.gd local)
 │   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Fasting Never Hurt Anyone"
-├── Starvation2Popup (ColorRect)       ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when starvation_count reaches 2; pauses tree; on dismiss grants free food then calls GameState.starvation_lose_cat(); gated by _starvation_2_popup_shown (Main.gd local)
+├── Starvation2Popup (ColorRect)       ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when starvation_count reaches 2; pauses tree; on dismiss: grants food, loses cat, checks game-over; gated by _starvation_2_popup_shown (Main.gd local)
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Third-World Dictator"
+├── StarvationRecurringPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown each time starvation_count advances past a new count >= 3; gated by _starvation_handled_count (Main.gd local int); chains directly to StarvationAssholePopup on dismiss (tree stays paused)
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "You know the drill"
+├── StarvationAssholePopup (ColorRect) ← second popup in recurring sequence; on dismiss: unpauses, grants food, loses cat, checks game-over
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Asshole"
+├── GameOverPopup (ColorRect)          ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown when cats==0 AND starvation_cats_lost>=1 AND cats_ever_purchased>0 after any starvation cat loss; chains to GameOver2Popup on dismiss
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Literally Hitler" achievement
+├── GameOver2Popup (ColorRect)         ← final popup; on dismiss calls get_tree().quit()
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Fuck you"
 │   └── DialogPanel (PanelContainer)  ← centered 600×280 dialog
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← "NEW ACHIEVEMENT: Fasting Never Hurt Anyone" message, autowrap
@@ -180,7 +189,8 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `first_cat_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `cats >= 1`; gates the first-cat achievement popup so it fires exactly once |
 | `starvation_count` | `int` | `0` | Increments each time the starvation condition transitions from inactive to active (cat_food <= 0 AND money < 10) |
 | `starvation_active` | `bool` | `false` | Frame-level debounce; `true` while the starvation condition persists; resets when cat_food > 0 or money >= 10 |
-| `starvation_cats_lost` | `int` | `0` | Tracks cats lost specifically via the starvation mechanic (reserved for future game-over logic) |
+| `starvation_cats_lost` | `int` | `0` | Tracks cats lost specifically via the starvation mechanic; used in game-over condition |
+| `cats_ever_purchased` | `int` | `0` | Lifetime cat purchase counter; incremented in `buy_cat()`; used to gate game-over so it only triggers if the player has owned at least one cat |
 | `happiness_cramped_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 50.0` (4 over max, e.g. cats = 24 with default max 20); used by Main.gd to show the cramped popup once |
 | `happiness_riot_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 0.0` (6 over max, e.g. cats = 26 with default max 20); used by Main.gd to show the riot popup once |
 | `happiness_zero_count` | `int` | `0` | Counts distinct edge-transitions into happiness=0% (i.e. increments each time happiness drops from >0 to 0, tracked via `_happiness_was_zero`); used to gate `cat_crusher_triggered` on count >= 2 |

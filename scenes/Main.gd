@@ -48,6 +48,10 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 @onready var first_cat_popup: ColorRect = $FirstCatPopup
 @onready var starvation_popup: ColorRect = $StarvationPopup
 @onready var starvation_2_popup: ColorRect = $Starvation2Popup
+@onready var starvation_recurring_popup: ColorRect = $StarvationRecurringPopup
+@onready var starvation_asshole_popup: ColorRect = $StarvationAssholePopup
+@onready var game_over_popup: ColorRect = $GameOverPopup
+@onready var game_over_2_popup: ColorRect = $GameOver2Popup
 @onready var happiness_cramped_popup: ColorRect = $HappinessCrampedPopup
 @onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
 @onready var cat_crusher_popup: ColorRect = $CatCrusherPopup
@@ -56,6 +60,9 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 var _only_paws_popup_shown: bool = false
 var _starvation_popup_shown: bool = false
 var _starvation_2_popup_shown: bool = false
+# Tracks the highest starvation_count whose recurring popup sequence was started,
+# so each new offense (count >= 3) fires exactly once per unique count value.
+var _starvation_handled_count: int = 0
 var _happiness_cramped_popup_shown: bool = false
 var _happiness_riot_popup_shown: bool = false
 var _cat_crusher_popup_shown: bool = false
@@ -172,6 +179,11 @@ func _process(_delta: float) -> void:
 		starvation_2_popup.visible = true
 		get_tree().paused = true
 
+	if GameState.starvation_count >= 3 and GameState.starvation_count > _starvation_handled_count:
+		_starvation_handled_count = GameState.starvation_count
+		starvation_recurring_popup.visible = true
+		get_tree().paused = true
+
 	if GameState.happiness_cramped_triggered and not _happiness_cramped_popup_shown:
 		_happiness_cramped_popup_shown = true
 		happiness_cramped_popup.visible = true
@@ -269,6 +281,35 @@ func _on_starvation_2_popup_ok_pressed() -> void:
 	get_tree().paused = false
 	GameState.grant_cat_food_pack()
 	GameState.starvation_lose_cat()
+	if GameState.cats == 0 and GameState.starvation_cats_lost >= 1 and GameState.cats_ever_purchased > 0:
+		game_over_popup.visible = true
+		get_tree().paused = true
+
+
+func _on_starvation_recurring_ok_pressed() -> void:
+	starvation_recurring_popup.visible = false
+	# Tree stays paused — chain directly into the second popup
+	starvation_asshole_popup.visible = true
+
+
+func _on_starvation_asshole_ok_pressed() -> void:
+	starvation_asshole_popup.visible = false
+	get_tree().paused = false
+	GameState.grant_cat_food_pack()
+	GameState.starvation_lose_cat()
+	if GameState.cats == 0 and GameState.starvation_cats_lost >= 1 and GameState.cats_ever_purchased > 0:
+		game_over_popup.visible = true
+		get_tree().paused = true
+
+
+func _on_game_over_popup_ok_pressed() -> void:
+	game_over_popup.visible = false
+	# Tree stays paused — chain directly into the final popup
+	game_over_2_popup.visible = true
+
+
+func _on_game_over_2_popup_ok_pressed() -> void:
+	get_tree().quit()
 
 
 func _on_first_cat_popup_ok_pressed() -> void:

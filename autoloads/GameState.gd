@@ -35,6 +35,7 @@ var first_cat_popup_shown: bool = false
 var starvation_count: int = 0
 var starvation_active: bool = false
 var starvation_cats_lost: int = 0
+var cats_ever_purchased: int = 0
 var happiness_cramped_triggered: bool = false
 var happiness_riot_triggered: bool = false
 var happiness_zero_count: int = 0
@@ -129,6 +130,7 @@ func buy_cat() -> void:
 		return
 	money -= next_cat_cost
 	cats += 1
+	cats_ever_purchased += 1
 	next_cat_cost *= cat_cost_growth_rate
 	if not only_paws_unlocked and cats >= Config.only_paws_unlock_cats:
 		only_paws_unlocked = true
