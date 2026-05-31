@@ -71,6 +71,8 @@ Main (Control, full-rect)             ← Main.gd
 │   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Fasting Never Hurt Anyone"
 ├── Starvation2Popup (ColorRect)       ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when starvation_count reaches 2; pauses tree; on dismiss: grants food, loses cat, checks game-over; gated by _starvation_2_popup_shown (Main.gd local)
 │   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Third-World Dictator"
+├── BotUnlockPopup (ColorRect)         ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when bot_shop_unlocked first becomes true; pauses tree; gated by GameState.bot_unlock_popup_shown
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Cat Harem" achievement
 ├── StarvationRecurringPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown each time starvation_count advances past a new count >= 3; gated by _starvation_handled_count (Main.gd local int); chains directly to StarvationAssholePopup on dismiss (tree stays paused)
 │   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "You know the drill"
 ├── StarvationAssholePopup (ColorRect) ← second popup in recurring sequence; on dismiss: unpauses, grants food, loses cat, checks game-over
@@ -201,6 +203,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `_cat_loss_timer` | `float` | `0.0` | Private accumulator; seconds elapsed since last cat loss tick; resets on drain start/stop and each 10-second fire |
 | `home_shop_unlocked` | `bool` | `false` | Set to `true` in Main.gd when the cramped popup is dismissed; reserved for a future shop section |
 | `upgrades_tab_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_manager_unlocked OR auto_feeder_unlocked`; gates the Upgrades tab achievement popup so it fires exactly once |
+| `bot_unlock_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_shop_unlocked`; gates the "Cat Harem" achievement popup so it fires exactly once |
 
 | Signal | Description |
 |---|---|

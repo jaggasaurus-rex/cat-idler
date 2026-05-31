@@ -46,6 +46,7 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 # the current fill level. Hidden until cat_crusher_unlocked.
 @onready var _cat_loss_marker: ColorRect = $HappinessBarContainer/HappinessRow/HappinessBar/CatLossMarker
 @onready var first_cat_popup: ColorRect = $FirstCatPopup
+@onready var bot_unlock_popup: ColorRect = $BotUnlockPopup
 @onready var starvation_popup: ColorRect = $StarvationPopup
 @onready var starvation_2_popup: ColorRect = $Starvation2Popup
 @onready var starvation_recurring_popup: ColorRect = $StarvationRecurringPopup
@@ -116,6 +117,11 @@ func _process(_delta: float) -> void:
 	if GameState.bot_shop_unlocked and not manager_bot_button.visible:
 		manager_bot_button.visible = true
 		bots_rate_label.visible = true
+
+	if GameState.bot_shop_unlocked and not GameState.bot_unlock_popup_shown:
+		GameState.bot_unlock_popup_shown = true
+		bot_unlock_popup.visible = true
+		get_tree().paused = true
 
 	cat_food_label.text = "Cat Food: " + Util.format_number(GameState.cat_food)
 	buy_cat_food_x1_button.disabled = GameState.money < Config.cat_food_pack_cost
@@ -284,6 +290,11 @@ func _on_starvation_2_popup_ok_pressed() -> void:
 	if GameState.cats == 0 and GameState.starvation_cats_lost >= 1 and GameState.cats_ever_purchased > 0:
 		game_over_popup.visible = true
 		get_tree().paused = true
+
+
+func _on_bot_unlock_popup_ok_pressed() -> void:
+	bot_unlock_popup.visible = false
+	get_tree().paused = false
 
 
 func _on_starvation_recurring_ok_pressed() -> void:
