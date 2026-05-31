@@ -231,10 +231,10 @@ func buy_housing_upgrade() -> void:
 	housing_tier_index = next_index
 
 
-# Base tier: floor(cats / 3) $/sec (0-2 cats=$0, 3-5=$1, 6-8=$2, …).
+# Base rate: cats * onlypaws_income_per_cat (at unlock: 3 * 0.25 = $0.75/sec).
 # Each manager bot doubles the entire output: total = base * 2^manager_bots.
 func _update_paws_rate() -> void:
-	paws_income_rate = float(cats / Config.only_paws_cats_per_tier) * pow(2.0, manager_bots)
+	paws_income_rate = float(cats) * Config.onlypaws_income_per_cat * pow(2.0, manager_bots)
 
 
 # Removes one cat from the count, recalculates paws rate, and signals Main.gd

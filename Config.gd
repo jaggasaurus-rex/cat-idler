@@ -19,6 +19,7 @@ const cat_cost_base: float = 5.0
 const cat_cost_growth_rate: float = 1.5
 const only_paws_unlock_cats: int = 3
 const only_paws_cats_per_tier: int = 3  # floor(cats / N) = base OnlyPaws income tier
+const onlypaws_income_per_cat: float = 0.25  # base $/sec per cat; at unlock (3 cats): 3 * 0.25 = $0.75/sec
 const bot_shop_unlock_cats: int = 6
 
 # Bots

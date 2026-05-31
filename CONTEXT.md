@@ -199,7 +199,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `get_max_cats` | `() -> int` | Returns `Config.base_max_cats` plus the sum of `max_cats_increase` for each purchased housing tier (1..housing_tier_index) |
 | `get_happiness` | `() -> float` | Returns happiness as a percentage (0–100). At or under max_cats: 100%. Over max: proportional quadratic decay — `clamp(100 - overage_pct^2 * Config.happiness_decay_scale, 0, 100)` where `overage_pct = (cats - max_cats) / max_cats`. max_cats from `get_max_cats()` |
 | `buy_housing_upgrade` | `() -> void` | Guards `housing_tier_index + 1 < Config.housing_tiers.size()` and `money >= cost`; deducts cost; increments `housing_tier_index` |
-| `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats / 3) * pow(2.0, manager_bots)` |
+| `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats) * Config.onlypaws_income_per_cat * pow(2.0, manager_bots)` |
 
 ### Config (`res://Config.gd`)
 
@@ -219,6 +219,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `cat_cost_growth_rate` | `float` | `1.5` | Default multiplier applied to cat cost after each purchase |
 | `only_paws_unlock_cats` | `int` | `3` | Cat count that unlocks OnlyPaws |
 | `only_paws_cats_per_tier` | `int` | `3` | Cats per $1/sec OnlyPaws income tier |
+| `onlypaws_income_per_cat` | `float` | `0.25` | Base $/sec per cat for OnlyPaws income; at unlock (3 cats) = $0.75/sec |
 | `bot_shop_unlock_cats` | `int` | `6` | Cat count that unlocks the bot shop |
 | `bot_cost_base` | `float` | `50.0` | Starting cost of the first bot |
 | `bot_cost_multiplier` | `float` | `2.0` | Multiplier applied to bot cost after each purchase |
@@ -300,7 +301,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Cats counter** — label refreshes every frame showing `X/MAX` (e.g. `0/20`); MAX from `GameState.get_max_cats()` = `base_max_cats` + 10 per purchased housing tier; turns red when cats exceed MAX
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `only_paws_unlocked`, `paws_income_rate`; emits `cat_purchased`
 - [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.5, reduced to 1.25 by breeder contract)
-- [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `floor(cats/3)` $/sec; each Manager-Bot doubles total output via `pow(2, manager_bots)`
+- [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `cats * 0.25` $/sec (e.g. $0.75/sec at unlock); each Manager-Bot doubles total output via `pow(2, manager_bots)`
 - [x] **OnlyPaws button + income label** — revealed together when `only_paws_unlocked`; first reveal shows modal popup (pauses tree) explaining the feature
 - [x] **OnlyPaws info panel** — PanelContainer with static description text (legacy node, permanently hidden)
 - [x] **OnlyPaws unlock popup** — modal overlay shown once when `only_paws_unlocked` first triggers; pauses game loop; dismissed with OK button
