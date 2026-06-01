@@ -228,7 +228,8 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `buy_breeder_contract` | `() -> void` | Guards `money >= 2000 and not breeder_purchased`; sets `cat_cost_growth_rate = 1.25`; retroactively recalculates `next_cat_cost = 5.0 * pow(1.25, cats)` |
 | `buy_cat_trees` | `() -> void` | Guards `money >= Config.cat_trees_cost (10000) and not cat_trees_purchased`; deducts cost; sets `cat_trees_purchased = true`; happiness recalculates immediately via `get_happiness()` |
 | `get_max_cats` | `() -> int` | Returns `Config.base_max_cats` plus the sum of `max_cats_increase` for each purchased housing tier (1..housing_tier_index) |
-| `get_happiness` | `() -> float` | Returns happiness as a percentage (0–100). At or under max_cats: 100%. Over max: proportional quadratic decay — `clamp(100 - overage_pct^2 * Config.happiness_decay_scale, 0, 100)` where `overage_pct = (cats - max_cats) / max_cats`. max_cats from `get_max_cats()` |
+| `get_happiness` | `() -> float` | Returns happiness as a percentage (0–100). At or under max_cats: 100%. Over max: two-segment quadratic ease-in decay. `fifty_break = max_cats + 5 + housing_tier_index` (happiness = 50%); `zero_break = max_cats + 10 + housing_tier_index * 2` (happiness = 0%). Segment 1 (max_cats < cats < fifty_break): `100 - t^2 * 50` where `t = (cats - max_cats) / (fifty_break - max_cats)`. Segment 2 (fifty_break ≤ cats < zero_break): `50 - t^2 * 50` where `t = (cats - fifty_break) / (zero_break - fifty_break)`. At or above zero_break: 0%. max_cats from `get_max_cats()` |
+| `_happiness_breakpoints` | `(max_cats: int) -> Array[int]` | Private helper; returns `[fifty_break, zero_break]` for the given max_cats and current `housing_tier_index`. |
 | `buy_housing_upgrade` | `() -> void` | Guards `housing_tier_index + 1 < Config.housing_tiers.size()` and `money >= cost`; deducts cost; increments `housing_tier_index` |
 | `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats) * Config.onlypaws_income_per_cat * pow(2.0, manager_bots)` |
 
@@ -263,7 +264,6 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `auto_feeder_unlock_cats` | `int` | `10` | Cat count that unlocks the Auto-Feeder shop item |
 | `auto_feeder_food_threshold` | `float` | `1.0` | Food level at or below which the auto feeder buys a cat food pack |
 | `base_max_cats` | `int` | `20` | Baseline cat cap before any housing upgrades; used by `get_max_cats()` |
-| `happiness_decay_scale` | `float` | `100.0` | Multiplier on `overage_pct^2` in `get_happiness()`; at 100.0 the curve hits 0% when cats exactly double max_cats |
 | `housing_tiers` | `Array` | 5 entries | Housing upgrade chain; each entry has `id`, `label`, `cost`, `max_cats_increase`; costs: 0 / 10k / 30k / 120k / 480k |
 
 ### Util (`res://autoloads/Util.gd`)
@@ -350,7 +350,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Token Pack shop item** — hidden until `tokens_shop_unlocked`; buy x1 ($20, +100 tokens) or x10 ($200, +1000 tokens); both buttons disabled when `money < 20`
 - [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 6 bots owned); one-time $40,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
 - [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (10+ cats or food has ever hit 0); one-time $20,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
-- [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: proportional quadratic decay `100 - overage_pct^2 * 100` where `overage_pct = (cats - max_cats) / max_cats` (clamped 0–100); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0% (cats double max), sets `happiness_riot_triggered`
+- [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: two-segment quadratic ease-in decay scaled by housing tier. `fifty_break = max_cats + 5 + housing_tier_index` (happiness = 50%); `zero_break = max_cats + 10 + housing_tier_index * 2` (happiness = 0%). Drops from 100%→50% on segment 1 then 50%→0% on segment 2, each using `t^2` (slow start, accelerating end); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0%, sets `happiness_riot_triggered`
 - [x] **Cramped popup** — shown once when happiness first drops to ≤ 50% (4 over max, cats = 24 with default max 20); pauses game loop; on dismiss sets `home_shop_unlocked = true`
 
 ---

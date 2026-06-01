@@ -40,9 +40,6 @@ const auto_feeder_food_threshold: float = 1.0
 
 # Cat Happiness
 const base_max_cats: int = 20  # baseline cat cap before any housing upgrades
-# Controls how steeply happiness falls per unit of proportional overage (overage_pct^2 * scale).
-# At 100.0 the curve hits 0% when cats exactly double max_cats (overage_pct = 1.0).
-const happiness_decay_scale: float = 100.0
 
 # Housing upgrade chain — ordered from cheapest to most expensive.
 # cost[n] = sum(cost[0..n-1]) * 3  (verified: 0, 10k, 30k, 120k, 480k)
