@@ -119,11 +119,11 @@ Main (Control, full-rect)             ← Main.gd
 │   │   ├── BotManagerItem (VBoxContainer) ← hidden until bot_manager_unlocked; one-way latch in _process()
 │   │   │   ├── BotManagerNameLabel (Label "Manager-bot Manager")
 │   │   │   ├── BotManagerDescLabel (Label, autowrap_mode=3) ← hidden in _process() when bot_manager_purchased
-│   │   │   └── BuyBotManagerButton (Button "Buy ($1,000,000)") ← calls buy_bot_manager(); disabled when unaffordable; green + disabled when purchased
+│   │   │   └── BuyBotManagerButton (Button "Buy ($20,000)") ← calls buy_bot_manager(); disabled when unaffordable; green + disabled when purchased
 │   │   └── AutoFeederItem (VBoxContainer) ← hidden until auto_feeder_unlocked; one-way latch in _process()
 │   │       ├── AutoFeederNameLabel (Label "Auto-Feeder")
 │   │       ├── AutoFeederDescLabel (Label, autowrap_mode=3) ← hidden in _process() when auto_feeder_purchased
-│   │       └── BuyAutoFeederButton (Button "Buy ($2,000,000)") ← calls buy_auto_feeder(); disabled when unaffordable; green + disabled when purchased
+│   │       └── BuyAutoFeederButton (Button "Buy ($40,000)") ← calls buy_auto_feeder(); disabled when unaffordable; green + disabled when purchased
 │   └── HomeTabContent (VBoxContainer) ← visible when Home tab active; hidden until tab button reveals
 │       ├── CurrentHousingItem (VBoxContainer) ← always visible; shows current tier
 │       │   └── CurrentHousingLabel (Label) ← "Current: [tier label]"; green modulate; updated every frame
@@ -256,10 +256,10 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `bot_cost_multiplier` | `float` | `2.0` | Multiplier applied to bot cost after each purchase |
 | `breeder_contract_cost` | `float` | `2000.0` | Cost of the breeder contract upgrade |
 | `breeder_contract_growth_rate` | `float` | `1.25` | Cat cost growth rate after breeder contract |
-| `bot_manager_cost` | `float` | `1000000.0` | Cost of the Manager-bot Manager upgrade |
+| `bot_manager_cost` | `float` | `20000.0` | Cost of the Manager-bot Manager upgrade |
 | `bot_manager_unlock_bots` | `int` | `10` | Bot count that unlocks the Manager-bot Manager shop item |
 | `bot_manager_token_threshold` | `float` | `1.0` | Token level at or below which the bot manager auto-buys a token pack |
-| `auto_feeder_cost` | `float` | `2000000.0` | Cost of the Auto-Feeder upgrade |
+| `auto_feeder_cost` | `float` | `40000.0` | Cost of the Auto-Feeder upgrade |
 | `auto_feeder_unlock_cats` | `int` | `30` | Cat count that unlocks the Auto-Feeder shop item |
 | `auto_feeder_food_threshold` | `float` | `1.0` | Food level at or below which the auto feeder buys a cat food pack |
 | `base_max_cats` | `int` | `20` | Baseline cat cap before any housing upgrades; used by `get_max_cats()` |
@@ -348,8 +348,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Cat Food Pack shop item** — buy x1 ($10, +100 food) or x10 ($100, +1000 food); both buttons disabled when `money < 10`
 - [x] **Token system** — `tokens` drains at `manager_bots * token_drain_per_bot` per second (clamped to 0); `TokensLabel` shows `floor(tokens)` in HUD; unlocks alongside Token Pack shop item on first bot purchase
 - [x] **Token Pack shop item** — hidden until `tokens_shop_unlocked`; buy x1 ($20, +100 tokens) or x10 ($200, +1000 tokens); both buttons disabled when `money < 20`
-- [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 10 bots owned); one-time $1,000,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
-- [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (30+ cats or food has ever hit 0); one-time $2,000,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
+- [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 10 bots owned); one-time $20,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
+- [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (30+ cats or food has ever hit 0); one-time $40,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
 - [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: proportional quadratic decay `100 - overage_pct^2 * 100` where `overage_pct = (cats - max_cats) / max_cats` (clamped 0–100); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0% (cats double max), sets `happiness_riot_triggered`
 - [x] **Cramped popup** — shown once when happiness first drops to ≤ 50% (4 over max, cats = 24 with default max 20); pauses game loop; on dismiss sets `home_shop_unlocked = true`
 

@@ -254,7 +254,7 @@ autowrap_mode = 3
 
 [node name="BuyBotManagerButton" type="Button" parent="ShopPanel/UpgradesTabContent/BotManagerItem" unique_id=400000023]
 layout_mode = 2
-text = "Buy ($1,000,000)"
+text = "Buy ($20,000)"
 
 [node name="AutoFeederItem" type="VBoxContainer" parent="ShopPanel/UpgradesTabContent" unique_id=400000030]
 visible = false
@@ -272,7 +272,7 @@ autowrap_mode = 3
 
 [node name="BuyAutoFeederButton" type="Button" parent="ShopPanel/UpgradesTabContent/AutoFeederItem" unique_id=400000033]
 layout_mode = 2
-text = "Buy ($2,000,000)"
+text = "Buy ($40,000)"
 
 [node name="HomeTabContent" type="VBoxContainer" parent="ShopPanel" unique_id=400000084]
 visible = false
