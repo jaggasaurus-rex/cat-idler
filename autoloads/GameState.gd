@@ -135,6 +135,7 @@ func buy_cat() -> void:
 	next_cat_cost *= cat_cost_growth_rate
 	if not only_paws_unlocked and cats >= Config.only_paws_unlock_cats:
 		only_paws_unlocked = true
+		only_paws_active = true
 	if not bot_shop_unlocked and cats >= Config.bot_shop_unlock_cats:
 		bot_shop_unlocked = true
 	_update_paws_rate()

@@ -336,7 +336,13 @@ theme_override_constants/separation = 12
 
 [node name="PopupLabel" type="Label" parent="OnlyPawsPopup/DialogPanel/VBoxContainer" unique_id=400000043]
 layout_mode = 2
-text = "Those cute little kitties gotta earn their keep somehow. Put them to work showing those toebeans on OnlyPaws!"
+text = "NEW ACHIEVEMENT: Work It Gurl
+
+Those cats sure are cute, but at this point they gotta earn their keep somehow.
+
+REWARD: Unlocked OnlyPaws
+
+Put those little toe beans to work on OnlyPaws. Earn some 'passive' income."
 autowrap_mode = 3
 
 [node name="OKButton" type="Button" parent="OnlyPawsPopup/DialogPanel/VBoxContainer" unique_id=400000044]

@@ -90,7 +90,7 @@ Main (Control, full-rect)             ← Main.gd
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← "NEW ACHIEVEMENT: Cat" message, autowrap
 │           └── OKButton (Button)     ← hides popup and unpauses tree
-├── OnlyPawsPopup (ColorRect)         ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when only_paws_unlocked first triggers; pauses tree
+├── OnlyPawsPopup (ColorRect)         ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when only_paws_unlocked first triggers; pauses tree; "NEW ACHIEVEMENT: Work It Gurl"
 │   └── DialogPanel (PanelContainer)  ← centered 450×180 dialog
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← unlock message, autowrap
@@ -176,7 +176,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `next_bot_cost` | `float` | `Config.bot_cost_base` | Cost of the next bot; multiplied by `Config.bot_cost_multiplier` after every successful purchase |
 | `bot_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 6` |
 | `shop_unlocked_bots` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots == 4`; reveals the attrition-reduction shop |
-| `only_paws_active` | `bool` | `false` | Player-toggled; income only ticks when `true`; toggling OFF also sets `bots_active = false`; toggling ON re-enables bots if tokens > 0 |
+| `only_paws_active` | `bool` | `false` | Player-toggled; set to `true` once at unlock in `buy_cat()`; income only ticks when `true`; toggling OFF also sets `bots_active = false`; toggling ON re-enables bots if tokens > 0 |
 | `cat_cost_growth_rate` | `float` | `Config.cat_cost_growth_rate` | Multiplier applied to `next_cat_cost` each purchase; reduced to `Config.breeder_contract_growth_rate` by breeder contract |
 | `breeder_purchased` | `bool` | `false` | One-way latch; set by `buy_breeder_contract()` |
 | `housing_tier_index` | `int` | `0` | Current housing upgrade tier (0 = Basic Studio). Incremented by `buy_housing_upgrade()`. Replaces the former `cat_trees_purchased` bool; tier >= 1 is equivalent |
