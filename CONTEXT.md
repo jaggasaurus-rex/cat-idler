@@ -186,7 +186,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `bot_manager_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `tokens <= 0` or `manager_bots >= Config.bot_manager_unlock_bots` |
 | `bot_manager_purchased` | `bool` | `false` | One-way latch; set by `buy_bot_manager()`; enables auto-token-purchase in `_process()` |
 | `food_hit_zero` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `cat_food <= 0`; used as second unlock trigger for Auto-Feeder |
-| `auto_feeder_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `cats >= 30` or `food_hit_zero` |
+| `auto_feeder_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `cats >= 10` or `food_hit_zero` |
 | `auto_feeder_purchased` | `bool` | `false` | One-way latch; set by `buy_auto_feeder()`; enables auto-food-purchase in `_process()` |
 | `first_cat_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `cats >= 1`; gates the first-cat achievement popup so it fires exactly once |
 | `starvation_count` | `int` | `0` | Increments each time the starvation condition transitions from inactive to active (cat_food <= 0 AND money < 10) |
@@ -256,11 +256,11 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `bot_cost_multiplier` | `float` | `2.0` | Multiplier applied to bot cost after each purchase |
 | `breeder_contract_cost` | `float` | `2000.0` | Cost of the breeder contract upgrade |
 | `breeder_contract_growth_rate` | `float` | `1.25` | Cat cost growth rate after breeder contract |
-| `bot_manager_cost` | `float` | `20000.0` | Cost of the Manager-bot Manager upgrade |
-| `bot_manager_unlock_bots` | `int` | `10` | Bot count that unlocks the Manager-bot Manager shop item |
+| `bot_manager_cost` | `float` | `40000.0` | Cost of the Manager-bot Manager upgrade |
+| `bot_manager_unlock_bots` | `int` | `6` | Bot count that unlocks the Manager-bot Manager shop item |
 | `bot_manager_token_threshold` | `float` | `1.0` | Token level at or below which the bot manager auto-buys a token pack |
-| `auto_feeder_cost` | `float` | `40000.0` | Cost of the Auto-Feeder upgrade |
-| `auto_feeder_unlock_cats` | `int` | `30` | Cat count that unlocks the Auto-Feeder shop item |
+| `auto_feeder_cost` | `float` | `20000.0` | Cost of the Auto-Feeder upgrade |
+| `auto_feeder_unlock_cats` | `int` | `10` | Cat count that unlocks the Auto-Feeder shop item |
 | `auto_feeder_food_threshold` | `float` | `1.0` | Food level at or below which the auto feeder buys a cat food pack |
 | `base_max_cats` | `int` | `20` | Baseline cat cap before any housing upgrades; used by `get_max_cats()` |
 | `happiness_decay_scale` | `float` | `100.0` | Multiplier on `overage_pct^2` in `get_happiness()`; at 100.0 the curve hits 0% when cats exactly double max_cats |
@@ -348,8 +348,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Cat Food Pack shop item** — buy x1 ($10, +100 food) or x10 ($100, +1000 food); both buttons disabled when `money < 10`
 - [x] **Token system** — `tokens` drains at `manager_bots * token_drain_per_bot` per second (clamped to 0); `TokensLabel` shows `floor(tokens)` in HUD; unlocks alongside Token Pack shop item on first bot purchase
 - [x] **Token Pack shop item** — hidden until `tokens_shop_unlocked`; buy x1 ($20, +100 tokens) or x10 ($200, +1000 tokens); both buttons disabled when `money < 20`
-- [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 10 bots owned); one-time $20,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
-- [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (30+ cats or food has ever hit 0); one-time $40,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
+- [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 6 bots owned); one-time $40,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
+- [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (10+ cats or food has ever hit 0); one-time $20,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
 - [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: proportional quadratic decay `100 - overage_pct^2 * 100` where `overage_pct = (cats - max_cats) / max_cats` (clamped 0–100); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0% (cats double max), sets `happiness_riot_triggered`
 - [x] **Cramped popup** — shown once when happiness first drops to ≤ 50% (4 over max, cats = 24 with default max 20); pauses game loop; on dismiss sets `home_shop_unlocked = true`
 

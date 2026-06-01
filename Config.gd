@@ -29,13 +29,13 @@ const bot_cost_multiplier: float = 2.0
 # Upgrades
 const breeder_contract_cost: float = 2000.0
 const breeder_contract_growth_rate: float = 1.25
-const bot_manager_cost: float = 20000.0
-const bot_manager_unlock_bots: int = 10
+const bot_manager_cost: float = 40000.0
+const bot_manager_unlock_bots: int = 6
 const bot_manager_token_threshold: float = 1.0
 
 # Auto-Feeder upgrade
-const auto_feeder_cost: float = 40000.0
-const auto_feeder_unlock_cats: int = 30
+const auto_feeder_cost: float = 20000.0
+const auto_feeder_unlock_cats: int = 10
 const auto_feeder_food_threshold: float = 1.0
 
 # Cat Happiness
