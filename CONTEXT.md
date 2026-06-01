@@ -239,7 +239,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | Constant | Type | Value | Description |
 |---|---|---|---|
 | `cat_food_start` | `float` | `1000.0` | Initial cat food supply |
-| `cat_food_drain_rate` | `float` | `0.2` | Food drained per cat per second |
+| `cat_food_drain_rate` | `float` | `1.0` | Food drained per cat per second |
 | `cat_food_pack_cost` | `float` | `10.0` | Cost per cat food pack |
 | `cat_food_pack_amount` | `float` | `100.0` | Food added per cat food pack |
 | `token_start` | `float` | `1000.0` | Initial token supply |
