@@ -1,9 +1,13 @@
 extends Control
 
 const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
+const CAT_SPACING_RADIUS := 64.0
+const UI_SAFE_PADDING := 16.0
+const CAT_PLACEMENT_ATTEMPTS := 30
 
 enum Tab { CURRENCY, UPGRADES, HOME }
 
+@onready var earn_money_button: Button = $EarnMoneyButton
 @onready var money_label: Label = $MoneyLabel
 @onready var cats_label: Label = $CatsLabel
 @onready var purchase_cat_button: Button = $PurchaseCatButton
@@ -40,6 +44,7 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 @onready var next_housing_cost_label: Label = $ShopPanel/HomeTabContent/NextHousingItem/NextHousingCostLabel
 @onready var buy_housing_button: Button = $ShopPanel/HomeTabContent/NextHousingItem/BuyHousingButton
 @onready var max_tier_label: Label = $ShopPanel/HomeTabContent/MaxTierLabel
+@onready var happiness_bar_container: VBoxContainer = $HappinessBarContainer
 @onready var happiness_bar: ProgressBar = $HappinessBarContainer/HappinessRow/HappinessBar
 # Thin red vertical line at the 20% position on the bar; child of HappinessBar so it
 # sits above the fill layer and stays anchored at 20% of the bar's width regardless of
@@ -390,25 +395,80 @@ func _switch_tab(tab: Tab) -> void:
 
 
 func _on_cat_purchased() -> void:
-	var cat := CAT_SCENE.instantiate()
+	var cat: Node2D = CAT_SCENE.instantiate()
 	cat.scale = Vector2(0.4, 0.4)
 	cat_container.add_child(cat)
-	_reposition_cats()
+	_place_cat(cat)
 
 
 func _on_cat_lost() -> void:
-	var children := cat_container.get_children()
+	var children: Array[Node] = cat_container.get_children()
 	if children.size() > 0:
 		children.back().queue_free()
-	_reposition_cats()
 
 
-# Keeps all purchased cats evenly spaced and centered around the
-# container's origin so the row self-centres as it grows.
-func _reposition_cats() -> void:
-	var children := cat_container.get_children()
-	var count := children.size()
-	var spacing := 72.0
-	var start_x := -(count - 1) * spacing / 2.0
-	for i in count:
-		children[i].position = Vector2(start_x + i * spacing, 0.0)
+# Places cat at a random viewport position that avoids UI elements and existing cats.
+# Falls back to ignoring cat spacing, then to anywhere in the viewport.
+func _place_cat(cat: Node2D) -> void:
+	var vp_rect: Rect2 = get_viewport_rect()
+	var ui_nodes: Array[Control] = [
+		shop_panel, happiness_bar_container, money_label, cats_label,
+		cat_food_label, earn_money_button, purchase_cat_button,
+		only_paws_button, manager_bot_button, bots_rate_label, tokens_label,
+	]
+	var ui_rects: Array[Rect2] = []
+	for node: Control in ui_nodes:
+		ui_rects.append(node.get_global_rect().grow(UI_SAFE_PADDING))
+
+	var existing_positions: Array[Vector2] = []
+	for child: Node in cat_container.get_children():
+		if child != cat:
+			existing_positions.append(cat_container.to_global((child as Node2D).position))
+
+	var chosen_pos: Vector2 = Vector2.ZERO
+	var found: bool = false
+
+	for _i: int in CAT_PLACEMENT_ATTEMPTS:
+		var candidate := Vector2(
+			randf_range(vp_rect.position.x, vp_rect.end.x),
+			randf_range(vp_rect.position.y, vp_rect.end.y)
+		)
+		if _overlaps_ui(candidate, ui_rects) or _too_close_to_cats(candidate, existing_positions):
+			continue
+		chosen_pos = candidate
+		found = true
+		break
+
+	if not found:
+		for _i: int in CAT_PLACEMENT_ATTEMPTS:
+			var candidate := Vector2(
+				randf_range(vp_rect.position.x, vp_rect.end.x),
+				randf_range(vp_rect.position.y, vp_rect.end.y)
+			)
+			if _overlaps_ui(candidate, ui_rects):
+				continue
+			chosen_pos = candidate
+			found = true
+			break
+
+	if not found:
+		chosen_pos = Vector2(
+			randf_range(vp_rect.position.x, vp_rect.end.x),
+			randf_range(vp_rect.position.y, vp_rect.end.y)
+		)
+
+	cat.position = cat_container.to_local(chosen_pos)
+
+
+func _overlaps_ui(pos: Vector2, ui_rects: Array[Rect2]) -> bool:
+	for rect: Rect2 in ui_rects:
+		if rect.has_point(pos):
+			return true
+	return false
+
+
+func _too_close_to_cats(pos: Vector2, existing_positions: Array[Vector2]) -> bool:
+	for existing: Vector2 in existing_positions:
+		if pos.distance_to(existing) < CAT_SPACING_RADIUS:
+			return true
+	return false

@@ -27,11 +27,11 @@ cat-idler/
 │   ├── GameState.gd        # Global state singleton
 │   └── Util.gd             # Stateless helper functions (format_number)
 ├── scenes/
-│   ├── CatCharacter.tscn   # Procedural cat (instances scripts/CatCharacter.gd)
+│   ├── CatCharacter.tscn   # Sprite-based cat (instances scripts/CatCharacter.gd; AnimatedSprite2D child)
 │   ├── Main.gd             # Root scene script
 │   └── Main.tscn           # Root scene
 ├── scripts/
-│   └── CatCharacter.gd     # Cat draw + bob animation
+│   └── CatCharacter.gd     # Cat character root (AnimatedSprite2D configured in editor)
 ├── Config.gd               # Autoloaded singleton; all static tuning constants
 ├── CONTEXT.md              # This file
 ├── ROADMAP.md              # Phase plan and design intent
@@ -50,6 +50,8 @@ cat-idler/
 
 ```
 Main (Control, full-rect)             ← Main.gd
+├── TextureRect                       ← full-screen lofi-studio background image (res://assets/lofi-studio.png)
+├── CatContainer (Node2D)             ← pos (576, 530); purchased cats added here; placed second so cats render above the background and below all UI
 ├── CatsLabel (Label)                 ← hero stat; positioned first (top=20); bold + 1.3× font size applied in _ready(); updated every _process() frame; text format "Cats: X/MAX" where MAX = happiness threshold; modulate = RED when cats > MAX, WHITE otherwise
 ├── MoneyLabel (Label)                ← updated every _process() frame
 ├── CatFoodLabel (Label)              ← "Cat Food: X" where X = floor(cat_food); updated every frame
@@ -152,7 +154,6 @@ Main (Control, full-rect)             ← Main.gd
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← "NEW ACHIEVEMENT: Cat Crusher!" message, autowrap
 │           └── OKButton (Button)     ← hides popup, unpauses tree, sets cat_crusher_unlocked=true
-└── CatContainer (Node2D)             ← pos (576, 530); purchased cats added here, auto-recentred
 ```
 
 ---
@@ -278,26 +279,13 @@ Autoloaded singleton containing stateless helper functions. No mutable state.
 
 ### CatCharacter (`res://scripts/CatCharacter.gd`)
 
-Procedurally drawn cat rendered entirely with `_draw()` primitives. No sprites or textures.
+Sprite-based cat. The script is a bare `extends Node2D` with no code — all animation is handled by the `AnimatedSprite2D` child node configured in the editor.
 
-| Part | Primitive | Notes |
-|---|---|---|
-| Body | `draw_circle` | radius 52, ginger orange |
-| Head | `draw_circle` | radius 38, offset (0, -78) |
-| Ears | `draw_polygon` (×4) | outer + inner pink triangle per ear |
-| Eyes | `draw_circle` (×6) | white + pupil + gleam highlight |
-| Nose | `draw_polygon` | small pink triangle |
-| Tail | `draw_polyline` | 16-point sine curve from right flank |
-
-| Variable | Type | Description |
-|---|---|---|
-| `base_y` | `float` | Initial `position.y` captured in `_ready()` |
-
-| Method | Description |
-|---|---|
-| `_ready()` | Stores `base_y = position.y` |
-| `_process(delta)` | `position.y = base_y + sin(Time.get_ticks_msec() * 0.002) * 6.0` — vertical bob |
-| `_draw()` | Calls all `_draw_*` helpers in back-to-front order |
+Scene tree:
+```
+CatCharacter (Node2D) ← CatCharacter.gd
+└── AnimatedSprite2D  ← SpriteFrames and animations set up in editor
+```
 
 ---
 
@@ -315,13 +303,15 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | `_on_only_paws_button_pressed()` | Flips `GameState.only_paws_active`; turning OFF sets `bots_active = false`; turning ON re-enables bots if `tokens > 0` |
 | `_on_only_paws_popup_ok_pressed()` | Hides `OnlyPawsPopup` and unpauses tree |
 | `_on_manager_bot_button_pressed()` | Calls `GameState.buy_bot()` |
-| `_on_cat_purchased()` | Instantiates `CatCharacter` at scale 0.4, adds to `CatContainer`, calls `_reposition_cats()` |
+| `_on_cat_purchased()` | Instantiates `CatCharacter` at scale 0.4, adds to `CatContainer`, calls `_place_cat(cat)` |
 | `_on_buy_cat_food_x1_button_pressed()` | Calls `GameState.buy_cat_food_pack(1)` |
 | `_on_buy_cat_food_x10_button_pressed()` | Calls `GameState.buy_cat_food_pack(10)` |
 | `_on_buy_token_x1_button_pressed()` | Calls `GameState.buy_tokens(1)` |
 | `_on_buy_token_x10_button_pressed()` | Calls `GameState.buy_tokens(10)` |
 | `_on_buy_bot_manager_button_pressed()` | Calls `GameState.buy_bot_manager()` |
-| `_reposition_cats()` | Spaces all `CatContainer` children evenly (72 px) and re-centres the row around the container origin |
+| `_place_cat(cat: Node2D)` | Places a newly added cat at a random viewport position. Up to 30 attempts to avoid UI rects (+ 16 px padding) and existing cats (64 px radius). Falls back to ignoring cat spacing, then to unconstrained viewport position. |
+| `_overlaps_ui(pos, ui_rects)` | Returns `true` if `pos` falls inside any rect in `ui_rects`. |
+| `_too_close_to_cats(pos, existing_positions)` | Returns `true` if `pos` is within `CAT_SPACING_RADIUS` of any element in `existing_positions`. |
 
 ---
 
@@ -336,8 +326,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **OnlyPaws button + income label** — revealed together when `only_paws_unlocked`; first reveal shows modal popup (pauses tree) explaining the feature
 - [x] **OnlyPaws info panel** — PanelContainer with static description text (legacy node, permanently hidden)
 - [x] **OnlyPaws unlock popup** — modal overlay shown once when `only_paws_unlocked` first triggers; pauses game loop; dismissed with OK button
-- [x] **Cat spawning** — each purchase instances `CatCharacter` at scale 0.4 into `CatContainer`; row auto-centres as it grows
-- [x] **Procedural cat character** — drawn with `_draw()` primitives (body, head, ears, eyes, nose, tail); smooth vertical bob animation via sine wave
+- [x] **Cat spawning** — each purchase instances `CatCharacter` at scale 0.4 into `CatContainer`; placed at a random viewport position avoiding UI elements (16 px padding) and other cats (64 px radius); cats keep their position when new ones are added or one is lost
+- [x] **Sprite-based cat character** — `CatCharacter` scene contains an `AnimatedSprite2D` child; animations configured in the Godot editor
 - [x] **OnlyPaws Manager-Bot** — unlocks at 6 cats; costs $50 (doubles each purchase); each bot doubles total OnlyPaws income rate; button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count and current rate
 - [x] **OnlyPaws ON/OFF toggle** — `OnlyPawsButton` flips `only_paws_active`; income only runs while active; toggling OFF also sets `bots_active = false` stopping token drain; toggling ON re-enables bots if tokens > 0; button label and green modulate reflect state
 - [x] **Upgrade stubs (GameState only)** — `buy_breeder_contract()` exists in GameState but is not wired to any UI
@@ -383,7 +373,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [ ] Offline earnings calculation on load
 
 ### Phase 5 — Polish
-- [x] Procedural cat character with bob animation
+- [x] Sprite-based cat character (AnimatedSprite2D)
 - [ ] Click reaction animation on cat (squash/stretch or color flash)
 - [ ] Fish count formatted with suffixes (K, M, B…)
 - [ ] Sound effects (click, purchase)
