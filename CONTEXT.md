@@ -55,12 +55,12 @@ Main (Control, full-rect)             ← Main.gd
 ├── CatsLabel (Label)                 ← hero stat; positioned first (top=20); bold + 1.3× font size applied in _ready(); updated every _process() frame; text format "Cats: X/MAX" where MAX = happiness threshold; modulate = RED when cats > MAX, WHITE otherwise
 ├── MoneyLabel (Label)                ← updated every _process() frame
 ├── EarnMoneyButton (Button)          ← directly below MoneyLabel (offset_top=95); pressed → GameState.click()
-├── PurchaseCatButton (Button)        ← directly below EarnMoneyButton (offset_top=130); permanently shown once shop_unlocked; label updates every frame
+├── PurchaseCatButton (Button)        ← directly below EarnMoneyButton (offset_top=130); always visible from game start; label updates every frame
 ├── OnlyPawsButton (Button)           ← permanently shown once only_paws_unlocked; toggles only_paws_active;
 │                                       label = "OnlyPaws: ON/OFF"; green modulate when active
 ├── OnlyPawsIncomeLabel (Label)       ← shown with OnlyPawsButton; "OnlyPaws: $X.XX/sec" updates every frame
-├── CatFoodLabel (Label)              ← directly below PurchaseCatButton (offset_top=165); "Cat Food: X" where X = floor(cat_food); updated every frame
-├── BuyCatFoodButton (Button "Buy Food ($10)") ← directly below CatFoodLabel (offset_top=197); always visible; calls buy_cat_food_pack(1); label gains " ∞" suffix (one-way latch) when auto_feeder_purchased
+├── CatFoodLabel (Label)              ← directly below PurchaseCatButton (offset_top=165); hidden until cats_ever_purchased >= 1 (one-way latch); "Cat Food: X" where X = floor(cat_food); updated every frame
+├── BuyCatFoodButton (Button "Buy Food ($10)") ← directly below CatFoodLabel (offset_top=197); revealed with CatFoodLabel; calls buy_cat_food_pack(1); label gains " ∞" suffix (one-way latch) when auto_feeder_purchased
 ├── OnlyPawsInfoPanel (PanelContainer)← hidden permanently (legacy node, not wired to button anymore)
 │   └── InfoLabel (Label)             ← static info text, autowrap enabled
 ├── HappinessBarContainer (VBoxContainer) ← always visible; top=20, left=420–760; shows Cat Happiness title + progress bar

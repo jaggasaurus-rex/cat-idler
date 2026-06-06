@@ -49,7 +49,6 @@ offset_bottom = 58.0
 text = "Cats: 0"
 
 [node name="PurchaseCatButton" type="Button" parent="." unique_id=375900732]
-visible = false
 layout_mode = 0
 offset_left = 20.0
 offset_top = 130.0
@@ -58,6 +57,7 @@ offset_bottom = 160.0
 text = "Purchase Cat ($5)"
 
 [node name="CatFoodLabel" type="Label" parent="." unique_id=400000001]
+visible = false
 layout_mode = 0
 offset_left = 20.0
 offset_top = 165.0
@@ -66,6 +66,7 @@ offset_bottom = 195.0
 text = "Cat Food: 1000"
 
 [node name="BuyCatFoodButton" type="Button" parent="." unique_id=400000007]
+visible = false
 layout_mode = 0
 offset_left = 20.0
 offset_top = 197.0

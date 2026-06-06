@@ -89,9 +89,6 @@ func _process(_delta: float) -> void:
 	purchase_cat_button.text = "Purchase Cat ($" + Util.format_number(GameState.next_cat_cost) + ")"
 	only_paws_income_label.text = "OnlyPaws: $%.2f/sec" % GameState.paws_income_rate
 
-	if GameState.shop_unlocked and not purchase_cat_button.visible:
-		purchase_cat_button.visible = true
-
 	if GameState.cats >= 1 and not GameState.first_cat_popup_shown:
 		GameState.first_cat_popup_shown = true
 		first_cat_popup.visible = true
@@ -117,6 +114,10 @@ func _process(_delta: float) -> void:
 		bot_unlock_popup.visible = true
 		get_tree().paused = true
 
+	# One-way latch — cat food controls appear after the first cat purchase
+	if GameState.cats_ever_purchased >= 1 and not cat_food_label.visible:
+		cat_food_label.visible = true
+		buy_cat_food_button.visible = true
 	cat_food_label.text = "Cat Food: " + Util.format_number(GameState.cat_food)
 	# GameState buy methods guard against insufficient funds; buttons stay enabled
 	if GameState.auto_feeder_purchased and not _cat_food_button_auto_set:
