@@ -2,6 +2,7 @@ extends Node
 
 signal cat_purchased
 signal cat_lost
+signal research_completed(id: String)
 
 var money: float = 0.0
 var cats: int = 0
@@ -48,6 +49,15 @@ var home_shop_unlocked: bool = false
 var upgrades_tab_popup_shown: bool = false
 var bot_unlock_popup_shown: bool = false
 var bot_manager_unlock_popup_shown: bool = false
+
+# 0.0 = all cats on OnlyPaws; 1.0 = all cats on research
+var research_cat_fraction: float = 0.0
+# id -> bool; true once player has paid fund_cost
+var research_funded: Dictionary = {}
+# id -> float; accumulated progress points
+var research_points: Dictionary = {}
+# id -> bool; true once points_cost reached (named research_complete to avoid clash with signal)
+var research_complete: Dictionary = {}
 
 
 func _ready() -> void:
@@ -119,6 +129,30 @@ func _process(delta: float) -> void:
 			# Linear map: 0% happiness → ×0.30, 100% happiness → ×1.00
 			var happiness_multiplier: float = 0.30 + (happiness / 100.0) * 0.70
 			money += paws_income_rate * happiness_multiplier * delta
+	for item: Dictionary in Config.RESEARCH_ITEMS:
+		var item_id: String = item["id"]
+		if not research_funded.get(item_id, false):
+			continue
+		if research_complete.get(item_id, false):
+			continue
+		var rc: int = get_research_cats()
+		if rc < int(item["min_cats_required"]):
+			continue
+		research_points[item_id] = research_points.get(item_id, 0.0) + float(rc) * delta
+		if research_points[item_id] >= float(item["points_cost"]):
+			research_points[item_id] = float(item["points_cost"])
+			research_complete[item_id] = true
+			research_completed.emit(item_id)
+
+
+## Returns the number of cats currently assigned to research.
+func get_research_cats() -> int:
+	return int(floor(float(cats) * research_cat_fraction))
+
+
+## Returns the number of cats currently on OnlyPaws income.
+func get_onlypaws_cats() -> int:
+	return cats - get_research_cats()
 
 
 func click() -> void:
@@ -285,10 +319,22 @@ func buy_housing_upgrade() -> void:
 	housing_tier_index = next_index
 
 
-# Base rate: cats * onlypaws_income_per_cat (at unlock: 3 * 0.25 = $0.75/sec).
+## Pays fund_cost to unlock a research item, enabling point accumulation.
+## No-ops if already funded or money is insufficient.
+func fund_research(id: String) -> void:
+	for item: Dictionary in Config.RESEARCH_ITEMS:
+		if item["id"] == id:
+			if money >= float(item["fund_cost"]) and not research_funded.get(id, false):
+				money -= float(item["fund_cost"])
+				research_funded[id] = true
+				research_points[id] = 0.0
+			return
+
+
+# Base rate: get_onlypaws_cats() * onlypaws_income_per_cat (at unlock: 3 * 0.25 = $0.75/sec).
 # Each manager bot doubles the entire output: total = base * 2^manager_bots.
 func _update_paws_rate() -> void:
-	paws_income_rate = float(cats) * Config.onlypaws_income_per_cat * pow(2.0, manager_bots)
+	paws_income_rate = float(get_onlypaws_cats()) * Config.onlypaws_income_per_cat * pow(2.0, manager_bots)
 
 
 # Removes one cat from the count, recalculates paws rate, and signals Main.gd

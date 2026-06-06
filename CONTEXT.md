@@ -183,16 +183,21 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `upgrades_tab_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_manager_unlocked OR auto_feeder_unlocked`; gates the Upgrades tab achievement popup so it fires exactly once |
 | `bot_unlock_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_shop_unlocked`; gates the "Cat Harem" achievement popup so it fires exactly once |
 | `bot_manager_unlock_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_manager_unlocked`; gates the Manager-Bot Manager unlock popup so it fires exactly once |
+| `research_cat_fraction` | `float` | `0.0` | 0.0 = all cats on OnlyPaws; 1.0 = all cats on research; drives `get_research_cats()` and `get_onlypaws_cats()` |
+| `research_funded` | `Dictionary` | `{}` | id → bool; true once `fund_research()` has been paid for that item |
+| `research_points` | `Dictionary` | `{}` | id → float; accumulated research-cat-seconds for each funded item |
+| `research_complete` | `Dictionary` | `{}` | id → bool; true once an item's `points_cost` has been reached (named `research_complete` rather than `research_completed` to avoid clash with the signal) |
 
 | Signal | Description |
 |---|---|
 | `cat_purchased` | Emitted by `buy_cat()` after a successful purchase |
 | `cat_lost` | Emitted by `_lose_cat()` each time a cat is removed by the drain; Main.gd removes the last CatCharacter node from CatContainer |
+| `research_completed(id: String)` | Emitted by `_process()` the frame a research item finishes accumulating its required points |
 
 | Method | Signature | Description |
 |---|---|---|
 | `_ready` | `() -> void` | Sets `process_mode = PROCESS_MODE_ALWAYS` so income ticks even while tree is paused |
-| `_process` | `(delta) -> void` | Always drains `cat_food`; sets `food_hit_zero` the first time food reaches 0; checks and sets `auto_feeder_unlocked`; if `auto_feeder_purchased` and food low: calls `buy_cat_food_pack(1)`; if `bots_active`: drains tokens, sets `bots_active = false` when tokens reach 0; checks and sets `bot_manager_unlocked`; if `bot_manager_purchased` and tokens low: calls `buy_tokens(1)`; sets `happiness_riot_triggered` the first time `get_happiness() <= 0`; tracks `happiness_zero_count` via edge detection and sets `cat_crusher_triggered` on count >= 2; runs cat loss drain when `cat_crusher_unlocked` (activates at happiness ≤ 20%, fires immediately then every 10s, deactivates at happiness > 80%); if `only_paws_active and bots_active and cat_food > 0`: earns `paws_income_rate * happiness_multiplier * delta` where `happiness_multiplier = 0.30 + (happiness / 100.0) * 0.70` |
+| `_process` | `(delta) -> void` | Always drains `cat_food`; sets `food_hit_zero` the first time food reaches 0; checks and sets `auto_feeder_unlocked`; if `auto_feeder_purchased` and food low: calls `buy_cat_food_pack(1)`; if `bots_active`: drains tokens, sets `bots_active = false` when tokens reach 0; checks and sets `bot_manager_unlocked`; if `bot_manager_purchased` and tokens low: calls `buy_tokens(1)`; sets `happiness_riot_triggered` the first time `get_happiness() <= 0`; tracks `happiness_zero_count` via edge detection and sets `cat_crusher_triggered` on count >= 2; runs cat loss drain when `cat_crusher_unlocked` (activates at happiness ≤ 20%, fires immediately then every 10s, deactivates at happiness > 80%); if `only_paws_active and bots_active and cat_food > 0`: earns `paws_income_rate * happiness_multiplier * delta` where `happiness_multiplier = 0.30 + (happiness / 100.0) * 0.70`; research tick: for each funded, incomplete item in `Config.RESEARCH_ITEMS`, adds `get_research_cats() * delta` to `research_points[id]` (skips items with `min_cats_required > get_research_cats()`); clamps and completes when `points_cost` is reached, emits `research_completed(id)` |
 | `_lose_cat` | `() -> void` | Private; decrements `cats` (clamped, no-ops at 0), calls `_update_paws_rate()`, emits `cat_lost` |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `only_paws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
@@ -210,7 +215,10 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `get_happiness` | `() -> float` | Returns happiness as a percentage (0–100). At or under max_cats: 100%. Over max: two-segment quadratic ease-in decay. `fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index` (happiness = 50%); `zero_break = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2` (happiness = 0%). Segment 1 (max_cats < cats < fifty_break): `100 - t^2 * 50` where `t = (cats - max_cats) / (fifty_break - max_cats)`. Segment 2 (fifty_break ≤ cats < zero_break): `50 - t^2 * 50` where `t = (cats - fifty_break) / (zero_break - fifty_break)`. At or above zero_break: 0%. max_cats from `get_max_cats()` |
 | `_happiness_breakpoints` | `(max_cats: int) -> Array[int]` | Private helper; returns `[fifty_break, zero_break]` for the given max_cats and current `housing_tier_index`. |
 | `buy_housing_upgrade` | `() -> void` | Guards `housing_tier_index + 1 < Config.housing_tiers.size()` and `money >= cost`; deducts cost; increments `housing_tier_index` |
-| `_update_paws_rate` | `() -> void` | `paws_income_rate = float(cats) * Config.onlypaws_income_per_cat * pow(2.0, manager_bots)` |
+| `get_research_cats` | `() -> int` | Returns `floor(cats * research_cat_fraction)`; number of cats assigned to research |
+| `get_onlypaws_cats` | `() -> int` | Returns `cats - get_research_cats()`; number of cats contributing to OnlyPaws income |
+| `fund_research` | `(id: String) -> void` | Finds item in `Config.RESEARCH_ITEMS` by id; if `money >= fund_cost` and not yet funded: deducts cost, sets `research_funded[id] = true`, initialises `research_points[id] = 0.0` |
+| `_update_paws_rate` | `() -> void` | `paws_income_rate = float(get_onlypaws_cats()) * Config.onlypaws_income_per_cat * pow(2.0, manager_bots)` |
 
 ### Config (`res://Config.gd`)
 
@@ -218,6 +226,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 
 | Constant | Type | Value | Description |
 |---|---|---|---|
+| `RESEARCH_ITEMS` | `Array` | 1 entry | Research item definitions. Each entry: `{id, name, subtitle, description, fund_cost: float, points_cost: float, min_cats_required: int}`. Current item: `cat_power_unite` ($2,000 fund cost, 200 pts, 10 cats required). |
 | `cat_food_start` | `float` | `1000.0` | Initial cat food supply |
 | `cat_food_drain_rate` | `float` | `1.0` | Food drained per cat per second |
 | `cat_food_pack_cost` | `float` | `10.0` | Cost per cat food pack |

@@ -59,3 +59,16 @@ const housing_tiers: Array = [
 	{"id": "bedroom_2",       "label": "2 Bedroom",       "cost": 34500.0,  "max_cats_increase": 10},
 	{"id": "bedroom_3",       "label": "3 Bedroom",       "cost": 138000.0, "max_cats_increase": 10},
 ]
+
+# Research items — each entry defines a fundable, cat-powered research project.
+const RESEARCH_ITEMS: Array = [
+	{
+		"id": "cat_power_unite",
+		"name": "Cat Power Unite",
+		"subtitle": "Cat Intelligence +1",
+		"description": "This will make your cats smart enough to research upgrades for you, but they're not exactly tiny geniuses right now. So, it's going to take a LOT of cats to kick it off.",
+		"fund_cost": 2000.0,
+		"points_cost": 200.0,
+		"min_cats_required": 10,
+	},
+]
