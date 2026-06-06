@@ -132,7 +132,7 @@ Main (Control, full-rect)             ← Main.gd
 │       ├── NextHousingItem (VBoxContainer) ← visible while not at max tier; shows next upgrade to buy
 │       │   ├── NextHousingNameLabel (Label) ← next tier label; updated every frame
 │       │   ├── NextHousingCostLabel (Label, autowrap_mode=3) ← "Expand your cats' living space — $X"; updated every frame
-│       │   └── BuyHousingButton (Button) ← calls buy_housing_upgrade(); disabled when unaffordable
+│       │   └── BuyHousingButton (Button) ← calls buy_housing_upgrade(); label and disabled state both read from next_tier["cost"] each frame
 │       └── MaxTierLabel (Label "Max Upgrade Reached") ← hidden until housing_tier_index == last tier
 ├── HappinessCrampedPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_cramped_triggered first sets (cats>=10); on dismiss sets home_shop_unlocked=true; pauses tree
 │   └── DialogPanel (PanelContainer)  ← centered 500×200 dialog

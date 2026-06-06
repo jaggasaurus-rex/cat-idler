@@ -241,6 +241,8 @@ func _process(_delta: float) -> void:
 		var next_tier: Dictionary = Config.housing_tiers[GameState.housing_tier_index + 1]
 		next_housing_name_label.text = next_tier["label"]
 		next_housing_cost_label.text = "Expand your cats' living space — $" + Util.format_number(float(next_tier["cost"]))
+		# Label reads from next_tier["cost"], same source as next_housing_cost_label above
+		buy_housing_button.text = "Buy ($" + Util.format_number(float(next_tier["cost"])) + ")"
 		buy_housing_button.disabled = GameState.money < float(next_tier["cost"])
 
 
