@@ -270,7 +270,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `HOUSING_UPGRADE_PROMPT_THRESHOLD` | `int` | `8` | Cat count that fires the "cats are cramped" popup and reveals the Home tab; shared by GameState._process() and Main.gd._process() |
 | `happiness_fifty_break_offset` | `int` | `2` | Cats over max_cats where happiness hits 50% (before housing bonus); ratio 2:5 with zero_break_offset |
 | `happiness_zero_break_offset` | `int` | `5` | Cats over max_cats where happiness hits 0% (before housing bonus); ratio 2:5 with fifty_break_offset |
-| `housing_tiers` | `Array` | 5 entries | Housing upgrade chain; each entry has `id`, `label`, `cost`, `max_cats_increase`; costs: 0 / 10k / 30k / 120k / 480k |
+| `housing_tiers` | `Array` | 5 entries | Housing upgrade chain; each entry has `id`, `label`, `cost`, `max_cats_increase`; costs: 0 / 1.5k / 10k / 34.5k / 138k |
 
 ### Util (`res://autoloads/Util.gd`)
 
@@ -338,7 +338,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **OnlyPaws ON/OFF toggle** — `OnlyPawsButton` flips `only_paws_active`; income only runs while active; toggling OFF also sets `bots_active = false` stopping token drain; toggling ON re-enables bots if tokens > 0; button label and green modulate reflect state
 - [x] **Upgrade stubs (GameState only)** — `buy_breeder_contract()` exists in GameState but is not wired to any UI
 - [x] **Tabbed shop** — ShopPanel has three tabs in order: Currency | Upgrades | Home; active tab has green modulate; defaults to Currency on load; Upgrades tab hidden until `bot_manager_unlocked OR auto_feeder_unlocked`; Home tab hidden until `home_shop_unlocked`; tab switching via `Tab` enum in `Main.gd`
-- [x] **Housing upgrade chain** — in Home tab; 4 purchasable tiers (Basic Studio is free starting state); each tier costs 3× all previous tiers combined (10k / 30k / 120k / 480k); each purchased tier adds 10 to max_cats (20 → 30 → 40 → 50 → 60); UI shows current tier (green label) + next tier (name, cost, buy button), or "Max Upgrade Reached" at cap; sliding window: always exactly one current + one next visible
+- [x] **Housing upgrade chain** — in Home tab; 4 purchasable tiers (Basic Studio is free starting state); each tier costs 3× all previous tiers combined (1.5k / 10k / 34.5k / 138k); each purchased tier adds 10 to max_cats (20 → 30 → 40 → 50 → 60); UI shows current tier (green label) + next tier (name, cost, buy button), or "Max Upgrade Reached" at cap; sliding window: always exactly one current + one next visible
 - [x] **Shop panel always visible** — `ShopPanel` is shown from game start; no unlock gate
 - [x] **Cat food** — `cat_food` starts at 1000; drains at `cats / 10` per second (always, not gated); clamped to 0; `CatFoodLabel` shows `floor(cat_food)` in the HUD
 - [x] **Cat Food Pack shop item** — buy x1 ($10, +100 food) or x10 ($100, +1000 food); both buttons disabled when `money < 10`

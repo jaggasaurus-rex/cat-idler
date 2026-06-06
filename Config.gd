@@ -49,13 +49,13 @@ const happiness_zero_break_offset: int = 5
 const HOUSING_UPGRADE_PROMPT_THRESHOLD: int = 8
 
 # Housing upgrade chain — ordered from cheapest to most expensive.
-# cost[n] = sum(cost[0..n-1]) * 3  (verified: 0, 10k, 30k, 120k, 480k)
+# cost[n] = sum(cost[0..n-1]) * 3  (verified: 0, 1.5k, 10k, 34.5k, 138k)
 # max_cats_increase is summed for tiers 1..housing_tier_index and added to base_max_cats.
 # Each entry: {id: String, label: String, cost: float, max_cats_increase: int}
 const housing_tiers: Array = [
 	{"id": "studio_basic",    "label": "Basic Studio",    "cost": 0.0,      "max_cats_increase": 0},
-	{"id": "studio_upgraded", "label": "Upgraded Studio", "cost": 10000.0,  "max_cats_increase": 10},
-	{"id": "bedroom_1",       "label": "1 Bedroom",       "cost": 30000.0,  "max_cats_increase": 10},
-	{"id": "bedroom_2",       "label": "2 Bedroom",       "cost": 120000.0, "max_cats_increase": 10},
-	{"id": "bedroom_3",       "label": "3 Bedroom",       "cost": 480000.0, "max_cats_increase": 10},
+	{"id": "studio_upgraded", "label": "Upgraded Studio", "cost": 1500.0,   "max_cats_increase": 10},
+	{"id": "bedroom_1",       "label": "1 Bedroom",       "cost": 10000.0,  "max_cats_increase": 10},
+	{"id": "bedroom_2",       "label": "2 Bedroom",       "cost": 34500.0,  "max_cats_increase": 10},
+	{"id": "bedroom_3",       "label": "3 Bedroom",       "cost": 138000.0, "max_cats_increase": 10},
 ]
