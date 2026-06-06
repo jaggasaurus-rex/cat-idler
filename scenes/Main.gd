@@ -89,6 +89,9 @@ func _ready() -> void:
 	_happiness_fill_style = StyleBoxFlat.new()
 	_happiness_fill_style.bg_color = Color.GREEN
 	happiness_bar.add_theme_stylebox_override("fill", _happiness_fill_style)
+	# Costs used by _sort_upgrades_tab() to order items cheapest-first
+	bot_manager_item.set_meta("upgrade_cost", Config.bot_manager_cost)
+	auto_feeder_item.set_meta("upgrade_cost", Config.auto_feeder_cost)
 	_switch_tab(Tab.CURRENCY)
 
 
@@ -153,6 +156,7 @@ func _process(_delta: float) -> void:
 	# One-way latch — bot manager shop item appears when unlocked
 	if GameState.bot_manager_unlocked and not bot_manager_item.visible:
 		bot_manager_item.visible = true
+		_sort_upgrades_tab()
 
 	if GameState.bot_manager_purchased:
 		buy_bot_manager_button.disabled = true
@@ -221,6 +225,7 @@ func _process(_delta: float) -> void:
 	# One-way latch — auto feeder shop item appears when unlocked
 	if GameState.auto_feeder_unlocked and not auto_feeder_item.visible:
 		auto_feeder_item.visible = true
+		_sort_upgrades_tab()
 
 	if GameState.auto_feeder_purchased:
 		buy_auto_feeder_button.disabled = true
@@ -386,8 +391,19 @@ func _on_cat_crusher_popup_ok_pressed() -> void:
 	GameState.cat_crusher_unlocked = true
 
 
+func _sort_upgrades_tab() -> void:
+	var items: Array[Node] = upgrades_tab_content.get_children()
+	items.sort_custom(func(a: Node, b: Node) -> bool:
+		return float(a.get_meta("upgrade_cost", 0.0)) < float(b.get_meta("upgrade_cost", 0.0))
+	)
+	for i: int in items.size():
+		upgrades_tab_content.move_child(items[i], i)
+
+
 func _switch_tab(tab: Tab) -> void:
 	_active_tab = tab
+	if tab == Tab.UPGRADES:
+		_sort_upgrades_tab()
 	currency_tab_content.visible = tab == Tab.CURRENCY
 	upgrades_tab_content.visible = tab == Tab.UPGRADES
 	home_tab_content.visible = tab == Tab.HOME

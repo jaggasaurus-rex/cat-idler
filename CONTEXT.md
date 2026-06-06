@@ -300,7 +300,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 |---|---|
 | `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`; styles `CatsLabel` as hero stat (bold `SystemFont` + `1.3×` font size relative to `MoneyLabel` base) |
 | `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`, `home_shop_unlocked` (reveals HomeTabButton), and `bot_manager_unlocked OR auto_feeder_unlocked` (reveals UpgradesTabButton); shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); shows cramped/riot popups when triggered; updates housing chain display (current label green, next tier name/cost/button, or MaxTierLabel when at cap) |
-| `_switch_tab` | `(tab: Tab) -> void` | Shows only the content VBox for the given `Tab` enum value; sets green modulate on the active tab button, white on the others |
+| `_sort_upgrades_tab` | `() -> void` | Private; sorts direct children of `upgrades_tab_content` ascending by their `"upgrade_cost"` metadata; called on tab switch and each time a new upgrade item becomes visible |
+| `_switch_tab` | `(tab: Tab) -> void` | Shows only the content VBox for the given `Tab` enum value; sets green modulate on the active tab button, white on the others; calls `_sort_upgrades_tab()` when switching to `Tab.UPGRADES` |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
 | `_on_only_paws_button_pressed()` | Flips `GameState.only_paws_active`; turning OFF sets `bots_active = false`; turning ON re-enables bots if `tokens > 0` |
