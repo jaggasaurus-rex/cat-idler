@@ -54,12 +54,13 @@ Main (Control, full-rect)             ← Main.gd
 ├── CatContainer (Node2D)             ← pos (576, 530); purchased cats added here; placed second so cats render above the background and below all UI
 ├── CatsLabel (Label)                 ← hero stat; positioned first (top=20); bold + 1.3× font size applied in _ready(); updated every _process() frame; text format "Cats: X/MAX" where MAX = happiness threshold; modulate = RED when cats > MAX, WHITE otherwise
 ├── MoneyLabel (Label)                ← updated every _process() frame
-├── CatFoodLabel (Label)              ← "Cat Food: X" where X = floor(cat_food); updated every frame
 ├── EarnMoneyButton (Button)          ← directly below MoneyLabel (offset_top=95); pressed → GameState.click()
-├── PurchaseCatButton (Button)        ← permanently shown once shop_unlocked; label updates every frame
+├── PurchaseCatButton (Button)        ← directly below EarnMoneyButton (offset_top=130); permanently shown once shop_unlocked; label updates every frame
 ├── OnlyPawsButton (Button)           ← permanently shown once only_paws_unlocked; toggles only_paws_active;
 │                                       label = "OnlyPaws: ON/OFF"; green modulate when active
 ├── OnlyPawsIncomeLabel (Label)       ← shown with OnlyPawsButton; "OnlyPaws: $X.XX/sec" updates every frame
+├── CatFoodLabel (Label)              ← directly below PurchaseCatButton (offset_top=165); "Cat Food: X" where X = floor(cat_food); updated every frame
+├── BuyCatFoodButton (Button "Buy Food ($10)") ← directly below CatFoodLabel (offset_top=197); always visible; calls buy_cat_food_pack(1); label gains " ∞" suffix (one-way latch) when auto_feeder_purchased
 ├── OnlyPawsInfoPanel (PanelContainer)← hidden permanently (legacy node, not wired to button anymore)
 │   └── InfoLabel (Label)             ← static info text, autowrap enabled
 ├── HappinessBarContainer (VBoxContainer) ← always visible; top=20, left=420–760; shows Cat Happiness title + progress bar
@@ -97,11 +98,11 @@ Main (Control, full-rect)             ← Main.gd
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← unlock message, autowrap
 │           └── OKButton (Button)     ← hides popup and unpauses tree
-├── BuyCatFoodButton (Button "Buy Food ($10)") ← always visible; calls buy_cat_food_pack(1); disabled when money < 10; label gains " ∞" suffix (one-way latch) when auto_feeder_purchased
-├── ManagerBotButton (Button)         ← hidden until bot_shop_unlocked; label shows live cost; disabled when unaffordable
-├── BotsRateLabel (Label)             ← shown with ManagerBotButton; "Bots: X" updates every frame
-├── TokensLabel (Label)               ← hidden until tokens_shop_unlocked; "Tokens: X" updates every frame
-├── BuyTokensButton (Button "Buy Tokens ($20)") ← hidden until tokens_shop_unlocked; calls buy_tokens(1); disabled when money < 20; label gains " ∞" suffix (one-way latch) when bot_manager_purchased
+├── ManagerBotButton (Button)         ← hidden until bot_shop_unlocked; label shows live cost
+├── BotTokenRow (HBoxContainer)       ← layout_mode=0 at offset_top=350; always visible; contains BotsRateLabel and TokensLabel side by side with 16px separation
+│   ├── BotsRateLabel (Label)         ← hidden until bot_shop_unlocked; "Bots: X" updates every frame
+│   └── TokensLabel (Label)           ← hidden until tokens_shop_unlocked; "Tokens: X" updates every frame
+├── BuyTokensButton (Button "Buy Tokens ($20)") ← hidden until tokens_shop_unlocked; calls buy_tokens(1); label gains " ∞" suffix (one-way latch) when bot_manager_purchased
 ├── ShopPanel (VBoxContainer)         ← right-anchored, always visible; offset_left=-380, offset_right=-10 (370px wide)
 │   ├── ShopLabel (Label "Shop")
 │   └── ShopScroll (ScrollContainer) ← fills remaining ShopPanel height; size_flags_vertical=3

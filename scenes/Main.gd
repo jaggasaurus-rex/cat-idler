@@ -16,7 +16,7 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var only_paws_popup: ColorRect = $OnlyPawsPopup
 @onready var upgrades_tab_popup: ColorRect = $UpgradesTabPopup
 @onready var manager_bot_button: Button = $ManagerBotButton
-@onready var bots_rate_label: Label = $BotsRateLabel
+@onready var bots_rate_label: Label = $BotTokenRow/BotsRateLabel
 @onready var shop_panel: VBoxContainer = $ShopPanel
 @onready var shop_list: VBoxContainer = $ShopPanel/ShopScroll/ShopList
 @onready var housing_button: Button = $ShopPanel/ShopScroll/ShopList/HousingButton
@@ -24,7 +24,7 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var bot_manager_shop_button: Button = $ShopPanel/ShopScroll/ShopList/BotManagerShopButton
 @onready var cat_food_label: Label = $CatFoodLabel
 @onready var buy_cat_food_button: Button = $BuyCatFoodButton
-@onready var tokens_label: Label = $TokensLabel
+@onready var tokens_label: Label = $BotTokenRow/TokensLabel
 @onready var buy_tokens_button: Button = $BuyTokensButton
 @onready var happiness_bar_container: VBoxContainer = $HappinessBarContainer
 @onready var happiness_bar: ProgressBar = $HappinessBarContainer/HappinessRow/HappinessBar
@@ -118,7 +118,7 @@ func _process(_delta: float) -> void:
 		get_tree().paused = true
 
 	cat_food_label.text = "Cat Food: " + Util.format_number(GameState.cat_food)
-	buy_cat_food_button.disabled = GameState.money < Config.cat_food_pack_cost
+	# GameState buy methods guard against insufficient funds; buttons stay enabled
 	if GameState.auto_feeder_purchased and not _cat_food_button_auto_set:
 		_cat_food_button_auto_set = true
 		buy_cat_food_button.text = "Buy Food ($10) ∞"
@@ -129,7 +129,6 @@ func _process(_delta: float) -> void:
 		buy_tokens_button.visible = true
 
 	tokens_label.text = "Tokens: " + Util.format_number(GameState.tokens)
-	buy_tokens_button.disabled = GameState.money < Config.token_pack_cost
 	if GameState.bot_manager_purchased and not _tokens_button_auto_set:
 		_tokens_button_auto_set = true
 		buy_tokens_button.text = "Buy Tokens ($20) ∞"
@@ -149,7 +148,6 @@ func _process(_delta: float) -> void:
 		if not bot_manager_shop_button.visible:
 			bot_manager_shop_button.visible = true
 			_sort_shop_list()
-		bot_manager_shop_button.disabled = GameState.money < Config.bot_manager_cost
 	elif bot_manager_shop_button.visible:
 		bot_manager_shop_button.visible = false
 		_sort_shop_list()
@@ -163,7 +161,6 @@ func _process(_delta: float) -> void:
 		only_paws_button.modulate = Color(1.0, 1.0, 1.0)
 
 	manager_bot_button.text = "OnlyPaws Manager-Bot ($" + Util.format_number(GameState.next_bot_cost) + ")"
-	manager_bot_button.disabled = GameState.money < GameState.next_bot_cost
 	bots_rate_label.text = "Bots: " + Util.format_number(GameState.manager_bots)
 
 	# Happiness bar: colour transitions smoothly from red (0%) to green (100%)
@@ -211,7 +208,6 @@ func _process(_delta: float) -> void:
 		if not auto_feeder_button.visible:
 			auto_feeder_button.visible = true
 			_sort_shop_list()
-		auto_feeder_button.disabled = GameState.money < Config.auto_feeder_cost
 	elif auto_feeder_button.visible:
 		auto_feeder_button.visible = false
 		_sort_shop_list()
@@ -225,7 +221,6 @@ func _process(_delta: float) -> void:
 				_sort_shop_list()
 			var next_tier: Dictionary = Config.housing_tiers[GameState.housing_tier_index + 1]
 			housing_button.text = next_tier["label"] + "\n$" + Util.format_number(float(next_tier["cost"]))
-			housing_button.disabled = GameState.money < float(next_tier["cost"])
 		elif housing_button.visible:
 			housing_button.visible = false
 			_sort_shop_list()
