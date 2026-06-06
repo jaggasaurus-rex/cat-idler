@@ -226,6 +226,58 @@ layout_mode = 2
 text = "Manager-Bot Manager
 $40,000"
 
+[node name="CenterColumn" type="VBoxContainer" parent="." unique_id=400000600]
+visible = false
+layout_mode = 0
+offset_left = 430.0
+offset_top = 110.0
+offset_right = 830.0
+offset_bottom = 600.0
+theme_override_constants/separation = 8
+
+[node name="ResearchTitle" type="Label" parent="CenterColumn" unique_id=400000601]
+layout_mode = 2
+text = "Research"
+
+[node name="ResearchActiveLabel" type="Label" parent="CenterColumn" unique_id=400000602]
+layout_mode = 2
+text = "No Active Research"
+
+[node name="ResearchProgressBar" type="ProgressBar" parent="CenterColumn" unique_id=400000603]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+value = 0.0
+show_percentage = false
+
+[node name="ResearchSlider" type="HSlider" parent="CenterColumn" unique_id=400000604]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+
+[node name="SliderLabels" type="HBoxContainer" parent="CenterColumn" unique_id=400000605]
+layout_mode = 2
+
+[node name="OnlyPawsHint" type="Label" parent="CenterColumn/SliderLabels" unique_id=400000606]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OnlyPaws"
+
+[node name="ResearchHint" type="Label" parent="CenterColumn/SliderLabels" unique_id=400000607]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 2
+text = "Research"
+
+[node name="ResearchCatsLabel" type="Label" parent="CenterColumn" unique_id=400000608]
+layout_mode = 2
+text = "Cats researching: 0"
+
+[node name="ResearchItemList" type="VBoxContainer" parent="CenterColumn" unique_id=400000609]
+layout_mode = 2
+theme_override_constants/separation = 4
+
 
 [node name="OnlyPawsPopup" type="ColorRect" parent="." unique_id=400000040]
 process_mode = 2
@@ -747,6 +799,7 @@ autowrap_mode = 3
 layout_mode = 2
 text = "OK"
 
+[connection signal="value_changed" from="CenterColumn/ResearchSlider" to="." method="_on_research_slider_value_changed"]
 [connection signal="pressed" from="EarnMoneyButton" to="." method="_on_earn_money_button_pressed"]
 [connection signal="pressed" from="PurchaseCatButton" to="." method="_on_purchase_cat_button_pressed"]
 [connection signal="pressed" from="OnlyPawsButton" to="." method="_on_only_paws_button_pressed"]

@@ -44,6 +44,11 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var happiness_cramped_popup: ColorRect = $HappinessCrampedPopup
 @onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
 @onready var cat_crusher_popup: ColorRect = $CatCrusherPopup
+@onready var center_column: VBoxContainer = $CenterColumn
+@onready var research_active_label: Label = $CenterColumn/ResearchActiveLabel
+@onready var research_progress_bar: ProgressBar = $CenterColumn/ResearchProgressBar
+@onready var research_slider: HSlider = $CenterColumn/ResearchSlider
+@onready var research_cats_label: Label = $CenterColumn/ResearchCatsLabel
 
 
 var _only_paws_popup_shown: bool = false
@@ -58,6 +63,7 @@ var _cat_crusher_popup_shown: bool = false
 var _happiness_fill_style: StyleBoxFlat
 var _cat_food_button_auto_set: bool = false
 var _tokens_button_auto_set: bool = false
+var _center_column_shown: bool = false
 
 
 func _ready() -> void:
@@ -170,6 +176,19 @@ func _process(_delta: float) -> void:
 	var t: float = happiness / 100.0
 	_happiness_fill_style.bg_color = Color.RED.lerp(Color.GREEN, t)
 
+	var active_item: Dictionary = {}
+	for item: Dictionary in Config.RESEARCH_ITEMS:
+		if GameState.research_funded.get(item["id"], false) and not GameState.research_complete.get(item["id"], false):
+			active_item = item
+			break
+	if active_item.is_empty():
+		research_active_label.text = "No Active Research"
+		research_progress_bar.value = 0.0
+	else:
+		research_active_label.text = active_item["name"]
+		research_progress_bar.value = GameState.research_points.get(active_item["id"], 0.0) / float(active_item["points_cost"])
+	research_cats_label.text = "Cats researching: " + str(GameState.get_research_cats())
+
 	if GameState.starvation_count >= 1 and not _starvation_popup_shown:
 		_starvation_popup_shown = true
 		starvation_popup.visible = true
@@ -225,6 +244,11 @@ func _process(_delta: float) -> void:
 		elif housing_button.visible:
 			housing_button.visible = false
 			_sort_shop_list()
+
+	# One-way latch — center research column appears after first housing upgrade
+	if GameState.housing_tier_index >= 1 and not _center_column_shown:
+		_center_column_shown = true
+		center_column.visible = true
 
 
 func _on_earn_money_button_pressed() -> void:
@@ -336,6 +360,10 @@ func _on_buy_housing_button_pressed() -> void:
 	GameState.buy_housing_upgrade()
 
 
+func _on_research_slider_value_changed(value: float) -> void:
+	GameState.research_cat_fraction = value
+
+
 func _on_happiness_cramped_popup_ok_pressed() -> void:
 	happiness_cramped_popup.visible = false
 	get_tree().paused = false
@@ -392,6 +420,8 @@ func _place_cat(cat: Node2D) -> void:
 		cat_food_label, buy_cat_food_button, earn_money_button, purchase_cat_button,
 		only_paws_button, manager_bot_button, bots_rate_label, tokens_label, buy_tokens_button,
 	]
+	if center_column.visible:
+		ui_nodes.append(center_column)
 	var ui_rects: Array[Rect2] = []
 	for node: Control in ui_nodes:
 		ui_rects.append(node.get_global_rect().grow(UI_SAFE_PADDING))
