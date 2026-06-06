@@ -83,7 +83,7 @@ func _process(delta: float) -> void:
 			bot_manager_unlocked = true
 	if bot_manager_purchased and tokens <= Config.bot_manager_token_threshold:
 		buy_tokens(1)
-	if not happiness_cramped_triggered and get_happiness() <= 50.0:
+	if not happiness_cramped_triggered and cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD:
 		happiness_cramped_triggered = true
 	if not happiness_riot_triggered and get_happiness() <= 0.0:
 		happiness_riot_triggered = true

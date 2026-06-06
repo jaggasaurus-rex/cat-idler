@@ -45,6 +45,9 @@ const base_max_cats: int = 10  # baseline cat cap before any housing upgrades
 const happiness_fifty_break_offset: int = 2
 const happiness_zero_break_offset: int = 5
 
+# Cat count at which the "your cats are cramped" popup fires and the Home tab unlocks.
+const HOUSING_UPGRADE_PROMPT_THRESHOLD: int = 8
+
 # Housing upgrade chain — ordered from cheapest to most expensive.
 # cost[n] = sum(cost[0..n-1]) * 3  (verified: 0, 10k, 30k, 120k, 480k)
 # max_cats_increase is summed for tiers 1..housing_tier_index and added to base_max_cats.

@@ -194,7 +194,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `starvation_active` | `bool` | `false` | Frame-level debounce; `true` while the starvation condition persists; resets when cat_food > 0 or money >= 10 |
 | `starvation_cats_lost` | `int` | `0` | Tracks cats lost specifically via the starvation mechanic; used in game-over condition |
 | `cats_ever_purchased` | `int` | `0` | Lifetime cat purchase counter; incremented in `buy_cat()`; used to gate game-over so it only triggers if the player has owned at least one cat |
-| `happiness_cramped_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 50.0` (4 over max, e.g. cats = 24 with default max 20); used by Main.gd to show the cramped popup once |
+| `happiness_cramped_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD` (8 cats); used by Main.gd to show the cramped popup once |
 | `happiness_riot_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `get_happiness() <= 0.0` (6 over max, e.g. cats = 26 with default max 20); used by Main.gd to show the riot popup once |
 | `happiness_zero_count` | `int` | `0` | Counts distinct edge-transitions into happiness=0% (i.e. increments each time happiness drops from >0 to 0, tracked via `_happiness_was_zero`); used to gate `cat_crusher_triggered` on count >= 2 |
 | `cat_crusher_triggered` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `happiness_zero_count >= 2`; used by Main.gd to show the Cat Crusher popup once |
@@ -202,7 +202,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `_happiness_was_zero` | `bool` | `false` | Private edge-detection helper; holds whether the previous frame had happiness <= 0; used to count distinct transitions for `happiness_zero_count` |
 | `_cat_loss_active` | `bool` | `false` | Private; `true` while the cat loss drain is running; set to `true` when `cat_crusher_unlocked AND happiness <= 20%`; cleared when `happiness > 80%` |
 | `_cat_loss_timer` | `float` | `0.0` | Private accumulator; seconds elapsed since last cat loss tick; resets on drain start/stop and each 10-second fire |
-| `home_shop_unlocked` | `bool` | `false` | Set to `true` in Main.gd when the cramped popup is dismissed; reserved for a future shop section |
+| `home_shop_unlocked` | `bool` | `false` | Set to `true` in Main.gd when the cramped popup is dismissed; no longer gates Home tab visibility (tab now uses `HOUSING_UPGRADE_PROMPT_THRESHOLD` directly) |
 | `upgrades_tab_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_manager_unlocked OR auto_feeder_unlocked`; gates the Upgrades tab achievement popup so it fires exactly once |
 | `bot_unlock_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_shop_unlocked`; gates the "Cat Harem" achievement popup so it fires exactly once |
 
@@ -265,6 +265,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `auto_feeder_unlock_cats` | `int` | `10` | Cat count that unlocks the Auto-Feeder shop item |
 | `auto_feeder_food_threshold` | `float` | `1.0` | Food level at or below which the auto feeder buys a cat food pack |
 | `base_max_cats` | `int` | `10` | Baseline cat cap before any housing upgrades; used by `get_max_cats()` |
+| `HOUSING_UPGRADE_PROMPT_THRESHOLD` | `int` | `8` | Cat count that fires the "cats are cramped" popup and reveals the Home tab; shared by GameState._process() and Main.gd._process() |
 | `happiness_fifty_break_offset` | `int` | `2` | Cats over max_cats where happiness hits 50% (before housing bonus); ratio 2:5 with zero_break_offset |
 | `happiness_zero_break_offset` | `int` | `5` | Cats over max_cats where happiness hits 0% (before housing bonus); ratio 2:5 with fifty_break_offset |
 | `housing_tiers` | `Array` | 5 entries | Housing upgrade chain; each entry has `id`, `label`, `cost`, `max_cats_increase`; costs: 0 / 10k / 30k / 120k / 480k |
@@ -343,7 +344,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 6 bots owned); one-time $40,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
 - [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (10+ cats or food has ever hit 0); one-time $20,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
 - [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: two-segment quadratic ease-in decay scaled by housing tier. `fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index` (happiness = 50%); `zero_break = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2` (happiness = 0%). Drops from 100%→50% on segment 1 then 50%→0% on segment 2, each using `t^2` (slow start, accelerating end); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0%, sets `happiness_riot_triggered`
-- [x] **Cramped popup** — shown once when happiness first drops to ≤ 50% (2 over max with default base_max_cats=10, cats = 12); pauses game loop; on dismiss sets `home_shop_unlocked = true`
+- [x] **Cramped popup** — shown once when `cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD` (8 cats); pauses game loop; on dismiss sets `home_shop_unlocked = true`
 
 ---
 

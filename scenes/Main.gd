@@ -214,8 +214,8 @@ func _process(_delta: float) -> void:
 	if GameState.cat_crusher_unlocked and not _cat_loss_marker.visible:
 		_cat_loss_marker.visible = true
 
-	# One-way latch — Home tab reveals when home_shop_unlocked
-	if GameState.home_shop_unlocked and not home_tab_button.visible:
+	# One-way latch — Home tab reveals at the same cat count that fires the cramped popup
+	if GameState.cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD and not home_tab_button.visible:
 		home_tab_button.visible = true
 
 	# One-way latch — auto feeder shop item appears when unlocked
