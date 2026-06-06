@@ -48,39 +48,47 @@ offset_right = 300.0
 offset_bottom = 128.0
 text = "Cat Food: 1000"
 
-[node name="EarnMoneyButton" type="Button" parent="." unique_id=1094360717]
+[node name="BuyCatFoodButton" type="Button" parent="." unique_id=400000007]
 layout_mode = 0
 offset_left = 20.0
 offset_top = 130.0
-offset_right = 185.0
+offset_right = 275.0
 offset_bottom = 160.0
+text = "Buy Food ($10)"
+
+[node name="EarnMoneyButton" type="Button" parent="." unique_id=1094360717]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 165.0
+offset_right = 185.0
+offset_bottom = 195.0
 text = "Work at McPawnalds"
 
 [node name="PurchaseCatButton" type="Button" parent="." unique_id=375900732]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 170.0
+offset_top = 205.0
 offset_right = 275.0
-offset_bottom = 200.0
+offset_bottom = 235.0
 text = "Purchase Cat ($5)"
 
 [node name="OnlyPawsButton" type="Button" parent="." unique_id=519044290]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 210.0
+offset_top = 245.0
 offset_right = 275.0
-offset_bottom = 240.0
+offset_bottom = 275.0
 text = "Sell pics on OnlyPaws"
 
 [node name="OnlyPawsIncomeLabel" type="Label" parent="." unique_id=1013931731]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 245.0
+offset_top = 280.0
 offset_right = 350.0
-offset_bottom = 270.0
+offset_bottom = 305.0
 text = "OnlyPaws: $0/sec"
 
 [node name="OnlyPawsInfoPanel" type="PanelContainer" parent="." unique_id=820538870]
@@ -102,28 +110,37 @@ autowrap_mode = 3
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 280.0
+offset_top = 315.0
 offset_right = 360.0
-offset_bottom = 310.0
+offset_bottom = 345.0
 text = "OnlyPaws Manager-Bot ($50.00)"
 
 [node name="BotsRateLabel" type="Label" parent="." unique_id=982341620]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 315.0
+offset_top = 350.0
 offset_right = 400.0
-offset_bottom = 340.0
+offset_bottom = 375.0
 text = "Bots: 0 | Rate: $0.00/sec"
 
 [node name="TokensLabel" type="Label" parent="." unique_id=400000010]
 visible = false
 layout_mode = 0
 offset_left = 20.0
-offset_top = 350.0
+offset_top = 385.0
 offset_right = 300.0
-offset_bottom = 375.0
+offset_bottom = 410.0
 text = "Tokens: 0"
+
+[node name="BuyTokensButton" type="Button" parent="." unique_id=400000016]
+visible = false
+layout_mode = 0
+offset_left = 20.0
+offset_top = 415.0
+offset_right = 275.0
+offset_bottom = 445.0
+text = "Buy Tokens ($20)"
 
 [node name="HappinessBarContainer" type="VBoxContainer" parent="." unique_id=400000050]
 layout_mode = 0
@@ -216,13 +233,6 @@ layout_mode = 2
 text = "100 cat food — $10"
 autowrap_mode = 3
 
-[node name="BuyCatFoodX1Button" type="Button" parent="ShopPanel/CurrencyTabContent/CatFoodItem" unique_id=400000005]
-layout_mode = 2
-text = "Buy x1 ($10)"
-
-[node name="BuyCatFoodX10Button" type="Button" parent="ShopPanel/CurrencyTabContent/CatFoodItem" unique_id=400000006]
-layout_mode = 2
-text = "Buy x10 ($100)"
 
 [node name="TokenPackItem" type="VBoxContainer" parent="ShopPanel/CurrencyTabContent" unique_id=400000011]
 visible = false
@@ -238,13 +248,6 @@ layout_mode = 2
 text = "100 tokens — $20"
 autowrap_mode = 3
 
-[node name="BuyTokenX1Button" type="Button" parent="ShopPanel/CurrencyTabContent/TokenPackItem" unique_id=400000014]
-layout_mode = 2
-text = "Buy x1 ($20)"
-
-[node name="BuyTokenX10Button" type="Button" parent="ShopPanel/CurrencyTabContent/TokenPackItem" unique_id=400000015]
-layout_mode = 2
-text = "Buy x10 ($200)"
 
 [node name="UpgradesTabContent" type="VBoxContainer" parent="ShopPanel" unique_id=400000091]
 visible = false
@@ -849,10 +852,8 @@ text = "OK"
 [connection signal="pressed" from="ShopPanel/TabBar/CurrencyTabButton" to="." method="_on_currency_tab_button_pressed"]
 [connection signal="pressed" from="ShopPanel/TabBar/UpgradesTabButton" to="." method="_on_upgrades_tab_button_pressed"]
 [connection signal="pressed" from="ShopPanel/TabBar/HomeTabButton" to="." method="_on_home_tab_button_pressed"]
-[connection signal="pressed" from="ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX1Button" to="." method="_on_buy_cat_food_x1_button_pressed"]
-[connection signal="pressed" from="ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX10Button" to="." method="_on_buy_cat_food_x10_button_pressed"]
-[connection signal="pressed" from="ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX1Button" to="." method="_on_buy_token_x1_button_pressed"]
-[connection signal="pressed" from="ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX10Button" to="." method="_on_buy_token_x10_button_pressed"]
+[connection signal="pressed" from="BuyCatFoodButton" to="." method="_on_buy_cat_food_x1_button_pressed"]
+[connection signal="pressed" from="BuyTokensButton" to="." method="_on_buy_token_x1_button_pressed"]
 [connection signal="pressed" from="ShopPanel/UpgradesTabContent/BotManagerItem/BuyBotManagerButton" to="." method="_on_buy_bot_manager_button_pressed"]
 [connection signal="pressed" from="ShopPanel/UpgradesTabContent/AutoFeederItem/BuyAutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
 [connection signal="pressed" from="ShopPanel/HomeTabContent/NextHousingItem/BuyHousingButton" to="." method="_on_buy_housing_button_pressed"]

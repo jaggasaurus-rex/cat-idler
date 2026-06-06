@@ -97,9 +97,11 @@ Main (Control, full-rect)             ← Main.gd
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← unlock message, autowrap
 │           └── OKButton (Button)     ← hides popup and unpauses tree
+├── BuyCatFoodButton (Button "Buy Food ($10)") ← always visible; calls buy_cat_food_pack(1); disabled when money < 10; label gains " ∞" suffix (one-way latch) when auto_feeder_purchased
 ├── ManagerBotButton (Button)         ← hidden until bot_shop_unlocked; label shows live cost; disabled when unaffordable
 ├── BotsRateLabel (Label)             ← shown with ManagerBotButton; "Bots: X" updates every frame
 ├── TokensLabel (Label)               ← hidden until tokens_shop_unlocked; "Tokens: X" updates every frame
+├── BuyTokensButton (Button "Buy Tokens ($20)") ← hidden until tokens_shop_unlocked; calls buy_tokens(1); disabled when money < 20; label gains " ∞" suffix (one-way latch) when bot_manager_purchased
 ├── ShopPanel (VBoxContainer)         ← right-anchored, always visible; offset_left=-380, offset_right=-10 (370px wide)
 │   ├── ShopLabel (Label "Shop")
 │   ├── TabBar (HBoxContainer)         ← tab buttons; active tab has green modulate
@@ -107,16 +109,12 @@ Main (Control, full-rect)             ← Main.gd
 │   │   ├── UpgradesTabButton (Button "Upgrades") ← hidden until bot_manager_unlocked OR auto_feeder_unlocked; switches to Upgrades tab; green when active
 │   │   └── HomeTabButton (Button "Home") ← hidden until home_shop_unlocked; switches to Home tab; green when active
 │   ├── CurrencyTabContent (VBoxContainer) ← visible when Currency tab active (default)
-│   │   ├── CatFoodItem (VBoxContainer)   ← always visible
+│   │   ├── CatFoodItem (VBoxContainer)   ← always visible; info labels only (buy button moved to HUD)
 │   │   │   ├── CatFoodNameLabel (Label "Cat Food Pack")
-│   │   │   ├── CatFoodDescLabel (Label "100 cat food — $10", autowrap_mode=3)
-│   │   │   ├── BuyCatFoodX1Button (Button "Buy x1 ($10)")  ← calls buy_cat_food_pack(1); disabled when money < 10
-│   │   │   └── BuyCatFoodX10Button (Button "Buy x10 ($100)") ← calls buy_cat_food_pack(10); disabled when money < 10
-│   │   └── TokenPackItem (VBoxContainer) ← hidden until tokens_shop_unlocked; one-way latch in _process()
+│   │   │   └── CatFoodDescLabel (Label "100 cat food — $10", autowrap_mode=3)
+│   │   └── TokenPackItem (VBoxContainer) ← hidden until tokens_shop_unlocked; one-way latch in _process(); info labels only (buy button moved to HUD)
 │   │       ├── TokenPackNameLabel (Label "Token Pack")
-│   │       ├── TokenPackDescLabel (Label "100 tokens — $20", autowrap_mode=3)
-│   │       ├── BuyTokenX1Button (Button "Buy x1 ($20)")   ← calls buy_tokens(1); disabled when money < 20
-│   │       └── BuyTokenX10Button (Button "Buy x10 ($200)") ← calls buy_tokens(10); disabled when money < 20
+│   │       └── TokenPackDescLabel (Label "100 tokens — $20", autowrap_mode=3)
 │   ├── UpgradesTabContent (VBoxContainer) ← visible when Upgrades tab active; hidden until tab button reveals
 │   │   ├── BotManagerItem (VBoxContainer) ← hidden until bot_manager_unlocked; one-way latch in _process()
 │   │   │   ├── BotManagerNameLabel (Label "Manager-bot Manager")

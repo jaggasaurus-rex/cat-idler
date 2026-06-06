@@ -26,12 +26,10 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 @onready var upgrades_tab_content: VBoxContainer = $ShopPanel/UpgradesTabContent
 @onready var home_tab_content: VBoxContainer = $ShopPanel/HomeTabContent
 @onready var cat_food_label: Label = $CatFoodLabel
-@onready var buy_cat_food_x1_button: Button = $ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX1Button
-@onready var buy_cat_food_x10_button: Button = $ShopPanel/CurrencyTabContent/CatFoodItem/BuyCatFoodX10Button
+@onready var buy_cat_food_button: Button = $BuyCatFoodButton
 @onready var tokens_label: Label = $TokensLabel
+@onready var buy_tokens_button: Button = $BuyTokensButton
 @onready var token_pack_item: VBoxContainer = $ShopPanel/CurrencyTabContent/TokenPackItem
-@onready var buy_token_x1_button: Button = $ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX1Button
-@onready var buy_token_x10_button: Button = $ShopPanel/CurrencyTabContent/TokenPackItem/BuyTokenX10Button
 @onready var bot_manager_item: VBoxContainer = $ShopPanel/UpgradesTabContent/BotManagerItem
 @onready var bot_manager_desc_label: Label = $ShopPanel/UpgradesTabContent/BotManagerItem/BotManagerDescLabel
 @onready var buy_bot_manager_button: Button = $ShopPanel/UpgradesTabContent/BotManagerItem/BuyBotManagerButton
@@ -75,6 +73,8 @@ var _happiness_riot_popup_shown: bool = false
 var _cat_crusher_popup_shown: bool = false
 var _happiness_fill_style: StyleBoxFlat
 var _active_tab: Tab = Tab.CURRENCY
+var _cat_food_button_auto_set: bool = false
+var _tokens_button_auto_set: bool = false
 
 
 func _ready() -> void:
@@ -133,17 +133,22 @@ func _process(_delta: float) -> void:
 		get_tree().paused = true
 
 	cat_food_label.text = "Cat Food: " + Util.format_number(GameState.cat_food)
-	buy_cat_food_x1_button.disabled = GameState.money < Config.cat_food_pack_cost
-	buy_cat_food_x10_button.disabled = GameState.money < Config.cat_food_pack_cost
+	buy_cat_food_button.disabled = GameState.money < Config.cat_food_pack_cost
+	if GameState.auto_feeder_purchased and not _cat_food_button_auto_set:
+		_cat_food_button_auto_set = true
+		buy_cat_food_button.text = "Buy Food ($10) ∞"
 
-	# One-way latch — tokens label and token shop item appear on first bot purchase
+	# One-way latch — tokens label, buy button, and token shop item appear on first bot purchase
 	if GameState.tokens_shop_unlocked and not tokens_label.visible:
 		tokens_label.visible = true
+		buy_tokens_button.visible = true
 		token_pack_item.visible = true
 
 	tokens_label.text = "Tokens: " + Util.format_number(GameState.tokens)
-	buy_token_x1_button.disabled = GameState.money < Config.token_pack_cost
-	buy_token_x10_button.disabled = GameState.money < Config.token_pack_cost
+	buy_tokens_button.disabled = GameState.money < Config.token_pack_cost
+	if GameState.bot_manager_purchased and not _tokens_button_auto_set:
+		_tokens_button_auto_set = true
+		buy_tokens_button.text = "Buy Tokens ($20) ∞"
 
 	# One-way latch — Upgrades tab reveals when either of its items unlocks
 	if (GameState.bot_manager_unlocked or GameState.auto_feeder_unlocked) and not upgrades_tab_button.visible:
@@ -282,16 +287,8 @@ func _on_buy_cat_food_x1_button_pressed() -> void:
 	GameState.buy_cat_food_pack(1)
 
 
-func _on_buy_cat_food_x10_button_pressed() -> void:
-	GameState.buy_cat_food_pack(10)
-
-
 func _on_buy_token_x1_button_pressed() -> void:
 	GameState.buy_tokens(1)
-
-
-func _on_buy_token_x10_button_pressed() -> void:
-	GameState.buy_tokens(10)
 
 
 func _on_starvation_popup_ok_pressed() -> void:
@@ -442,8 +439,8 @@ func _place_cat(cat: Node2D) -> void:
 	var vp_rect: Rect2 = get_viewport_rect()
 	var ui_nodes: Array[Control] = [
 		shop_panel, happiness_bar_container, money_label, cats_label,
-		cat_food_label, earn_money_button, purchase_cat_button,
-		only_paws_button, manager_bot_button, bots_rate_label, tokens_label,
+		cat_food_label, buy_cat_food_button, earn_money_button, purchase_cat_button,
+		only_paws_button, manager_bot_button, bots_rate_label, tokens_label, buy_tokens_button,
 	]
 	var ui_rects: Array[Rect2] = []
 	for node: Control in ui_nodes:
