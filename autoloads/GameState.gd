@@ -47,6 +47,7 @@ var _cat_loss_timer: float = 0.0
 var home_shop_unlocked: bool = false
 var upgrades_tab_popup_shown: bool = false
 var bot_unlock_popup_shown: bool = false
+var bot_manager_unlock_popup_shown: bool = false
 
 
 func _ready() -> void:

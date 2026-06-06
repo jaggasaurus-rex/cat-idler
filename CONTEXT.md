@@ -144,6 +144,7 @@ Main (Control, full-rect)             ← Main.gd
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← riot message, autowrap
 │           └── OKButton (Button)     ← hides popup and unpauses tree
+├── BotManagerUnlockPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when bot_manager_unlocked first becomes true (gated by GameState.bot_manager_unlock_popup_shown); placeholder text "New upgrade available: Manager-Bot Manager."; pauses tree; dismiss unpauses only
 ├── UpgradesTabPopup (ColorRect)      ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when bot_manager_unlocked OR auto_feeder_unlocked first becomes true (gated by GameState.upgrades_tab_popup_shown); pauses tree; dismiss unpauses only
 │   └── DialogPanel (PanelContainer)  ← centered 600×260 dialog
 │       └── VBoxContainer
@@ -205,6 +206,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `home_shop_unlocked` | `bool` | `false` | Set to `true` in Main.gd when the cramped popup is dismissed; no longer gates Home tab visibility (tab now uses `HOUSING_UPGRADE_PROMPT_THRESHOLD` directly) |
 | `upgrades_tab_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_manager_unlocked OR auto_feeder_unlocked`; gates the Upgrades tab achievement popup so it fires exactly once |
 | `bot_unlock_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_shop_unlocked`; gates the "Cat Harem" achievement popup so it fires exactly once |
+| `bot_manager_unlock_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `bot_manager_unlocked`; gates the Manager-Bot Manager unlock popup so it fires exactly once |
 
 | Signal | Description |
 |---|---|
