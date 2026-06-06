@@ -241,8 +241,8 @@ func get_max_cats() -> int:
 ## Returns cat happiness as a percentage (0–100).
 ## At or under max_cats: always 100%.
 ## Two-segment quadratic ease-in decay above max_cats, breakpoints scaled by housing tier:
-##   fifty_break = max_cats + 5 + housing_tier_index  → happiness = 50%
-##   zero_break  = max_cats + 10 + housing_tier_index * 2  → happiness = 0%
+##   fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index  → happiness = 50%
+##   zero_break  = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2  → happiness = 0%
 ## Segment 1 (max_cats < cats < fifty_break): t^2 ease-in from 100% down to 50%.
 ## Segment 2 (fifty_break <= cats < zero_break): t^2 ease-in from 50% down to 0%.
 func get_happiness() -> float:
@@ -265,7 +265,10 @@ func get_happiness() -> float:
 # fifty_break: cats count where happiness hits 50%; zero_break: where it hits 0%.
 # Both widen as housing_tier_index increases, rewarding housing investment.
 func _happiness_breakpoints(max_cats: int) -> Array[int]:
-	return [max_cats + 5 + housing_tier_index, max_cats + 10 + housing_tier_index * 2]
+	return [
+		max_cats + Config.happiness_fifty_break_offset + housing_tier_index,
+		max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2,
+	]
 
 
 ## Purchases the next housing tier, increasing the max_cats threshold.

@@ -39,7 +39,11 @@ const auto_feeder_unlock_cats: int = 10
 const auto_feeder_food_threshold: float = 1.0
 
 # Cat Happiness
-const base_max_cats: int = 20  # baseline cat cap before any housing upgrades
+const base_max_cats: int = 10  # baseline cat cap before any housing upgrades
+# Cats over max_cats at which happiness hits 50% and 0% respectively (before housing bonus).
+# Intended ratio: 2:5 (50% threshold is 2/5 of the way to the 0% threshold).
+const happiness_fifty_break_offset: int = 2
+const happiness_zero_break_offset: int = 5
 
 # Housing upgrade chain — ordered from cheapest to most expensive.
 # cost[n] = sum(cost[0..n-1]) * 3  (verified: 0, 10k, 30k, 120k, 480k)
