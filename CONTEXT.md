@@ -112,7 +112,7 @@ Main (Control, full-rect)             ← Main.gd
 │   │   ├── OnlyPawsHint (Label "OnlyPaws") ← left side hint
 │   │   └── ResearchHint (Label "Research") ← right-aligned hint
 │   ├── ResearchCatsLabel (Label)     ← "Cats researching: X"; updated every frame from GameState.get_research_cats()
-│   └── ResearchItemList (VBoxContainer) ← empty; populated in next prompt
+│   └── ResearchItemList (VBoxContainer) ← children built dynamically in Main.gd _ready() from Config.RESEARCH_ITEMS; each child is a PanelContainer → VBoxContainer → NameLabel + DescriptionLabel (autowrap) + FundButton + ProgressLabel (hidden until funded); refs stored in _research_panels/_research_fund_buttons/_research_progress_labels dicts keyed by item id
 ├── ShopPanel (VBoxContainer)         ← right-anchored, always visible; offset_left=-380, offset_right=-10 (370px wide)
 │   ├── ShopLabel (Label "Shop")
 │   └── ShopScroll (ScrollContainer) ← fills remaining ShopPanel height; size_flags_vertical=3
@@ -295,7 +295,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 
 | Method | Description |
 |---|---|
-| `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`; styles `CatsLabel` as hero stat (bold `SystemFont` + `1.3×` font size relative to `MoneyLabel` base) |
+| `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`, `cat_lost` → `_on_cat_lost`, `research_completed` → `_on_research_completed`; styles `CatsLabel` as hero stat; builds per-item research panels in `ResearchItemList` from `Config.RESEARCH_ITEMS` (PanelContainer → VBoxContainer → NameLabel, DescriptionLabel, FundButton, ProgressLabel); stores refs in `_research_panels`, `_research_fund_buttons`, `_research_progress_labels`, `_research_panel_hidden` |
 | `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`, `home_shop_unlocked`, `housing_tier_index >= 1` (reveals CenterColumn), and `bot_manager_unlocked OR auto_feeder_unlocked`; shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); updates `ResearchActiveLabel`, `ResearchProgressBar`, `ResearchCatsLabel` every frame; shows cramped/riot popups when triggered; updates housing chain display |
 | `_sort_shop_list` | `() -> void` | Private; updates dynamic `shop_cost` metadata (housing next-tier cost, manager-bot live cost) then sorts `ShopList` children ascending by `shop_cost`; invisible items sink to bottom; called whenever any item's visibility changes |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |

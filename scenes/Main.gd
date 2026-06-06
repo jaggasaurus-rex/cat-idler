@@ -49,6 +49,7 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var research_progress_bar: ProgressBar = $CenterColumn/ResearchProgressBar
 @onready var research_slider: HSlider = $CenterColumn/ResearchSlider
 @onready var research_cats_label: Label = $CenterColumn/ResearchCatsLabel
+@onready var research_item_list: VBoxContainer = $CenterColumn/ResearchItemList
 
 
 var _only_paws_popup_shown: bool = false
@@ -64,11 +65,41 @@ var _happiness_fill_style: StyleBoxFlat
 var _cat_food_button_auto_set: bool = false
 var _tokens_button_auto_set: bool = false
 var _center_column_shown: bool = false
+var _research_panels: Dictionary = {}
+var _research_fund_buttons: Dictionary = {}
+var _research_progress_labels: Dictionary = {}
+var _research_panel_hidden: Dictionary = {}
 
 
 func _ready() -> void:
 	GameState.cat_purchased.connect(_on_cat_purchased)
 	GameState.cat_lost.connect(_on_cat_lost)
+	GameState.research_completed.connect(_on_research_completed)
+	for item: Dictionary in Config.RESEARCH_ITEMS:
+		var item_id: String = item["id"]
+		var panel: PanelContainer = PanelContainer.new()
+		research_item_list.add_child(panel)
+		_research_panels[item_id] = panel
+		var vbox: VBoxContainer = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 4)
+		panel.add_child(vbox)
+		var name_label: Label = Label.new()
+		name_label.text = item["name"] + " — " + item["subtitle"]
+		vbox.add_child(name_label)
+		var desc_label: Label = Label.new()
+		desc_label.text = item["description"]
+		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(desc_label)
+		var fund_btn: Button = Button.new()
+		fund_btn.text = "Fund Research ($" + Util.format_number(float(item["fund_cost"])) + ")"
+		fund_btn.pressed.connect(_on_fund_button_pressed.bind(item_id))
+		vbox.add_child(fund_btn)
+		_research_fund_buttons[item_id] = fund_btn
+		var progress_label: Label = Label.new()
+		progress_label.visible = false
+		vbox.add_child(progress_label)
+		_research_progress_labels[item_id] = progress_label
+		_research_panel_hidden[item_id] = false
 	# Hero stat: bold + 30% larger than the base metric font size
 	var base_size: int = money_label.get_theme_font_size("font_size")
 	cats_label.add_theme_font_size_override("font_size", roundi(float(base_size) * 1.3))
@@ -188,6 +219,23 @@ func _process(_delta: float) -> void:
 		research_active_label.text = active_item["name"]
 		research_progress_bar.value = GameState.research_points.get(active_item["id"], 0.0) / float(active_item["points_cost"])
 	research_cats_label.text = "Cats researching: " + str(GameState.get_research_cats())
+	for item: Dictionary in Config.RESEARCH_ITEMS:
+		var item_id: String = item["id"]
+		if _research_panel_hidden.get(item_id, false):
+			continue
+		var fund_btn: Button = _research_fund_buttons[item_id]
+		var prog_label: Label = _research_progress_labels[item_id]
+		if GameState.research_funded.get(item_id, false):
+			fund_btn.visible = false
+			prog_label.visible = true
+			if int(item["min_cats_required"]) > 0 and GameState.get_research_cats() < int(item["min_cats_required"]):
+				prog_label.text = "Needs " + str(int(item["min_cats_required"])) + "+ cats assigned to begin"
+			else:
+				prog_label.text = "In Progress…"
+		else:
+			fund_btn.visible = true
+			fund_btn.disabled = GameState.money < float(item["fund_cost"])
+			prog_label.visible = false
 
 	if GameState.starvation_count >= 1 and not _starvation_popup_shown:
 		_starvation_popup_shown = true
@@ -362,6 +410,16 @@ func _on_buy_housing_button_pressed() -> void:
 
 func _on_research_slider_value_changed(value: float) -> void:
 	GameState.research_cat_fraction = value
+
+
+func _on_research_completed(id: String) -> void:
+	if _research_panels.has(id):
+		(_research_panels[id] as PanelContainer).visible = false
+		_research_panel_hidden[id] = true
+
+
+func _on_fund_button_pressed(item_id: String) -> void:
+	GameState.fund_research(item_id)
 
 
 func _on_happiness_cramped_popup_ok_pressed() -> void:
