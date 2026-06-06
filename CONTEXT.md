@@ -55,7 +55,7 @@ Main (Control, full-rect)             ← Main.gd
 ├── CatsLabel (Label)                 ← hero stat; positioned first (top=20); bold + 1.3× font size applied in _ready(); updated every _process() frame; text format "Cats: X/MAX" where MAX = happiness threshold; modulate = RED when cats > MAX, WHITE otherwise
 ├── MoneyLabel (Label)                ← updated every _process() frame
 ├── CatFoodLabel (Label)              ← "Cat Food: X" where X = floor(cat_food); updated every frame
-├── EarnMoneyButton (Button)          ← pressed → GameState.click()
+├── EarnMoneyButton (Button)          ← directly below MoneyLabel (offset_top=95); pressed → GameState.click()
 ├── PurchaseCatButton (Button)        ← permanently shown once shop_unlocked; label updates every frame
 ├── OnlyPawsButton (Button)           ← permanently shown once only_paws_unlocked; toggles only_paws_active;
 │                                       label = "OnlyPaws: ON/OFF"; green modulate when active

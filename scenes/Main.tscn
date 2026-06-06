@@ -32,6 +32,14 @@ offset_right = 300.0
 offset_bottom = 93.0
 text = "Money: $0.0"
 
+[node name="EarnMoneyButton" type="Button" parent="." unique_id=1094360717]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 95.0
+offset_right = 185.0
+offset_bottom = 125.0
+text = "Work at McPawnalds"
+
 [node name="CatsLabel" type="Label" parent="." unique_id=1595888146]
 layout_mode = 0
 offset_left = 20.0
@@ -43,26 +51,18 @@ text = "Cats: 0"
 [node name="CatFoodLabel" type="Label" parent="." unique_id=400000001]
 layout_mode = 0
 offset_left = 20.0
-offset_top = 98.0
+offset_top = 130.0
 offset_right = 300.0
-offset_bottom = 128.0
+offset_bottom = 160.0
 text = "Cat Food: 1000"
 
 [node name="BuyCatFoodButton" type="Button" parent="." unique_id=400000007]
 layout_mode = 0
 offset_left = 20.0
-offset_top = 130.0
+offset_top = 162.0
 offset_right = 275.0
-offset_bottom = 160.0
+offset_bottom = 192.0
 text = "Buy Food ($10)"
-
-[node name="EarnMoneyButton" type="Button" parent="." unique_id=1094360717]
-layout_mode = 0
-offset_left = 20.0
-offset_top = 165.0
-offset_right = 185.0
-offset_bottom = 195.0
-text = "Work at McPawnalds"
 
 [node name="PurchaseCatButton" type="Button" parent="." unique_id=375900732]
 visible = false
