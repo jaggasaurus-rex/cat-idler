@@ -22,7 +22,6 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var housing_button: Button = $ShopPanel/ShopScroll/ShopList/HousingButton
 @onready var auto_feeder_button: Button = $ShopPanel/ShopScroll/ShopList/AutoFeederButton
 @onready var bot_manager_shop_button: Button = $ShopPanel/ShopScroll/ShopList/BotManagerShopButton
-@onready var manager_bot_shop_button: Button = $ShopPanel/ShopScroll/ShopList/ManagerBotShopButton
 @onready var cat_food_label: Label = $CatFoodLabel
 @onready var buy_cat_food_button: Button = $BuyCatFoodButton
 @onready var tokens_label: Label = $TokensLabel
@@ -78,7 +77,6 @@ func _ready() -> void:
 	auto_feeder_button.set_meta("shop_cost", Config.auto_feeder_cost)
 	bot_manager_shop_button.set_meta("shop_cost", Config.bot_manager_cost)
 	housing_button.set_meta("shop_cost", 0.0)
-	manager_bot_shop_button.set_meta("shop_cost", 0.0)
 	auto_feeder_button.text = "Auto-Feeder\n$" + Util.format_number(Config.auto_feeder_cost)
 	bot_manager_shop_button.text = "Manager-Bot Manager\n$" + Util.format_number(Config.bot_manager_cost)
 
@@ -217,14 +215,6 @@ func _process(_delta: float) -> void:
 	elif auto_feeder_button.visible:
 		auto_feeder_button.visible = false
 		_sort_shop_list()
-
-	# Manager bot shop button — visible when bot_shop_unlocked; stays after purchase
-	if GameState.bot_shop_unlocked and not manager_bot_shop_button.visible:
-		manager_bot_shop_button.visible = true
-		_sort_shop_list()
-	if manager_bot_shop_button.visible:
-		manager_bot_shop_button.text = "Manager Bot\n$" + Util.format_number(GameState.next_bot_cost)
-		manager_bot_shop_button.disabled = GameState.money < GameState.next_bot_cost
 
 	# Housing shop button — visible when home_shop_unlocked; updates to next tier, disappears at cap
 	if GameState.home_shop_unlocked:
@@ -367,16 +357,11 @@ func _on_cat_crusher_popup_ok_pressed() -> void:
 	GameState.cat_crusher_unlocked = true
 
 
-func _on_manager_bot_shop_button_pressed() -> void:
-	GameState.buy_bot()
-
-
 # Sorts visible shop list items ascending by shop_cost meta; invisible items sink to the bottom.
 func _sort_shop_list() -> void:
 	if not (GameState.housing_tier_index >= Config.housing_tiers.size() - 1):
 		var next_tier: Dictionary = Config.housing_tiers[GameState.housing_tier_index + 1]
 		housing_button.set_meta("shop_cost", float(next_tier["cost"]))
-	manager_bot_shop_button.set_meta("shop_cost", GameState.next_bot_cost)
 	var items: Array[Node] = shop_list.get_children()
 	items.sort_custom(func(a: Node, b: Node) -> bool:
 		if not a.visible:

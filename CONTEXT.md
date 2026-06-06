@@ -109,7 +109,6 @@ Main (Control, full-rect)             ← Main.gd
 │           ├── HousingButton (Button) ← hidden until home_shop_unlocked; text = next tier name + cost; disappears when max tier reached; calls buy_housing_upgrade()
 │           ├── AutoFeederButton (Button) ← hidden until auto_feeder_unlocked; disappears on purchase; calls buy_auto_feeder()
 │           ├── BotManagerShopButton (Button) ← hidden until bot_manager_unlocked; disappears on purchase; calls buy_bot_manager()
-│           └── ManagerBotShopButton (Button) ← hidden until bot_shop_unlocked; stays after purchase; text updates each frame with live cost; calls buy_bot()
 ├── HappinessCrampedPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_cramped_triggered first sets (cats>=10); on dismiss sets home_shop_unlocked=true; pauses tree
 │   └── DialogPanel (PanelContainer)  ← centered 500×200 dialog
 │       └── VBoxContainer

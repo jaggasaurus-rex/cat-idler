@@ -225,11 +225,6 @@ layout_mode = 2
 text = "Manager-Bot Manager
 $40,000"
 
-[node name="ManagerBotShopButton" type="Button" parent="ShopPanel/ShopScroll/ShopList" unique_id=400000405]
-visible = false
-layout_mode = 2
-text = "Manager Bot
-$50"
 
 [node name="OnlyPawsPopup" type="ColorRect" parent="." unique_id=400000040]
 process_mode = 2
@@ -760,7 +755,6 @@ text = "OK"
 [connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/HousingButton" to="." method="_on_buy_housing_button_pressed"]
 [connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/AutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
 [connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/BotManagerShopButton" to="." method="_on_buy_bot_manager_button_pressed"]
-[connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/ManagerBotShopButton" to="." method="_on_manager_bot_shop_button_pressed"]
 [connection signal="pressed" from="OnlyPawsPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_only_paws_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessCrampedPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_cramped_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessRiotPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_riot_popup_ok_pressed"]
