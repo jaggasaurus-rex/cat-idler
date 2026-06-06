@@ -104,34 +104,12 @@ Main (Control, full-rect)             ← Main.gd
 ├── BuyTokensButton (Button "Buy Tokens ($20)") ← hidden until tokens_shop_unlocked; calls buy_tokens(1); disabled when money < 20; label gains " ∞" suffix (one-way latch) when bot_manager_purchased
 ├── ShopPanel (VBoxContainer)         ← right-anchored, always visible; offset_left=-380, offset_right=-10 (370px wide)
 │   ├── ShopLabel (Label "Shop")
-│   ├── TabBar (HBoxContainer)         ← tab buttons; active tab has green modulate
-│   │   ├── CurrencyTabButton (Button "Currency") ← switches to Currency tab; green when active
-│   │   ├── UpgradesTabButton (Button "Upgrades") ← hidden until bot_manager_unlocked OR auto_feeder_unlocked; switches to Upgrades tab; green when active
-│   │   └── HomeTabButton (Button "Home") ← hidden until home_shop_unlocked; switches to Home tab; green when active
-│   ├── CurrencyTabContent (VBoxContainer) ← visible when Currency tab active (default)
-│   │   ├── CatFoodItem (VBoxContainer)   ← always visible; info labels only (buy button moved to HUD)
-│   │   │   ├── CatFoodNameLabel (Label "Cat Food Pack")
-│   │   │   └── CatFoodDescLabel (Label "100 cat food — $10", autowrap_mode=3)
-│   │   └── TokenPackItem (VBoxContainer) ← hidden until tokens_shop_unlocked; one-way latch in _process(); info labels only (buy button moved to HUD)
-│   │       ├── TokenPackNameLabel (Label "Token Pack")
-│   │       └── TokenPackDescLabel (Label "100 tokens — $20", autowrap_mode=3)
-│   ├── UpgradesTabContent (VBoxContainer) ← visible when Upgrades tab active; hidden until tab button reveals
-│   │   ├── BotManagerItem (VBoxContainer) ← hidden until bot_manager_unlocked; one-way latch in _process()
-│   │   │   ├── BotManagerNameLabel (Label "Manager-bot Manager")
-│   │   │   ├── BotManagerDescLabel (Label, autowrap_mode=3) ← hidden in _process() when bot_manager_purchased
-│   │   │   └── BuyBotManagerButton (Button "Buy ($20,000)") ← calls buy_bot_manager(); disabled when unaffordable; green + disabled when purchased
-│   │   └── AutoFeederItem (VBoxContainer) ← hidden until auto_feeder_unlocked; one-way latch in _process()
-│   │       ├── AutoFeederNameLabel (Label "Auto-Feeder")
-│   │       ├── AutoFeederDescLabel (Label, autowrap_mode=3) ← hidden in _process() when auto_feeder_purchased
-│   │       └── BuyAutoFeederButton (Button "Buy ($40,000)") ← calls buy_auto_feeder(); disabled when unaffordable; green + disabled when purchased
-│   └── HomeTabContent (VBoxContainer) ← visible when Home tab active; hidden until tab button reveals
-│       ├── CurrentHousingItem (VBoxContainer) ← always visible; shows current tier
-│       │   └── CurrentHousingLabel (Label) ← "Current: [tier label]"; green modulate; updated every frame
-│       ├── NextHousingItem (VBoxContainer) ← visible while not at max tier; shows next upgrade to buy
-│       │   ├── NextHousingNameLabel (Label) ← next tier label; updated every frame
-│       │   ├── NextHousingCostLabel (Label, autowrap_mode=3) ← "Expand your cats' living space — $X"; updated every frame
-│       │   └── BuyHousingButton (Button) ← calls buy_housing_upgrade(); label and disabled state both read from next_tier["cost"] each frame
-│       └── MaxTierLabel (Label "Max Upgrade Reached") ← hidden until housing_tier_index == last tier
+│   └── ShopScroll (ScrollContainer) ← fills remaining ShopPanel height; size_flags_vertical=3
+│       └── ShopList (VBoxContainer) ← single item list; size_flags_horizontal=3; separation=8; sorted ascending by cost each time visibility changes
+│           ├── HousingButton (Button) ← hidden until home_shop_unlocked; text = next tier name + cost; disappears when max tier reached; calls buy_housing_upgrade()
+│           ├── AutoFeederButton (Button) ← hidden until auto_feeder_unlocked; disappears on purchase; calls buy_auto_feeder()
+│           ├── BotManagerShopButton (Button) ← hidden until bot_manager_unlocked; disappears on purchase; calls buy_bot_manager()
+│           └── ManagerBotShopButton (Button) ← hidden until bot_shop_unlocked; stays after purchase; text updates each frame with live cost; calls buy_bot()
 ├── HappinessCrampedPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_cramped_triggered first sets (cats>=10); on dismiss sets home_shop_unlocked=true; pauses tree
 │   └── DialogPanel (PanelContainer)  ← centered 500×200 dialog
 │       └── VBoxContainer
@@ -300,8 +278,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 |---|---|
 | `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`; styles `CatsLabel` as hero stat (bold `SystemFont` + `1.3×` font size relative to `MoneyLabel` base) |
 | `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`, `home_shop_unlocked` (reveals HomeTabButton), and `bot_manager_unlocked OR auto_feeder_unlocked` (reveals UpgradesTabButton); shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; disables cat food buy buttons when `money < 10.0`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); shows cramped/riot popups when triggered; updates housing chain display (current label green, next tier name/cost/button, or MaxTierLabel when at cap) |
-| `_sort_upgrades_tab` | `() -> void` | Private; sorts direct children of `upgrades_tab_content` ascending by their `"upgrade_cost"` metadata; called on tab switch and each time a new upgrade item becomes visible |
-| `_switch_tab` | `(tab: Tab) -> void` | Shows only the content VBox for the given `Tab` enum value; sets green modulate on the active tab button, white on the others; calls `_sort_upgrades_tab()` when switching to `Tab.UPGRADES` |
+| `_sort_shop_list` | `() -> void` | Private; updates dynamic `shop_cost` metadata (housing next-tier cost, manager-bot live cost) then sorts `ShopList` children ascending by `shop_cost`; invisible items sink to bottom; called whenever any item's visibility changes |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
 | `_on_only_paws_button_pressed()` | Flips `GameState.only_paws_active`; turning OFF sets `bots_active = false`; turning ON re-enables bots if `tokens > 0` |
@@ -335,7 +312,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **OnlyPaws Manager-Bot** — unlocks at 6 cats; costs $50 (doubles each purchase); each bot doubles total OnlyPaws income rate; button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count and current rate
 - [x] **OnlyPaws ON/OFF toggle** — `OnlyPawsButton` flips `only_paws_active`; income only runs while active; toggling OFF also sets `bots_active = false` stopping token drain; toggling ON re-enables bots if tokens > 0; button label and green modulate reflect state
 - [x] **Upgrade stubs (GameState only)** — `buy_breeder_contract()` exists in GameState but is not wired to any UI
-- [x] **Tabbed shop** — ShopPanel has three tabs in order: Currency | Upgrades | Home; active tab has green modulate; defaults to Currency on load; Upgrades tab hidden until `bot_manager_unlocked OR auto_feeder_unlocked`; Home tab hidden until `home_shop_unlocked`; tab switching via `Tab` enum in `Main.gd`
+- [x] **Flat shop list** — ShopPanel contains a ScrollContainer with a single VBoxContainer; items are individual Button nodes sorted ascending by cost each time visibility changes; no tabs
 - [x] **Housing upgrade chain** — in Home tab; 4 purchasable tiers (Basic Studio is free starting state); each tier costs 3× all previous tiers combined (1.5k / 10k / 34.5k / 138k); each purchased tier adds 10 to max_cats (20 → 30 → 40 → 50 → 60); UI shows current tier (green label) + next tier (name, cost, buy button), or "Max Upgrade Reached" at cap; sliding window: always exactly one current + one next visible
 - [x] **Shop panel always visible** — `ShopPanel` is shown from game start; no unlock gate
 - [x] **Cat food** — `cat_food` starts at 1000; drains at `cats / 10` per second (always, not gated); clamped to 0; `CatFoodLabel` shows `floor(cat_food)` in the HUD

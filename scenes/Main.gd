@@ -5,7 +5,6 @@ const CAT_SPACING_RADIUS := 64.0
 const UI_SAFE_PADDING := 16.0
 const CAT_PLACEMENT_ATTEMPTS := 30
 
-enum Tab { CURRENCY, UPGRADES, HOME }
 
 @onready var earn_money_button: Button = $EarnMoneyButton
 @onready var money_label: Label = $MoneyLabel
@@ -19,29 +18,15 @@ enum Tab { CURRENCY, UPGRADES, HOME }
 @onready var manager_bot_button: Button = $ManagerBotButton
 @onready var bots_rate_label: Label = $BotsRateLabel
 @onready var shop_panel: VBoxContainer = $ShopPanel
-@onready var currency_tab_button: Button = $ShopPanel/TabBar/CurrencyTabButton
-@onready var upgrades_tab_button: Button = $ShopPanel/TabBar/UpgradesTabButton
-@onready var home_tab_button: Button = $ShopPanel/TabBar/HomeTabButton
-@onready var currency_tab_content: VBoxContainer = $ShopPanel/CurrencyTabContent
-@onready var upgrades_tab_content: VBoxContainer = $ShopPanel/UpgradesTabContent
-@onready var home_tab_content: VBoxContainer = $ShopPanel/HomeTabContent
+@onready var shop_list: VBoxContainer = $ShopPanel/ShopScroll/ShopList
+@onready var housing_button: Button = $ShopPanel/ShopScroll/ShopList/HousingButton
+@onready var auto_feeder_button: Button = $ShopPanel/ShopScroll/ShopList/AutoFeederButton
+@onready var bot_manager_shop_button: Button = $ShopPanel/ShopScroll/ShopList/BotManagerShopButton
+@onready var manager_bot_shop_button: Button = $ShopPanel/ShopScroll/ShopList/ManagerBotShopButton
 @onready var cat_food_label: Label = $CatFoodLabel
 @onready var buy_cat_food_button: Button = $BuyCatFoodButton
 @onready var tokens_label: Label = $TokensLabel
 @onready var buy_tokens_button: Button = $BuyTokensButton
-@onready var token_pack_item: VBoxContainer = $ShopPanel/CurrencyTabContent/TokenPackItem
-@onready var bot_manager_item: VBoxContainer = $ShopPanel/UpgradesTabContent/BotManagerItem
-@onready var bot_manager_desc_label: Label = $ShopPanel/UpgradesTabContent/BotManagerItem/BotManagerDescLabel
-@onready var buy_bot_manager_button: Button = $ShopPanel/UpgradesTabContent/BotManagerItem/BuyBotManagerButton
-@onready var auto_feeder_item: VBoxContainer = $ShopPanel/UpgradesTabContent/AutoFeederItem
-@onready var auto_feeder_desc_label: Label = $ShopPanel/UpgradesTabContent/AutoFeederItem/AutoFeederDescLabel
-@onready var buy_auto_feeder_button: Button = $ShopPanel/UpgradesTabContent/AutoFeederItem/BuyAutoFeederButton
-@onready var current_housing_label: Label = $ShopPanel/HomeTabContent/CurrentHousingItem/CurrentHousingLabel
-@onready var next_housing_item: VBoxContainer = $ShopPanel/HomeTabContent/NextHousingItem
-@onready var next_housing_name_label: Label = $ShopPanel/HomeTabContent/NextHousingItem/NextHousingNameLabel
-@onready var next_housing_cost_label: Label = $ShopPanel/HomeTabContent/NextHousingItem/NextHousingCostLabel
-@onready var buy_housing_button: Button = $ShopPanel/HomeTabContent/NextHousingItem/BuyHousingButton
-@onready var max_tier_label: Label = $ShopPanel/HomeTabContent/MaxTierLabel
 @onready var happiness_bar_container: VBoxContainer = $HappinessBarContainer
 @onready var happiness_bar: ProgressBar = $HappinessBarContainer/HappinessRow/HappinessBar
 # Thin red vertical line at the 20% position on the bar; child of HappinessBar so it
@@ -72,7 +57,6 @@ var _happiness_cramped_popup_shown: bool = false
 var _happiness_riot_popup_shown: bool = false
 var _cat_crusher_popup_shown: bool = false
 var _happiness_fill_style: StyleBoxFlat
-var _active_tab: Tab = Tab.CURRENCY
 var _cat_food_button_auto_set: bool = false
 var _tokens_button_auto_set: bool = false
 
@@ -90,10 +74,13 @@ func _ready() -> void:
 	_happiness_fill_style = StyleBoxFlat.new()
 	_happiness_fill_style.bg_color = Color.GREEN
 	happiness_bar.add_theme_stylebox_override("fill", _happiness_fill_style)
-	# Costs used by _sort_upgrades_tab() to order items cheapest-first
-	bot_manager_item.set_meta("upgrade_cost", Config.bot_manager_cost)
-	auto_feeder_item.set_meta("upgrade_cost", Config.auto_feeder_cost)
-	_switch_tab(Tab.CURRENCY)
+	# Static shop item costs for sort ordering; dynamic costs updated before each sort
+	auto_feeder_button.set_meta("shop_cost", Config.auto_feeder_cost)
+	bot_manager_shop_button.set_meta("shop_cost", Config.bot_manager_cost)
+	housing_button.set_meta("shop_cost", 0.0)
+	manager_bot_shop_button.set_meta("shop_cost", 0.0)
+	auto_feeder_button.text = "Auto-Feeder\n$" + Util.format_number(Config.auto_feeder_cost)
+	bot_manager_shop_button.text = "Manager-Bot Manager\n$" + Util.format_number(Config.bot_manager_cost)
 
 
 func _process(_delta: float) -> void:
@@ -138,11 +125,10 @@ func _process(_delta: float) -> void:
 		_cat_food_button_auto_set = true
 		buy_cat_food_button.text = "Buy Food ($10) ∞"
 
-	# One-way latch — tokens label, buy button, and token shop item appear on first bot purchase
+	# One-way latch — tokens label and buy button appear on first bot purchase
 	if GameState.tokens_shop_unlocked and not tokens_label.visible:
 		tokens_label.visible = true
 		buy_tokens_button.visible = true
-		token_pack_item.visible = true
 
 	tokens_label.text = "Tokens: " + Util.format_number(GameState.tokens)
 	buy_tokens_button.disabled = GameState.money < Config.token_pack_cost
@@ -150,32 +136,25 @@ func _process(_delta: float) -> void:
 		_tokens_button_auto_set = true
 		buy_tokens_button.text = "Buy Tokens ($20) ∞"
 
-	# One-way latch — Upgrades tab reveals when either of its items unlocks
-	if (GameState.bot_manager_unlocked or GameState.auto_feeder_unlocked) and not upgrades_tab_button.visible:
-		upgrades_tab_button.visible = true
-
 	if (GameState.bot_manager_unlocked or GameState.auto_feeder_unlocked) and not GameState.upgrades_tab_popup_shown:
 		GameState.upgrades_tab_popup_shown = true
 		upgrades_tab_popup.visible = true
 		get_tree().paused = true
-
-	# One-way latch — bot manager shop item appears when unlocked
-	if GameState.bot_manager_unlocked and not bot_manager_item.visible:
-		bot_manager_item.visible = true
-		_sort_upgrades_tab()
 
 	if GameState.bot_manager_unlocked and not GameState.bot_manager_unlock_popup_shown:
 		GameState.bot_manager_unlock_popup_shown = true
 		bot_manager_unlock_popup.visible = true
 		get_tree().paused = true
 
-	if GameState.bot_manager_purchased:
-		buy_bot_manager_button.disabled = true
-		buy_bot_manager_button.modulate = Color(0.4, 1.0, 0.4)
-		bot_manager_desc_label.visible = false
-	else:
-		buy_bot_manager_button.disabled = GameState.money < Config.bot_manager_cost
-		buy_bot_manager_button.modulate = Color(1.0, 1.0, 1.0)
+	# Bot manager shop button — visible when unlocked, disappears on purchase
+	if GameState.bot_manager_unlocked and not GameState.bot_manager_purchased:
+		if not bot_manager_shop_button.visible:
+			bot_manager_shop_button.visible = true
+			_sort_shop_list()
+		bot_manager_shop_button.disabled = GameState.money < Config.bot_manager_cost
+	elif bot_manager_shop_button.visible:
+		bot_manager_shop_button.visible = false
+		_sort_shop_list()
 
 	# OnlyPaws toggle state — green tint when active, default when inactive
 	if GameState.only_paws_active:
@@ -229,37 +208,37 @@ func _process(_delta: float) -> void:
 	if GameState.cat_crusher_unlocked and not _cat_loss_marker.visible:
 		_cat_loss_marker.visible = true
 
-	# One-way latch — Home tab reveals at the same cat count that fires the cramped popup
-	if GameState.cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD and not home_tab_button.visible:
-		home_tab_button.visible = true
+	# Auto feeder shop button — visible when unlocked, disappears on purchase
+	if GameState.auto_feeder_unlocked and not GameState.auto_feeder_purchased:
+		if not auto_feeder_button.visible:
+			auto_feeder_button.visible = true
+			_sort_shop_list()
+		auto_feeder_button.disabled = GameState.money < Config.auto_feeder_cost
+	elif auto_feeder_button.visible:
+		auto_feeder_button.visible = false
+		_sort_shop_list()
 
-	# One-way latch — auto feeder shop item appears when unlocked
-	if GameState.auto_feeder_unlocked and not auto_feeder_item.visible:
-		auto_feeder_item.visible = true
-		_sort_upgrades_tab()
+	# Manager bot shop button — visible when bot_shop_unlocked; stays after purchase
+	if GameState.bot_shop_unlocked and not manager_bot_shop_button.visible:
+		manager_bot_shop_button.visible = true
+		_sort_shop_list()
+	if manager_bot_shop_button.visible:
+		manager_bot_shop_button.text = "Manager Bot\n$" + Util.format_number(GameState.next_bot_cost)
+		manager_bot_shop_button.disabled = GameState.money < GameState.next_bot_cost
 
-	if GameState.auto_feeder_purchased:
-		buy_auto_feeder_button.disabled = true
-		buy_auto_feeder_button.modulate = Color(0.4, 1.0, 0.4)
-		auto_feeder_desc_label.visible = false
-	else:
-		buy_auto_feeder_button.disabled = GameState.money < Config.auto_feeder_cost
-		buy_auto_feeder_button.modulate = Color(1.0, 1.0, 1.0)
-
-	# Housing upgrade chain — always-current sliding-window display
-	var current_tier: Dictionary = Config.housing_tiers[GameState.housing_tier_index]
-	current_housing_label.text = "Current: " + current_tier["label"]
-	current_housing_label.modulate = Color(0.4, 1.0, 0.4)
-	var is_max_tier: bool = GameState.housing_tier_index >= Config.housing_tiers.size() - 1
-	next_housing_item.visible = not is_max_tier
-	max_tier_label.visible = is_max_tier
-	if not is_max_tier:
-		var next_tier: Dictionary = Config.housing_tiers[GameState.housing_tier_index + 1]
-		next_housing_name_label.text = next_tier["label"]
-		next_housing_cost_label.text = "Expand your cats' living space — $" + Util.format_number(float(next_tier["cost"]))
-		# Label reads from next_tier["cost"], same source as next_housing_cost_label above
-		buy_housing_button.text = "Buy ($" + Util.format_number(float(next_tier["cost"])) + ")"
-		buy_housing_button.disabled = GameState.money < float(next_tier["cost"])
+	# Housing shop button — visible when home_shop_unlocked; updates to next tier, disappears at cap
+	if GameState.home_shop_unlocked:
+		var is_max_tier: bool = GameState.housing_tier_index >= Config.housing_tiers.size() - 1
+		if not is_max_tier:
+			if not housing_button.visible:
+				housing_button.visible = true
+				_sort_shop_list()
+			var next_tier: Dictionary = Config.housing_tiers[GameState.housing_tier_index + 1]
+			housing_button.text = next_tier["label"] + "\n$" + Util.format_number(float(next_tier["cost"]))
+			housing_button.disabled = GameState.money < float(next_tier["cost"])
+		elif housing_button.visible:
+			housing_button.visible = false
+			_sort_shop_list()
 
 
 func _on_earn_money_button_pressed() -> void:
@@ -366,17 +345,6 @@ func _on_buy_auto_feeder_button_pressed() -> void:
 	GameState.buy_auto_feeder()
 
 
-func _on_currency_tab_button_pressed() -> void:
-	_switch_tab(Tab.CURRENCY)
-
-
-func _on_upgrades_tab_button_pressed() -> void:
-	_switch_tab(Tab.UPGRADES)
-
-
-func _on_home_tab_button_pressed() -> void:
-	_switch_tab(Tab.HOME)
-
 
 func _on_buy_housing_button_pressed() -> void:
 	GameState.buy_housing_upgrade()
@@ -399,25 +367,26 @@ func _on_cat_crusher_popup_ok_pressed() -> void:
 	GameState.cat_crusher_unlocked = true
 
 
-func _sort_upgrades_tab() -> void:
-	var items: Array[Node] = upgrades_tab_content.get_children()
+func _on_manager_bot_shop_button_pressed() -> void:
+	GameState.buy_bot()
+
+
+# Sorts visible shop list items ascending by shop_cost meta; invisible items sink to the bottom.
+func _sort_shop_list() -> void:
+	if not (GameState.housing_tier_index >= Config.housing_tiers.size() - 1):
+		var next_tier: Dictionary = Config.housing_tiers[GameState.housing_tier_index + 1]
+		housing_button.set_meta("shop_cost", float(next_tier["cost"]))
+	manager_bot_shop_button.set_meta("shop_cost", GameState.next_bot_cost)
+	var items: Array[Node] = shop_list.get_children()
 	items.sort_custom(func(a: Node, b: Node) -> bool:
-		return float(a.get_meta("upgrade_cost", 0.0)) < float(b.get_meta("upgrade_cost", 0.0))
+		if not a.visible:
+			return false
+		if not b.visible:
+			return true
+		return float(a.get_meta("shop_cost", 0.0)) < float(b.get_meta("shop_cost", 0.0))
 	)
 	for i: int in items.size():
-		upgrades_tab_content.move_child(items[i], i)
-
-
-func _switch_tab(tab: Tab) -> void:
-	_active_tab = tab
-	if tab == Tab.UPGRADES:
-		_sort_upgrades_tab()
-	currency_tab_content.visible = tab == Tab.CURRENCY
-	upgrades_tab_content.visible = tab == Tab.UPGRADES
-	home_tab_content.visible = tab == Tab.HOME
-	currency_tab_button.modulate = Color(0.4, 1.0, 0.4) if tab == Tab.CURRENCY else Color(1.0, 1.0, 1.0)
-	upgrades_tab_button.modulate = Color(0.4, 1.0, 0.4) if tab == Tab.UPGRADES else Color(1.0, 1.0, 1.0)
-	home_tab_button.modulate = Color(0.4, 1.0, 0.4) if tab == Tab.HOME else Color(1.0, 1.0, 1.0)
+		shop_list.move_child(items[i], i)
 
 
 func _on_cat_purchased() -> void:
