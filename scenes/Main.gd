@@ -124,6 +124,7 @@ func _process(_delta: float) -> void:
 	cats_label.text = "Cats: " + Util.format_number(float(GameState.cats)) + "/" + Util.format_number(float(max_cats))
 	cats_label.modulate = Color.RED if GameState.cats > max_cats else Color.WHITE
 	purchase_cat_button.text = "Purchase Cat ($" + Util.format_number(GameState.next_cat_cost) + ")"
+	purchase_cat_button.disabled = GameState.get_happiness() <= 0.0
 	only_paws_income_label.text = "OnlyPaws: $%.2f/sec" % GameState.paws_income_rate
 
 	if GameState.cats >= 1 and not GameState.first_cat_popup_shown:

@@ -163,6 +163,8 @@ func click() -> void:
 func buy_cat() -> void:
 	if money < next_cat_cost:
 		return
+	if get_happiness() <= 0.0:
+		return
 	money -= next_cat_cost
 	cats += 1
 	cats_ever_purchased += 1
