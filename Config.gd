@@ -44,6 +44,12 @@ const base_max_cats: int = 10  # baseline cat cap before any housing upgrades
 # Intended ratio: 2:5 (50% threshold is 2/5 of the way to the 0% threshold).
 const happiness_fifty_break_offset: int = 2
 const happiness_zero_break_offset: int = 5
+# Cat-loss drain hysteresis: drain turns on at/below activate, off above deactivate.
+const happiness_cat_loss_activate: float = 20.0
+const happiness_cat_loss_deactivate: float = 80.0
+# Income multiplier: floor at 0% happiness, plus range added linearly up to 100%.
+const happiness_income_floor: float = 0.30
+const happiness_income_range: float = 0.70
 
 # Cat count at which the "your cats are cramped" popup fires and the Home tab unlocks.
 const HOUSING_UPGRADE_PROMPT_THRESHOLD: int = 8

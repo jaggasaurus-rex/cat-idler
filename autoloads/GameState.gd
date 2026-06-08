@@ -96,10 +96,11 @@ func _process(delta: float) -> void:
 		buy_tokens(1)
 	if not happiness_cramped_triggered and cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD:
 		happiness_cramped_triggered = true
-	if not happiness_riot_triggered and get_happiness() <= 0.0:
+	var happiness: float = get_happiness()
+	if not happiness_riot_triggered and happiness <= 0.0:
 		happiness_riot_triggered = true
 	# Count distinct transitions into 0% happiness; second transition triggers Cat Crusher
-	var _now_zero: bool = get_happiness() <= 0.0
+	var _now_zero: bool = happiness <= 0.0
 	if _now_zero and not _happiness_was_zero:
 		happiness_zero_count += 1
 		if happiness_zero_count >= 2 and not cat_crusher_triggered:
@@ -110,11 +111,10 @@ func _process(delta: float) -> void:
 	# Drain stops when happiness rises above 80% (naturally includes cats == 0,
 	# since 0 cats → 100% happiness, which exceeds 80% and deactivates the drain).
 	if cat_crusher_unlocked:
-		var drain_happiness: float = get_happiness()
-		if _cat_loss_active and drain_happiness > 80.0:
+		if _cat_loss_active and happiness > Config.happiness_cat_loss_deactivate:
 			_cat_loss_active = false
 			_cat_loss_timer = 0.0
-		elif not _cat_loss_active and drain_happiness <= 20.0:
+		elif not _cat_loss_active and happiness <= Config.happiness_cat_loss_activate:
 			_cat_loss_active = true
 			_lose_cat()
 			_cat_loss_timer = 0.0
@@ -125,9 +125,8 @@ func _process(delta: float) -> void:
 				_lose_cat()
 	if only_paws_active and bots_active:
 		if cat_food > 0.0:
-			var happiness: float = get_happiness()
-			# Linear map: 0% happiness → ×0.30, 100% happiness → ×1.00
-			var happiness_multiplier: float = 0.30 + (happiness / 100.0) * 0.70
+			# Linear map: 0% happiness → ×floor, 100% happiness → ×(floor + range)
+			var happiness_multiplier: float = Config.happiness_income_floor + (happiness / 100.0) * Config.happiness_income_range
 			money += paws_income_rate * happiness_multiplier * delta
 	for item: Dictionary in Config.RESEARCH_ITEMS:
 		var item_id: String = item["id"]
