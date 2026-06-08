@@ -40,13 +40,14 @@ const auto_feeder_food_threshold: float = 1.0
 
 # Cat Happiness
 const base_max_cats: int = 10  # baseline cat cap before any housing upgrades
-# Cats over max_cats at which happiness hits 50% and 0% respectively (before housing bonus).
-# Intended ratio: 2:5 (50% threshold is 2/5 of the way to the 0% threshold).
+# Base cats-over-max_cats where happiness hits 50% (fifty) and 0% (zero) at housing tier 0.
+# Both breakpoints widen with housing tier: fifty adds +tier, zero adds +tier*2.
+# This means the 50% point drifts later relative to 0% as tier increases — intentional design.
 const happiness_fifty_break_offset: int = 2
 const happiness_zero_break_offset: int = 5
 # Cat-loss drain hysteresis: drain turns on at/below activate, off above deactivate.
 const happiness_cat_loss_activate: float = 20.0
-const happiness_cat_loss_deactivate: float = 80.0
+const happiness_cat_loss_deactivate: float = 60.0
 # Income multiplier: floor at 0% happiness, plus range added linearly up to 100%.
 const happiness_income_floor: float = 0.30
 const happiness_income_range: float = 0.70
