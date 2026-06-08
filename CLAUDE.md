@@ -4,7 +4,11 @@ This is a Godot 4 project using GDScript.
 ## Maintenance
 - Before starting any task, read `CONTEXT.md` to understand current project state.
 - After every change, update `CONTEXT.md` in the project root to reflect what was added, modified, or removed. Include the affected files and a brief description of the change.
-- After completing each task, commit all changes with a descriptive message.
+## Commit discipline
+**After every discrete working change, commit before continuing.**  
+Do not batch multiple feature changes into one commit.  
+Do not end a session without committing completed work.  
+Commit message format: brief imperative sentence describing what changed.
 ## Language and Syntax
 - Godot 4 GDScript only. Never use Godot 3 syntax.
 - All variables, parameters, and return types must be explicitly typed. No inferred types except for loop variables where the type is obvious from context.
