@@ -332,10 +332,11 @@ func fund_research(id: String) -> void:
 			return
 
 
-# Base rate: get_onlypaws_cats() * onlypaws_income_per_cat (at unlock: 3 * 0.25 = $0.75/sec).
-# Each manager bot doubles the entire output: total = base * 2^manager_bots.
+# Base rate: get_onlypaws_cats() * onlypaws_income_per_cat * (1 + manager_bots).
+# Each bot adds one additional onlypaws_income_per_cat per cat per second (linear, not exponential).
 func _update_paws_rate() -> void:
-	paws_income_rate = float(get_onlypaws_cats()) * Config.onlypaws_income_per_cat * pow(2.0, manager_bots)
+	# 10 cats, 0.25/cat: 0 bots = $2.50/s, 1 bot = $5.00/s, 2 bots = $7.50/s, 3 bots = $10.00/s
+	paws_income_rate = float(get_onlypaws_cats()) * Config.onlypaws_income_per_cat * float(1 + manager_bots)
 
 
 # Removes one cat from the count, recalculates paws rate, and signals Main.gd

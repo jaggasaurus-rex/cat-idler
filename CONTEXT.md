@@ -228,7 +228,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `get_research_cats` | `() -> int` | Returns `floor(cats * research_cat_fraction)`; number of cats assigned to research |
 | `get_onlypaws_cats` | `() -> int` | Returns `cats - get_research_cats()`; number of cats contributing to OnlyPaws income |
 | `fund_research` | `(id: String) -> void` | Finds item in `Config.RESEARCH_ITEMS` by id; if `money >= fund_cost` and not yet funded: deducts cost, sets `research_funded[id] = true`, initialises `research_points[id] = 0.0` |
-| `_update_paws_rate` | `() -> void` | `paws_income_rate = float(get_onlypaws_cats()) * Config.onlypaws_income_per_cat * pow(2.0, manager_bots)` |
+| `_update_paws_rate` | `() -> void` | `paws_income_rate = float(get_onlypaws_cats()) * Config.onlypaws_income_per_cat * float(1 + manager_bots)` — linear additive scaling; 0 bots = 1×, 1 bot = 2×, 2 bots = 3×, etc. |
 
 ### Config (`res://Config.gd`)
 
@@ -326,7 +326,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Cats counter** — label refreshes every frame showing `X/MAX` (e.g. `0/10`); MAX from `GameState.get_max_cats()` = `base_max_cats` + 10 per purchased housing tier; turns red when cats exceed MAX
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `only_paws_unlocked`, `paws_income_rate`; emits `cat_purchased`
 - [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.5, reduced to 1.25 by breeder contract)
-- [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `cats * 0.25` $/sec (e.g. $0.75/sec at unlock); each Manager-Bot doubles total output via `pow(2, manager_bots)`
+- [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `cats * 0.25` $/sec (e.g. $0.75/sec at unlock); each Manager-Bot adds one additional multiplier step linearly: `(1 + manager_bots)` total (0 bots = 1×, 1 bot = 2×, 2 bots = 3×, etc.)
 - [x] **OnlyPaws button + income label** — revealed together when `only_paws_unlocked`; first reveal shows modal popup (pauses tree) explaining the feature
 - [x] **OnlyPaws info panel** — PanelContainer with static description text (legacy node, permanently hidden)
 - [x] **OnlyPaws unlock popup** — modal overlay shown once when `only_paws_unlocked` first triggers; pauses game loop; dismissed with OK button
