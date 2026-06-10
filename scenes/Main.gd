@@ -65,6 +65,7 @@ var _happiness_riot_popup_shown: bool = false
 var _cat_crusher_popup_shown: bool = false
 var _happiness_fill_style: StyleBoxFlat
 var _center_column_shown: bool = false
+var _research_slider_shown: bool = false
 var _research_panels: Dictionary = {}
 var _research_fund_buttons: Dictionary = {}
 var _research_progress_labels: Dictionary = {}
@@ -128,6 +129,7 @@ func _ready() -> void:
 	_ai_enterprise_membership_button.set_meta("shop_cost", Config.ai_enterprise_membership_cost)
 	_ai_enterprise_membership_button.pressed.connect(_on_buy_ai_enterprise_membership_button_pressed)
 	shop_list.add_child(_ai_enterprise_membership_button)
+	research_slider.visible = false
 
 
 func _process(_delta: float) -> void:
@@ -328,6 +330,11 @@ func _process(_delta: float) -> void:
 	if GameState.housing_tier_index >= 1 and not _center_column_shown:
 		_center_column_shown = true
 		center_column.visible = true
+
+	# One-way latch — research slider appears once any item is funded (GameState.research_funded)
+	if not _research_slider_shown and GameState.research_funded.size() > 0:
+		_research_slider_shown = true
+		research_slider.visible = true
 
 
 func _on_earn_money_button_pressed() -> void:

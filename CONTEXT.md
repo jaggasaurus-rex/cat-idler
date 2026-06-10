@@ -107,7 +107,7 @@ Main (Control, full-rect)             ← Main.gd
 │   ├── ResearchTitle (Label)         ← static "Research" heading
 │   ├── ResearchActiveLabel (Label)   ← "No Active Research" or active item name; updated every frame
 │   ├── ResearchProgressBar (ProgressBar) ← min=0 max=1; value = points / points_cost of active funded item; 0.0 when none; updated every frame
-│   ├── ResearchSlider (HSlider)      ← min=0 max=1 step=0.01; value_changed → GameState.research_cat_fraction
+│   ├── ResearchSlider (HSlider)      ← min=0 max=1 step=0.01; hidden in _ready(); revealed by one-way latch when GameState.research_funded.size() > 0; value_changed → GameState.research_cat_fraction
 │   ├── SliderLabels (HBoxContainer)  ← static orientation hints
 │   │   ├── OnlyPawsHint (Label "OnlyPaws") ← left side hint
 │   │   └── ResearchHint (Label "Research") ← right-aligned hint
@@ -241,7 +241,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 
 | Constant | Type | Value | Description |
 |---|---|---|---|
-| `RESEARCH_ITEMS` | `Array` | 1 entry | Research item definitions. Each entry: `{id, name, subtitle, description, fund_cost: float, points_cost: float, min_cats_required: int}`. Current item: `cat_power_unite` ($2,000 fund cost, 200 pts, 10 cats required). |
+| `RESEARCH_ITEMS` | `Array` | 1 entry | Research item definitions. Each entry: `{id, name, subtitle, description, fund_cost: float, points_cost: float, min_cats_required: int}`. Current item: `cat_power_unite` ($1,000 fund cost, 200 pts, 10 cats required). |
 | `cat_food_start` | `float` | `1000.0` | Initial cat food supply |
 | `cat_food_drain_rate` | `float` | `1.0` | Food drained per cat per second |
 | `cat_food_pack_cost` | `float` | `10.0` | Cost per cat food pack |
