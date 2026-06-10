@@ -35,11 +35,12 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	_frames += 1
 	if _frames == 10:
-		# Force one of each bubble type onto the screen.
+		# Force one of each bubble type onto the screen, anchored to two different cats.
+		var cats: Array[Node] = _main.cat_container.get_children()
 		GameState.research_cat_fraction = 0.0  # forces "viral"
-		_main._spawn_bubble()
+		_main._spawn_bubble(cats[0] as Node2D)
 		GameState.research_cat_fraction = 1.0  # forces "inspiration"
-		_main._spawn_bubble()
+		_main._spawn_bubble(cats[1] as Node2D)
 	elif _frames == 25:
 		await RenderingServer.frame_post_draw
 		var img: Image = get_viewport().get_texture().get_image()

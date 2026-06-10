@@ -91,7 +91,8 @@ const RESEARCH_ITEMS: Array = [
 ]
 
 # Bubble mechanic
-const BUBBLE_SPAWN_INTERVAL: float = 7.0      # seconds between spawn attempts
+const BUBBLE_SPAWN_MIN: float = 5.0           # min seconds of a per-cat bubble cooldown
+const BUBBLE_SPAWN_MAX: float = 15.0          # max seconds of a per-cat bubble cooldown
 const BUBBLE_LIFETIME: float = 4.5            # seconds before a bubble fades out
 const BUBBLE_MAX_ON_SCREEN: int = 4           # cap on simultaneous bubbles
 const BUBBLE_VIRAL_MULTIPLIER: float = 4.0    # viral reward = paws_income_rate × this

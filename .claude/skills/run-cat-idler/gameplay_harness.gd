@@ -16,6 +16,7 @@ extends Node
 var _main: Control
 var _step: int = 0
 var _bubble: Dictionary
+var _cat_node: Node2D
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS  # keep ticking even while the tree is paused
@@ -59,19 +60,20 @@ func _process(_delta: float) -> void:
 			GameState.only_paws_active = true
 			GameState._update_paws_rate()
 			_main._on_cat_purchased()  # spawn a real CatCharacter to anchor bubbles
+			_cat_node = _main.cat_container.get_children().back()
 		42:
 			if _main.cat_container.get_child_count() == 0:
 				_fail("no cat node in CatContainer")
 			# Guard: no spawn while OnlyPaws is off.
 			GameState.only_paws_active = false
-			_main._try_spawn_bubble()
+			_main._try_spawn_bubble_for_cat(_cat_node)
 			if _main._active_bubbles.size() != 0 or GameState.viral_popup_shown:
 				_fail("spawn not blocked while only_paws_active == false")
 			print("PASS: spawn blocked while only_paws_active is false")
 			GameState.only_paws_active = true
 		44:
 			# First viral spawn fires the whale popup (not a bubble) and pauses the tree.
-			_main._try_spawn_bubble()
+			_main._try_spawn_bubble_for_cat(_cat_node)
 			if not GameState.viral_popup_shown:
 				_fail("viral_popup_shown not set on first viral spawn")
 			if _main._active_bubbles.size() != 0:
@@ -89,7 +91,7 @@ func _process(_delta: float) -> void:
 			overlay.queue_free()
 		46:
 			# After dismiss, a viral bubble Button spawns.
-			_main._try_spawn_bubble()
+			_main._try_spawn_bubble_for_cat(_cat_node)
 			if _main._active_bubbles.size() != 1:
 				_fail("no bubble after popup dismissed (size=%d)" % _main._active_bubbles.size())
 			_bubble = _main._active_bubbles[0]
@@ -114,7 +116,7 @@ func _process(_delta: float) -> void:
 			GameState.fund_research("cat_power_unite")
 			if GameState.get_active_research_id() != "cat_power_unite":
 				_fail("research not active after funding")
-			_main._try_spawn_bubble()  # fraction 1.0 => always inspiration
+			_main._try_spawn_bubble_for_cat(_cat_node)  # fraction 1.0 => always inspiration
 			if _main._active_bubbles.size() != 1:
 				_fail("no inspiration bubble spawned")
 			var ib: Dictionary = _main._active_bubbles[0]

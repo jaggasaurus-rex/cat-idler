@@ -72,8 +72,9 @@ var _research_panels: Dictionary = {}
 var _research_fund_buttons: Dictionary = {}
 var _research_progress_labels: Dictionary = {}
 var _research_panel_hidden: Dictionary = {}
-# Accumulates delta toward Config.BUBBLE_SPAWN_INTERVAL; a spawn is attempted each interval.
-var _bubble_spawn_timer: float = 0.0
+# Each cat tracks its own randomized cooldown. Keys = instance_id, values = seconds remaining.
+# Timers reset to a new random value in [BUBBLE_SPAWN_MIN, BUBBLE_SPAWN_MAX] after each attempt.
+var _cat_bubble_timers: Dictionary = {}
 # Active bubble dicts: { "node": Button, "timer": float, "type": String, "research_id": String }
 var _active_bubbles: Array = []
 
@@ -353,11 +354,18 @@ func _process(delta: float) -> void:
 	if _cat_intelligence_label.visible:
 		_cat_intelligence_label.text = "Cat Intelligence: " + str(GameState.cat_intelligence)
 
-	# Bubble spawn timer — attempt a spawn each interval; all gating lives in _try_spawn_bubble()
-	_bubble_spawn_timer += delta
-	if _bubble_spawn_timer >= Config.BUBBLE_SPAWN_INTERVAL:
-		_bubble_spawn_timer = 0.0
-		_try_spawn_bubble()
+	# Per-cat bubble cooldowns — each cat independently attempts a spawn when its timer expires.
+	for key: int in _cat_bubble_timers.keys():
+		_cat_bubble_timers[key] -= delta
+		if _cat_bubble_timers[key] <= 0.0:
+			_cat_bubble_timers[key] = randf_range(Config.BUBBLE_SPAWN_MIN, Config.BUBBLE_SPAWN_MAX)
+			var cat_node: Node2D = null
+			for child: Node in cat_container.get_children():
+				if child.get_instance_id() == key:
+					cat_node = child as Node2D
+					break
+			if cat_node != null:
+				_try_spawn_bubble_for_cat(cat_node)
 
 	# Bubble lifetime & fade — advance timers, fade out, and collect expired bubbles
 	var _expired: Array = []
@@ -372,23 +380,21 @@ func _process(delta: float) -> void:
 
 
 # Viral spawn gates: viral_bubbles_unlocked (manager_bots >= 1 AND 20s elapsed),
-# only_paws_active, at least one cat exists, below BUBBLE_MAX_ON_SCREEN.
+# only_paws_active, below BUBBLE_MAX_ON_SCREEN. Called per-cat when that cat's cooldown expires.
 # Type: "viral" when no active research. When research active:
 #   "inspiration" with probability = research_cat_fraction, else "viral".
 # First viral spawn fires the whale popup instead of a bubble; bubbles begin after dismiss.
-func _try_spawn_bubble() -> void:
+func _try_spawn_bubble_for_cat(cat_node: Node2D) -> void:
 	if not GameState.viral_bubbles_unlocked:
 		return
 	if not GameState.only_paws_active:
 		return
-	if cat_container.get_child_count() == 0:
-		return
 	if _active_bubbles.size() >= Config.BUBBLE_MAX_ON_SCREEN:
 		return
-	_spawn_bubble()
+	_spawn_bubble(cat_node)
 
 
-func _spawn_bubble() -> void:
+func _spawn_bubble(cat_node: Node2D) -> void:
 	var active_research_id: String = GameState.get_active_research_id()
 	var type: String
 	if active_research_id == "":
@@ -402,10 +408,8 @@ func _spawn_bubble() -> void:
 		_show_viral_popup()
 		return
 
-	var cats: Array[Node] = cat_container.get_children()
-	var anchor_cat: Node2D = cats[randi() % cats.size()] as Node2D
 	var offset := Vector2(randf_range(-30.0, 30.0), randf_range(-50.0, -20.0))
-	var spawn_pos: Vector2 = cat_container.to_global(anchor_cat.position) + offset
+	var spawn_pos: Vector2 = cat_node.global_position + offset
 
 	var button: Button = Button.new()
 	button.text = "💡" if type == "inspiration" else "💰"
@@ -651,12 +655,15 @@ func _on_cat_purchased() -> void:
 	cat.scale = Vector2(0.4, 0.4)
 	cat_container.add_child(cat)
 	_place_cat(cat)
+	_cat_bubble_timers[cat.get_instance_id()] = randf_range(Config.BUBBLE_SPAWN_MIN, Config.BUBBLE_SPAWN_MAX)
 
 
 func _on_cat_lost() -> void:
 	var children: Array[Node] = cat_container.get_children()
 	if children.size() > 0:
-		children.back().queue_free()
+		var node: Node = children.back()
+		_cat_bubble_timers.erase(node.get_instance_id())
+		node.queue_free()
 
 
 # Places cat at a random viewport position that avoids UI elements and existing cats.
