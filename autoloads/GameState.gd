@@ -60,6 +60,7 @@ var research_funded: Dictionary = {}
 var research_points: Dictionary = {}
 # id -> bool; true once points_cost reached (named research_complete to avoid clash with signal)
 var research_complete: Dictionary = {}
+var cat_intelligence: int = 0
 
 
 func _ready() -> void:
@@ -142,6 +143,8 @@ func _process(delta: float) -> void:
 		if research_points[item_id] >= float(item["points_cost"]):
 			research_points[item_id] = float(item["points_cost"])
 			research_complete[item_id] = true
+			# Increments cat_intelligence by item["cat_intelligence_gain"] from Config.RESEARCH_ITEMS
+			cat_intelligence += int(item.get("cat_intelligence_gain", 0))
 			research_completed.emit(item_id)
 
 

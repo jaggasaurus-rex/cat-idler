@@ -54,6 +54,7 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 
 var _pawsco_membership_button: Button
 var _ai_enterprise_membership_button: Button
+var _cat_intelligence_label: Label
 var _only_paws_popup_shown: bool = false
 var _starvation_popup_shown: bool = false
 var _starvation_2_popup_shown: bool = false
@@ -66,6 +67,7 @@ var _cat_crusher_popup_shown: bool = false
 var _happiness_fill_style: StyleBoxFlat
 var _center_column_shown: bool = false
 var _research_slider_shown: bool = false
+var _cat_intelligence_shown: bool = false
 var _research_panels: Dictionary = {}
 var _research_fund_buttons: Dictionary = {}
 var _research_progress_labels: Dictionary = {}
@@ -130,6 +132,10 @@ func _ready() -> void:
 	_ai_enterprise_membership_button.pressed.connect(_on_buy_ai_enterprise_membership_button_pressed)
 	shop_list.add_child(_ai_enterprise_membership_button)
 	research_slider.visible = false
+	_cat_intelligence_label = Label.new()
+	_cat_intelligence_label.visible = false
+	center_column.add_child(_cat_intelligence_label)
+	center_column.move_child(_cat_intelligence_label, 1)
 
 
 func _process(_delta: float) -> void:
@@ -335,6 +341,13 @@ func _process(_delta: float) -> void:
 	if not _research_slider_shown and GameState.research_funded.size() > 0:
 		_research_slider_shown = true
 		research_slider.visible = true
+
+	# One-way latch — cat intelligence label appears once cat_power_unite completes (GameState.research_complete)
+	if not _cat_intelligence_shown and GameState.research_complete.get("cat_power_unite", false):
+		_cat_intelligence_shown = true
+		_cat_intelligence_label.visible = true
+	if _cat_intelligence_label.visible:
+		_cat_intelligence_label.text = "Cat Intelligence: " + str(GameState.cat_intelligence)
 
 
 func _on_earn_money_button_pressed() -> void:

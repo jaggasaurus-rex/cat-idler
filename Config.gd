@@ -86,5 +86,6 @@ const RESEARCH_ITEMS: Array = [
 		"fund_cost": 1000.0,
 		"points_cost": 200.0,
 		"min_cats_required": 10,
+		"cat_intelligence_gain": 1,
 	},
 ]

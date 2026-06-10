@@ -107,6 +107,7 @@ Main (Control, full-rect)             ← Main.gd
 │   ├── ResearchTitle (Label)         ← static "Research" heading
 │   ├── ResearchActiveLabel (Label)   ← "No Active Research" or active item name; updated every frame
 │   ├── ResearchProgressBar (ProgressBar) ← min=0 max=1; value = points / points_cost of active funded item; 0.0 when none; updated every frame
+│   ├── CatIntelligenceLabel (Label)  ← created programmatically in _ready(), inserted at index 1 (after ResearchTitle); hidden until one-way latch fires when GameState.research_complete["cat_power_unite"] is true; text = "Cat Intelligence: X" updated each frame while visible
 │   ├── ResearchSlider (HSlider)      ← min=0 max=1 step=0.01; hidden in _ready(); revealed by one-way latch when GameState.research_funded.size() > 0; value_changed → GameState.research_cat_fraction
 │   ├── SliderLabels (HBoxContainer)  ← static orientation hints
 │   │   ├── OnlyPawsHint (Label "OnlyPaws") ← left side hint
@@ -199,6 +200,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `research_funded` | `Dictionary` | `{}` | id → bool; true once `fund_research()` has been paid for that item |
 | `research_points` | `Dictionary` | `{}` | id → float; accumulated research-cat-seconds for each funded item |
 | `research_complete` | `Dictionary` | `{}` | id → bool; true once an item's `points_cost` has been reached (named `research_complete` rather than `research_completed` to avoid clash with the signal) |
+| `cat_intelligence` | `int` | `0` | Incremented at research completion by each item's `cat_intelligence_gain` field from `Config.RESEARCH_ITEMS`; currently +1 when `cat_power_unite` finishes |
 
 | Signal | Description |
 |---|---|
@@ -241,7 +243,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 
 | Constant | Type | Value | Description |
 |---|---|---|---|
-| `RESEARCH_ITEMS` | `Array` | 1 entry | Research item definitions. Each entry: `{id, name, subtitle, description, fund_cost: float, points_cost: float, min_cats_required: int}`. Current item: `cat_power_unite` ($1,000 fund cost, 200 pts, 10 cats required). |
+| `RESEARCH_ITEMS` | `Array` | 1 entry | Research item definitions. Each entry: `{id, name, subtitle, description, fund_cost: float, points_cost: float, min_cats_required: int, cat_intelligence_gain: int}`. Current item: `cat_power_unite` ($1,000 fund cost, 200 pts, 10 cats required, +1 cat_intelligence on completion). |
 | `cat_food_start` | `float` | `1000.0` | Initial cat food supply |
 | `cat_food_drain_rate` | `float` | `1.0` | Food drained per cat per second |
 | `cat_food_pack_cost` | `float` | `10.0` | Cost per cat food pack |
