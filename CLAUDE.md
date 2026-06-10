@@ -2,6 +2,7 @@
 ## Project
 This is a Godot 4 project using GDScript.
 ## Maintenance
+**After every discrete working change, review and update CONTEXT.md.** 
 - Before starting any task, read `CONTEXT.md` to understand current project state.
 - After every change, update `CONTEXT.md` in the project root to reflect what was added, modified, or removed. Include the affected files and a brief description of the change.
 ## Commit discipline
