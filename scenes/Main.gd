@@ -353,12 +353,11 @@ func _process(delta: float) -> void:
 	if _cat_intelligence_label.visible:
 		_cat_intelligence_label.text = "Cat Intelligence: " + str(GameState.cat_intelligence)
 
-	# Bubble spawn timer — attempt a spawn each interval, respecting the on-screen cap
+	# Bubble spawn timer — attempt a spawn each interval; all gating lives in _try_spawn_bubble()
 	_bubble_spawn_timer += delta
 	if _bubble_spawn_timer >= Config.BUBBLE_SPAWN_INTERVAL:
 		_bubble_spawn_timer = 0.0
-		if _active_bubbles.size() < Config.BUBBLE_MAX_ON_SCREEN:
-			_spawn_bubble()
+		_try_spawn_bubble()
 
 	# Bubble lifetime & fade — advance timers, fade out, and collect expired bubbles
 	var _expired: Array = []
@@ -372,14 +371,24 @@ func _process(delta: float) -> void:
 		_active_bubbles.erase(bubble)
 
 
-# Type selection: "viral" always when no research active.
-# When research active: "inspiration" with probability = research_cat_fraction, else "viral".
-# Viral reward = paws_income_rate × BUBBLE_VIRAL_MULTIPLIER (min 1.0)
-# Inspiration reward = get_research_cats() × BUBBLE_INSPIRATION_SECONDS points (min 1.0)
-func _spawn_bubble() -> void:
-	var cats: Array[Node] = cat_container.get_children()
-	if cats.is_empty():
+# Viral spawn gates: viral_bubbles_unlocked (manager_bots >= 1 AND 20s elapsed),
+# only_paws_active, at least one cat exists, below BUBBLE_MAX_ON_SCREEN.
+# Type: "viral" when no active research. When research active:
+#   "inspiration" with probability = research_cat_fraction, else "viral".
+# First viral spawn fires the whale popup instead of a bubble; bubbles begin after dismiss.
+func _try_spawn_bubble() -> void:
+	if not GameState.viral_bubbles_unlocked:
 		return
+	if not GameState.only_paws_active:
+		return
+	if cat_container.get_child_count() == 0:
+		return
+	if _active_bubbles.size() >= Config.BUBBLE_MAX_ON_SCREEN:
+		return
+	_spawn_bubble()
+
+
+func _spawn_bubble() -> void:
 	var active_research_id: String = GameState.get_active_research_id()
 	var type: String
 	if active_research_id == "":
@@ -387,12 +396,19 @@ func _spawn_bubble() -> void:
 	else:
 		type = "inspiration" if randf() < GameState.research_cat_fraction else "viral"
 
+	# First viral event fires the achievement popup instead of a bubble; bubbles flow after dismiss.
+	if type == "viral" and not GameState.viral_popup_shown:
+		GameState.viral_popup_shown = true
+		_show_viral_popup()
+		return
+
+	var cats: Array[Node] = cat_container.get_children()
 	var anchor_cat: Node2D = cats[randi() % cats.size()] as Node2D
 	var offset := Vector2(randf_range(-30.0, 30.0), randf_range(-50.0, -20.0))
 	var spawn_pos: Vector2 = cat_container.to_global(anchor_cat.position) + offset
 
 	var button: Button = Button.new()
-	button.text = "💡 Insight!" if type == "inspiration" else "💰 Viral!"
+	button.text = "💡" if type == "inspiration" else "💰"
 	button.position = spawn_pos
 	button.z_index = 10
 	add_child(button)
@@ -405,6 +421,44 @@ func _spawn_bubble() -> void:
 	}
 	button.pressed.connect(_on_bubble_pressed.bind(bubble))
 	_active_bubbles.append(bubble)
+
+
+# Builds and shows the one-time "Whale Hunting" achievement popup entirely in code,
+# mirroring the project's popup pattern (full-screen overlay + centered dialog, pauses tree).
+func _show_viral_popup() -> void:
+	var overlay: ColorRect = ColorRect.new()
+	overlay.color = Color(0.0, 0.0, 0.0, 0.6)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	overlay.z_index = 20
+	add_child(overlay)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var dialog: PanelContainer = PanelContainer.new()
+	center.add_child(dialog)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	dialog.add_child(vbox)
+
+	var label: Label = Label.new()
+	label.text = "NEW ACHIEVEMENT: Whale Hunting Baby!\n\nOne of your furry has caught the eye of a particularly \"giving\" patron. Snatch that money before they change their mind!\n\nREWARD: Dirty Filthy Disgusting Money\nEver so often one of your cats will go viral. When they do, a bubble will pop up over their head. Click the bubble before it goes away to get a small burst of money."
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(560.0, 0.0)
+	vbox.add_child(label)
+
+	var ok_button: Button = Button.new()
+	ok_button.text = "OK"
+	vbox.add_child(ok_button)
+	ok_button.pressed.connect(func() -> void:
+		overlay.queue_free()
+		get_tree().paused = false
+	)
+
+	get_tree().paused = true
 
 
 # Collects a bubble: removes it from the active list, frees its node, and grants the reward.
