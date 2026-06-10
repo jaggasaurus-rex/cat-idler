@@ -101,3 +101,8 @@ const BUBBLE_GLOBAL_CD_MIN: float = 20.0      # min seconds between burst window
 const BUBBLE_GLOBAL_CD_MAX: float = 40.0      # max seconds between burst windows
 const BUBBLE_BURST_WINDOW_MIN: float = 2.0    # min seconds a burst window stays open
 const BUBBLE_BURST_WINDOW_MAX: float = 10.0   # max seconds a burst window stays open
+
+# Cat wandering
+const CAT_MOVE_SPEED: float = 40.0     # pixels per second while walking
+const CAT_WANDER_MIN: float = 6.0      # minimum seconds between movement decisions
+const CAT_WANDER_MAX: float = 18.0     # maximum seconds between movement decisions

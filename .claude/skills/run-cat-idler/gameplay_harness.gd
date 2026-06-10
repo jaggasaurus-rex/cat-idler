@@ -175,6 +175,36 @@ func _process(_delta: float) -> void:
 			if _main._active_bubbles.size() != 1:
 				_fail("no bubble spawned during open burst window (size=%d)" % _main._active_bubbles.size())
 			print("PASS: open window allows per-cat spawn")
+		57:
+			# Cat wander + bubble pause/resume on an isolated instance (State.WALKING == 1).
+			# set_process(false) so only our manual _process() calls drive it (deterministic).
+			var c: Node2D = load("res://scenes/CatCharacter.tscn").instantiate()
+			_main.add_child(c)
+			c.set_process(false)
+			c.global_position = Vector2(500, 400)
+			c._wander_timer = 0.001
+			c._process(0.1)  # timer expires → picks target, enters WALKING
+			if c._state != 1:
+				_fail("cat did not enter WALKING after timer expiry")
+			# Deterministic movement toward a known target.
+			c._target_pos = Vector2(900, 400)
+			c.global_position = Vector2(500, 400)
+			c._process(0.1)
+			if c.global_position.x <= 500.0:
+				_fail("walking cat did not move toward target")
+			# pause_for_bubble freezes movement.
+			c.pause_for_bubble()
+			var frozen_pos: Vector2 = c.global_position
+			c._wander_timer = 0.001
+			c._process(1.0)
+			if c.global_position != frozen_pos:
+				_fail("paused cat moved")
+			# resume_from_bubble clears the pause.
+			c.resume_from_bubble()
+			if c._bubble_paused:
+				_fail("resume_from_bubble did not clear _bubble_paused")
+			c.queue_free()
+			print("PASS: cat wanders, freezes on pause, and resumes")
 		58:
 			print("ALL GAMEPLAY CHECKS PASSED")
 			get_tree().quit(0)

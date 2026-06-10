@@ -395,6 +395,8 @@ func _process(delta: float) -> void:
 		(bubble.node as Button).modulate.a = 1.0 - (bubble.timer / Config.BUBBLE_LIFETIME)
 		if bubble.timer >= Config.BUBBLE_LIFETIME:
 			(bubble.node as Button).queue_free()
+			if is_instance_valid(bubble.cat_node):
+				bubble.cat_node.resume_from_bubble()
 			_expired.append(bubble)
 	for bubble: Dictionary in _expired:
 		_active_bubbles.erase(bubble)
@@ -445,11 +447,15 @@ func _spawn_bubble(cat_node: Node2D) -> void:
 		"timer": 0.0,
 		"type": type,
 		"research_id": active_research_id,
+		"cat_node": cat_node,
 	}
 	# gui_input used instead of pressed so we can read cursor position and
 	# collect any additional bubbles stacked at the same screen location.
 	button.gui_input.connect(_on_bubble_gui_input.bind(bubble))
 	_active_bubbles.append(bubble)
+	# Only viral bubbles freeze the cat under them while the bubble is live.
+	if type == "viral" and is_instance_valid(cat_node):
+		cat_node.pause_for_bubble()
 
 
 # Builds and shows the one-time "Whale Hunting" achievement popup entirely in code,
@@ -515,6 +521,8 @@ func _on_bubble_gui_input(event: InputEvent, bubble: Dictionary) -> void:
 # Collects a bubble: removes it from the active list, frees its node, and grants the reward.
 func _on_bubble_pressed(bubble: Dictionary) -> void:
 	_active_bubbles.erase(bubble)
+	if is_instance_valid(bubble.cat_node):
+		bubble.cat_node.resume_from_bubble()
 	(bubble.node as Button).queue_free()
 
 	if bubble.type == "viral":
