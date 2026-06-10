@@ -160,7 +160,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `click()` the first time `money >= next_cat_cost` |
 | `only_paws_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 3` |
 | `paws_income_rate` | `float` | `0.0` | Passive $/sec; recalculated by `_update_paws_rate()` after each cat purchase or bot purchase |
-| `manager_bots` | `int` | `0` | Number of Manager-Bots purchased; each one adds one linear multiplier step: `(1 + manager_bots)` total (0 bots = 1×, 1 bot = 2×, 2 bots = 3×, etc.) |
+| `manager_bots` | `int` | `0` | Number of Manager-Bots purchased; each one adds `Config.onlypaws_income_per_bot` ($0.50) to the per-cat income rate; formula: `cats * (0.25 + 0.50 * manager_bots)` |
 | `next_bot_cost` | `float` | `Config.bot_cost_base` | Cost of the next bot; multiplied by `Config.bot_cost_multiplier` after every successful purchase |
 | `bot_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 6` |
 | `shop_unlocked_bots` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots == 4`; reveals the attrition-reduction shop |
@@ -213,7 +213,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `_lose_cat` | `() -> void` | Private; decrements `cats` (clamped, no-ops at 0), calls `_update_paws_rate()`, emits `cat_lost` |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `only_paws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `_update_paws_rate()`, emits `cat_purchased` |
-| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, doubles `next_bot_cost`, calls `_update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
+| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, multiplies `next_bot_cost` by `Config.bot_cost_multiplier` (1.6×), calls `_update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
 | `get_cat_food_packs_affordable` | `() -> int` | Returns `int(money / 10.0)` |
 | `grant_cat_food_pack` | `() -> void` | Adds `Config.cat_food_pack_amount` food at no cost; used for starvation pity rewards |
 | `starvation_lose_cat` | `() -> void` | Removes one cat as a starvation penalty: decrements `cats` (clamped), calls `_update_paws_rate()`, increments `starvation_cats_lost`, emits `cat_lost` |
@@ -336,7 +336,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Cats counter** — label refreshes every frame showing `X/MAX` (e.g. `0/10`); MAX from `GameState.get_max_cats()` = `base_max_cats` + 10 per purchased housing tier; turns red when cats exceed MAX
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `only_paws_unlocked`, `paws_income_rate`; emits `cat_purchased`
 - [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.4, reduced to 1.25 by breeder contract)
-- [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `cats * 0.25` $/sec (e.g. $0.75/sec at unlock); each Manager-Bot adds one additional multiplier step linearly: `(1 + manager_bots)` total (0 bots = 1×, 1 bot = 2×, 2 bots = 3×, etc.)
+- [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `cats * 0.25` $/sec (e.g. $0.75/sec at unlock); each Manager-Bot adds $0.50/cat/sec additively: formula `cats * (0.25 + 0.50 * bots)`; income only runs when `only_paws_active` and `cat_food > 0`
 - [x] **OnlyPaws button + income label** — revealed together when `only_paws_unlocked`; first reveal shows modal popup (pauses tree) explaining the feature
 - [x] **OnlyPaws info panel** — PanelContainer with static description text (legacy node, permanently hidden)
 - [x] **OnlyPaws unlock popup** — modal overlay shown once when `only_paws_unlocked` first triggers; pauses game loop; dismissed with OK button
@@ -356,7 +356,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (10+ cats or food has ever hit 0); one-time $2,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
 - [x] **PawsCo Membership upgrade** — hidden until `bot_manager_unlocked`; one-time $800 purchase; reduces cat food pack cost from $10 to $9 via `get_cat_food_pack_cost()`; button created dynamically in `_ready()`, disappears on purchase
 - [x] **AI Enterprise Membership upgrade** — hidden until `bot_manager_unlocked`; one-time $1,000 purchase; reduces token pack cost from $20 to $15 via `get_token_pack_cost()`; button created dynamically in `_ready()`, disappears on purchase
-- [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: two-segment quadratic ease-in decay scaled by housing tier. `fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index` (happiness = 50%); `zero_break = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2` (happiness = 0%). Drops from 100%→50% on segment 1 then 50%→0% on segment 2, each using `t^2` (slow start, accelerating end); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0%, sets `happiness_riot_triggered`
+- [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: two-segment quadratic ease-in decay scaled by housing tier. `fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index` (happiness = 50%); `zero_break = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2` (happiness = 0%). Drops from 100%→50% on segment 1 then 50%→0% on segment 2, each using `t^2` (slow start, accelerating end); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies continuous income multiplier `happiness_income_floor + (happiness / 100) * happiness_income_range` (0.30 at 0% → 1.00 at 100%); riot popup appears once when happiness first hits 0%, sets `happiness_riot_triggered`
 - [x] **Cramped popup** — shown once when `cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD` (8 cats); pauses game loop; on dismiss sets `home_shop_unlocked = true`
 
 ---
@@ -370,7 +370,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [ ] Basic UI polish (centered layout, styled labels & buttons)
 
 ### Phase 1 — Core Click Loop (continued)
-- [x] OnlyPaws Manager-Bot (doubling multiplier, unlocks at 6 cats)
+- [x] OnlyPaws Manager-Bot (additive $0.50/cat/sec per bot, unlocks at 6 cats)
 
 ### Phase 2 — Upgrades
 - [ ] Upgrade: increase click value (e.g. "Better Petting Technique")
