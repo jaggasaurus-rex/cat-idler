@@ -72,6 +72,10 @@ var _research_panels: Dictionary = {}
 var _research_fund_buttons: Dictionary = {}
 var _research_progress_labels: Dictionary = {}
 var _research_panel_hidden: Dictionary = {}
+# Accumulates delta toward Config.BUBBLE_SPAWN_INTERVAL; a spawn is attempted each interval.
+var _bubble_spawn_timer: float = 0.0
+# Active bubble dicts: { "node": Button, "timer": float, "type": String, "research_id": String }
+var _active_bubbles: Array = []
 
 
 func _ready() -> void:
@@ -138,7 +142,7 @@ func _ready() -> void:
 	center_column.move_child(_cat_intelligence_label, 1)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	money_label.text = "Money: $" + Util.format_number(GameState.money)
 	var max_cats: int = GameState.get_max_cats()
 	cats_label.text = "Cats: " + Util.format_number(float(GameState.cats)) + "/" + Util.format_number(float(max_cats))
@@ -348,6 +352,80 @@ func _process(_delta: float) -> void:
 		_cat_intelligence_label.visible = true
 	if _cat_intelligence_label.visible:
 		_cat_intelligence_label.text = "Cat Intelligence: " + str(GameState.cat_intelligence)
+
+	# Bubble spawn timer — attempt a spawn each interval, respecting the on-screen cap
+	_bubble_spawn_timer += delta
+	if _bubble_spawn_timer >= Config.BUBBLE_SPAWN_INTERVAL:
+		_bubble_spawn_timer = 0.0
+		if _active_bubbles.size() < Config.BUBBLE_MAX_ON_SCREEN:
+			_spawn_bubble()
+
+	# Bubble lifetime & fade — advance timers, fade out, and collect expired bubbles
+	var _expired: Array = []
+	for bubble: Dictionary in _active_bubbles:
+		bubble.timer += delta
+		(bubble.node as Button).modulate.a = 1.0 - (bubble.timer / Config.BUBBLE_LIFETIME)
+		if bubble.timer >= Config.BUBBLE_LIFETIME:
+			(bubble.node as Button).queue_free()
+			_expired.append(bubble)
+	for bubble: Dictionary in _expired:
+		_active_bubbles.erase(bubble)
+
+
+# Type selection: "viral" always when no research active.
+# When research active: "inspiration" with probability = research_cat_fraction, else "viral".
+# Viral reward = paws_income_rate × BUBBLE_VIRAL_MULTIPLIER (min 1.0)
+# Inspiration reward = get_research_cats() × BUBBLE_INSPIRATION_SECONDS points (min 1.0)
+func _spawn_bubble() -> void:
+	var cats: Array[Node] = cat_container.get_children()
+	if cats.is_empty():
+		return
+	var active_research_id: String = GameState.get_active_research_id()
+	var type: String
+	if active_research_id == "":
+		type = "viral"
+	else:
+		type = "inspiration" if randf() < GameState.research_cat_fraction else "viral"
+
+	var anchor_cat: Node2D = cats[randi() % cats.size()] as Node2D
+	var offset := Vector2(randf_range(-30.0, 30.0), randf_range(-50.0, -20.0))
+	var spawn_pos: Vector2 = cat_container.to_global(anchor_cat.position) + offset
+
+	var button: Button = Button.new()
+	button.text = "💡 Insight!" if type == "inspiration" else "💰 Viral!"
+	button.position = spawn_pos
+	button.z_index = 10
+	add_child(button)
+
+	var bubble: Dictionary = {
+		"node": button,
+		"timer": 0.0,
+		"type": type,
+		"research_id": active_research_id,
+	}
+	button.pressed.connect(_on_bubble_pressed.bind(bubble))
+	_active_bubbles.append(bubble)
+
+
+# Collects a bubble: removes it from the active list, frees its node, and grants the reward.
+func _on_bubble_pressed(bubble: Dictionary) -> void:
+	_active_bubbles.erase(bubble)
+	(bubble.node as Button).queue_free()
+
+	if bubble.type == "viral":
+		var reward: float = GameState.paws_income_rate * Config.BUBBLE_VIRAL_MULTIPLIER
+		reward = max(reward, 1.0)
+		GameState.money += reward
+	elif bubble.type == "inspiration":
+		var rid: String = bubble.research_id
+		if GameState.research_funded.get(rid, false) and not GameState.research_complete.get(rid, false):
+			var reward_points: float = float(GameState.get_research_cats()) * Config.BUBBLE_INSPIRATION_SECONDS
+			reward_points = max(reward_points, 1.0)
+			GameState.research_points[rid] = GameState.research_points.get(rid, 0.0) + reward_points
+			for item: Dictionary in Config.RESEARCH_ITEMS:
+				if item["id"] == rid:
+					GameState.research_points[rid] = min(GameState.research_points[rid], float(item["points_cost"]))
+					break
 
 
 func _on_earn_money_button_pressed() -> void:

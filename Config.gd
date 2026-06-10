@@ -89,3 +89,10 @@ const RESEARCH_ITEMS: Array = [
 		"cat_intelligence_gain": 1,
 	},
 ]
+
+# Bubble mechanic
+const BUBBLE_SPAWN_INTERVAL: float = 7.0      # seconds between spawn attempts
+const BUBBLE_LIFETIME: float = 4.5            # seconds before a bubble fades out
+const BUBBLE_MAX_ON_SCREEN: int = 4           # cap on simultaneous bubbles
+const BUBBLE_VIRAL_MULTIPLIER: float = 4.0    # viral reward = paws_income_rate × this
+const BUBBLE_INSPIRATION_SECONDS: float = 3.0 # inspiration reward = research_cats × this many seconds of points

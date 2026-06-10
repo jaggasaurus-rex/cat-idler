@@ -148,6 +148,16 @@ func _process(delta: float) -> void:
 			research_completed.emit(item_id)
 
 
+## Returns the id of the first research item that is funded but not yet complete,
+## iterating Config.RESEARCH_ITEMS in order. Returns "" if no such item exists.
+func get_active_research_id() -> String:
+	for item: Dictionary in Config.RESEARCH_ITEMS:
+		var item_id: String = item["id"]
+		if research_funded.get(item_id, false) and not research_complete.get(item_id, false):
+			return item_id
+	return ""
+
+
 ## Returns the number of cats currently assigned to research.
 func get_research_cats() -> int:
 	return int(floor(float(cats) * research_cat_fraction))

@@ -232,6 +232,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `get_happiness` | `() -> float` | Returns happiness as a percentage (0–100). At or under max_cats: 100%. Over max: two-segment quadratic ease-in decay. `fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index` (happiness = 50%); `zero_break = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2` (happiness = 0%). Segment 1 (max_cats < cats < fifty_break): `100 - t^2 * 50` where `t = (cats - max_cats) / (fifty_break - max_cats)`. Segment 2 (fifty_break ≤ cats < zero_break): `50 - t^2 * 50` where `t = (cats - fifty_break) / (zero_break - fifty_break)`. At or above zero_break: 0%. max_cats from `get_max_cats()` |
 | `_happiness_breakpoints` | `(max_cats: int) -> Array[int]` | Private helper; returns `[fifty_break, zero_break]` for the given max_cats and current `housing_tier_index`. |
 | `buy_housing_upgrade` | `() -> void` | Guards `housing_tier_index + 1 < Config.housing_tiers.size()` and `money >= cost`; deducts cost; increments `housing_tier_index` |
+| `get_active_research_id` | `() -> String` | Iterates `Config.RESEARCH_ITEMS` in order; returns the id of the first item that is funded but not complete, or `""` if none. Used by Main.gd bubble spawning to pick bubble type |
 | `get_research_cats` | `() -> int` | Returns `floor(cats * research_cat_fraction)`; number of cats assigned to research |
 | `get_onlypaws_cats` | `() -> int` | Returns `cats - get_research_cats()`; number of cats contributing to OnlyPaws income |
 | `fund_research` | `(id: String) -> void` | Finds item in `Config.RESEARCH_ITEMS` by id; if `money >= fund_cost` and not yet funded: deducts cost, sets `research_funded[id] = true`, initialises `research_points[id] = 0.0` |
@@ -282,6 +283,11 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `happiness_income_floor` | `float` | `0.30` | OnlyPaws income multiplier at 0% happiness; read by GameState._process() |
 | `happiness_income_range` | `float` | `0.70` | Multiplier range added linearly on top of the floor up to 100% happiness; read by GameState._process() |
 | `housing_tiers` | `Array` | 5 entries | Housing upgrade chain; each entry has `id`, `label`, `cost`, `max_cats_increase`; costs: 0 / 500 / 3.5k / 11.5k / 46k; tier 1 label is "Luxury Cat Trees" |
+| `BUBBLE_SPAWN_INTERVAL` | `float` | `7.0` | Seconds between bubble spawn attempts; read by Main.gd `_process()` |
+| `BUBBLE_LIFETIME` | `float` | `4.5` | Seconds a bubble lives before fading out and being removed |
+| `BUBBLE_MAX_ON_SCREEN` | `int` | `4` | Cap on simultaneous active bubbles; spawn is skipped at the cap |
+| `BUBBLE_VIRAL_MULTIPLIER` | `float` | `4.0` | Viral bubble reward = `paws_income_rate × this` (min 1.0) |
+| `BUBBLE_INSPIRATION_SECONDS` | `float` | `3.0` | Inspiration bubble reward = `get_research_cats() × this` research points (min 1.0) |
 
 ### Util (`res://autoloads/Util.gd`)
 
@@ -307,12 +313,12 @@ CatCharacter (Node2D) ← CatCharacter.gd
 
 ### Main UI (`res://scenes/Main.gd`)
 
-Drives the root scene. No mutable state lives here — reads from and delegates to `GameState`.
+Drives the root scene. Reads from and delegates to `GameState`; the only local mutable state is UI-latch flags plus the bubble mechanic's `_bubble_spawn_timer` (float) and `_active_bubbles` (Array of `{node, timer, type, research_id}` dicts).
 
 | Method | Description |
 |---|---|
 | `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`, `cat_lost` → `_on_cat_lost`, `research_completed` → `_on_research_completed`; styles `CatsLabel` as hero stat; builds per-item research panels in `ResearchItemList` from `Config.RESEARCH_ITEMS` (PanelContainer → VBoxContainer → NameLabel, DescriptionLabel, FundButton, ProgressLabel); stores refs in `_research_panels`, `_research_fund_buttons`, `_research_progress_labels`, `_research_panel_hidden` |
-| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`, `home_shop_unlocked`, `housing_tier_index >= 1` (reveals CenterColumn), and `bot_manager_unlocked OR auto_feeder_unlocked`; shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; `OnlyPawsIncomeLabel` shows `paws_income_rate` when `bots_active`, else `get_onlypaws_cats() * Config.onlypaws_income_per_cat` (matches effective income rate used by GameState); updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); updates `ResearchActiveLabel`, `ResearchProgressBar`, `ResearchCatsLabel` every frame; shows cramped/riot popups when triggered; updates housing chain display |
+| `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`, `home_shop_unlocked`, `housing_tier_index >= 1` (reveals CenterColumn), and `bot_manager_unlocked OR auto_feeder_unlocked`; shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; `OnlyPawsIncomeLabel` shows `paws_income_rate` when `bots_active`, else `get_onlypaws_cats() * Config.onlypaws_income_per_cat` (matches effective income rate used by GameState); updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); updates `ResearchActiveLabel`, `ResearchProgressBar`, `ResearchCatsLabel` every frame; shows cramped/riot popups when triggered; updates housing chain display; advances `_bubble_spawn_timer` by `delta` and calls `_spawn_bubble()` each `Config.BUBBLE_SPAWN_INTERVAL` (unless `_active_bubbles.size() >= Config.BUBBLE_MAX_ON_SCREEN`); advances each active bubble's timer, fades its alpha to `1.0 - timer/BUBBLE_LIFETIME`, and frees/removes it once `timer >= BUBBLE_LIFETIME` |
 | `_sort_shop_list` | `() -> void` | Private; updates dynamic `shop_cost` metadata (housing next-tier cost, manager-bot live cost) then sorts `ShopList` children ascending by `shop_cost`; invisible items sink to bottom; called whenever any item's visibility changes |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
 | `_on_purchase_cat_button_pressed()` | Calls `GameState.buy_cat()` |
@@ -326,6 +332,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 | `_on_buy_token_x10_button_pressed()` | Calls `GameState.buy_tokens(10)` |
 | `_on_buy_bot_manager_button_pressed()` | Calls `GameState.buy_bot_manager()` |
 | `_place_cat(cat: Node2D)` | Places a newly added cat at a random viewport position. Up to 30 attempts to avoid UI rects (+ 16 px padding) and existing cats (64 px radius). Falls back to ignoring cat spacing, then to unconstrained viewport position. |
+| `_spawn_bubble()` | Spawns one clickable bubble Button near a random cat. Skips if `CatContainer` has no children. Type is `"viral"` when no research is active (`GameState.get_active_research_id() == ""`); otherwise `"inspiration"` with probability `research_cat_fraction`, else `"viral"`. Positions the button at the anchor cat's global position + `Vector2(randf_range(-30,30), randf_range(-50,-20))`, sets `z_index = 10`, adds it as a child of Main, stores a dict `{node, timer, type, research_id}` in `_active_bubbles`, and binds `pressed` → `_on_bubble_pressed(bubble)`. `research_id` is captured at spawn so collection still works if research changes mid-flight |
+| `_on_bubble_pressed(bubble)` | Removes the bubble from `_active_bubbles`, frees its node. Viral: adds `max(paws_income_rate × Config.BUBBLE_VIRAL_MULTIPLIER, 1.0)` to `GameState.money`. Inspiration: if `bubble.research_id` is still funded and not complete, adds `max(get_research_cats() × Config.BUBBLE_INSPIRATION_SECONDS, 1.0)` to `research_points[id]`, clamped to the item's `points_cost` |
 | `_overlaps_ui(pos, ui_rects)` | Returns `true` if `pos` falls inside any rect in `ui_rects`. |
 | `_too_close_to_cats(pos, existing_positions)` | Returns `true` if `pos` is within `CAT_SPACING_RADIUS` of any element in `existing_positions`. |
 
@@ -360,6 +368,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **AI Enterprise Membership upgrade** — hidden until `bot_manager_unlocked`; one-time $1,000 purchase; reduces token pack cost from $20 to $15 via `get_token_pack_cost()`; button created dynamically in `_ready()`, disappears on purchase
 - [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: two-segment quadratic ease-in decay scaled by housing tier. `fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index` (happiness = 50%); `zero_break = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2` (happiness = 0%). Drops from 100%→50% on segment 1 then 50%→0% on segment 2, each using `t^2` (slow start, accelerating end); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies continuous income multiplier `happiness_income_floor + (happiness / 100) * happiness_income_range` (0.30 at 0% → 1.00 at 100%); riot popup appears once when happiness first hits 0%, sets `happiness_riot_triggered`
 - [x] **Cramped popup** — shown once when `cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD` (8 cats); pauses game loop; on dismiss sets `home_shop_unlocked = true`
+- [x] **Bubble mechanic** — clickable floating Button bubbles spawn near a random cat every `Config.BUBBLE_SPAWN_INTERVAL` (7s), capped at `BUBBLE_MAX_ON_SCREEN` (4). Two types: Viral (💰, reward = `paws_income_rate × 4`, min $1) and Inspiration (💡, reward = `get_research_cats() × 3` research points, min 1, clamped to `points_cost`). Viral always spawns when no research is active; with active research, Inspiration spawns with probability `research_cat_fraction` else Viral. Bubbles fade out over `BUBBLE_LIFETIME` (4.5s) and disappear if not clicked; spawning skips entirely when there are no cats. Created in code (no scene file), `z_index = 10`, children of Main
 
 ---
 
