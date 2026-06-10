@@ -716,7 +716,14 @@ func _on_cat_lost() -> void:
 # Places cat at a random viewport position that avoids UI elements and existing cats.
 # Falls back to ignoring cat spacing, then to anywhere in the viewport.
 func _place_cat(cat: Node2D) -> void:
-	var vp_rect: Rect2 = get_viewport_rect()
+	# Safe zone: 40px inset from all edges, top 10% of screen excluded so
+	# bubbles spawned above cats don't render off the top of the viewport.
+	var vp_size: Vector2 = get_viewport_rect().size
+	var padding: float = 40.0
+	var min_x: float = padding
+	var max_x: float = vp_size.x - padding
+	var min_y: float = vp_size.y * 0.10 + padding
+	var max_y: float = vp_size.y - padding
 	var ui_nodes: Array[Control] = [
 		shop_panel, happiness_bar_container, money_label, cats_label,
 		cat_food_label, buy_cat_food_button, earn_money_button, purchase_cat_button,
@@ -738,8 +745,8 @@ func _place_cat(cat: Node2D) -> void:
 
 	for _i: int in CAT_PLACEMENT_ATTEMPTS:
 		var candidate := Vector2(
-			randf_range(vp_rect.position.x, vp_rect.end.x),
-			randf_range(vp_rect.position.y, vp_rect.end.y)
+			randf_range(min_x, max_x),
+			randf_range(min_y, max_y)
 		)
 		if _overlaps_ui(candidate, ui_rects) or _too_close_to_cats(candidate, existing_positions):
 			continue
@@ -750,8 +757,8 @@ func _place_cat(cat: Node2D) -> void:
 	if not found:
 		for _i: int in CAT_PLACEMENT_ATTEMPTS:
 			var candidate := Vector2(
-				randf_range(vp_rect.position.x, vp_rect.end.x),
-				randf_range(vp_rect.position.y, vp_rect.end.y)
+				randf_range(min_x, max_x),
+				randf_range(min_y, max_y)
 			)
 			if _overlaps_ui(candidate, ui_rects):
 				continue
@@ -761,8 +768,8 @@ func _place_cat(cat: Node2D) -> void:
 
 	if not found:
 		chosen_pos = Vector2(
-			randf_range(vp_rect.position.x, vp_rect.end.x),
-			randf_range(vp_rect.position.y, vp_rect.end.y)
+			randf_range(min_x, max_x),
+			randf_range(min_y, max_y)
 		)
 
 	cat.position = cat_container.to_local(chosen_pos)
