@@ -246,19 +246,19 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `token_pack_cost` | `float` | `20.0` | Cost per token pack |
 | `token_pack_amount` | `float` | `100.0` | Tokens added per token pack |
 | `cat_cost_base` | `float` | `5.0` | Starting cost of the first cat |
-| `cat_cost_growth_rate` | `float` | `1.5` | Default multiplier applied to cat cost after each purchase |
+| `cat_cost_growth_rate` | `float` | `1.2` | Default multiplier applied to cat cost after each purchase |
 | `only_paws_unlock_cats` | `int` | `3` | Cat count that unlocks OnlyPaws |
 | `only_paws_cats_per_tier` | `int` | `3` | Cats per $1/sec OnlyPaws income tier |
 | `onlypaws_income_per_cat` | `float` | `0.25` | Base $/sec per cat for OnlyPaws income; at unlock (3 cats) = $0.75/sec |
 | `bot_shop_unlock_cats` | `int` | `6` | Cat count that unlocks the bot shop |
 | `bot_cost_base` | `float` | `50.0` | Starting cost of the first bot |
-| `bot_cost_multiplier` | `float` | `2.0` | Multiplier applied to bot cost after each purchase |
+| `bot_cost_multiplier` | `float` | `1.6` | Multiplier applied to bot cost after each purchase |
 | `breeder_contract_cost` | `float` | `2000.0` | Cost of the breeder contract upgrade |
 | `breeder_contract_growth_rate` | `float` | `1.25` | Cat cost growth rate after breeder contract |
-| `bot_manager_cost` | `float` | `40000.0` | Cost of the Manager-bot Manager upgrade |
+| `bot_manager_cost` | `float` | `4000.0` | Cost of the Manager-bot Manager upgrade |
 | `bot_manager_unlock_bots` | `int` | `6` | Bot count that unlocks the Manager-bot Manager shop item |
 | `bot_manager_token_threshold` | `float` | `1.0` | Token level at or below which the bot manager auto-buys a token pack |
-| `auto_feeder_cost` | `float` | `20000.0` | Cost of the Auto-Feeder upgrade |
+| `auto_feeder_cost` | `float` | `2000.0` | Cost of the Auto-Feeder upgrade |
 | `auto_feeder_unlock_cats` | `int` | `10` | Cat count that unlocks the Auto-Feeder shop item |
 | `auto_feeder_food_threshold` | `float` | `1.0` | Food level at or below which the auto feeder buys a cat food pack |
 | `base_max_cats` | `int` | `10` | Baseline cat cap before any housing upgrades; used by `get_max_cats()` |
@@ -269,7 +269,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `happiness_cat_loss_deactivate` | `float` | `80.0` | Happiness % above which the cat-loss drain turns off; read by GameState._process() |
 | `happiness_income_floor` | `float` | `0.30` | OnlyPaws income multiplier at 0% happiness; read by GameState._process() |
 | `happiness_income_range` | `float` | `0.70` | Multiplier range added linearly on top of the floor up to 100% happiness; read by GameState._process() |
-| `housing_tiers` | `Array` | 5 entries | Housing upgrade chain; each entry has `id`, `label`, `cost`, `max_cats_increase`; costs: 0 / 1.5k / 10k / 34.5k / 138k |
+| `housing_tiers` | `Array` | 5 entries | Housing upgrade chain; each entry has `id`, `label`, `cost`, `max_cats_increase`; costs: 0 / 500 / 3.5k / 11.5k / 46k; tier 1 label is "Luxury Cat Trees" |
 
 ### Util (`res://autoloads/Util.gd`)
 
@@ -325,7 +325,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Money counter** — label refreshes every frame, displayed to 2 decimal places (`$X.XX`)
 - [x] **Cats counter** — label refreshes every frame showing `X/MAX` (e.g. `0/10`); MAX from `GameState.get_max_cats()` = `base_max_cats` + 10 per purchased housing tier; turns red when cats exceed MAX
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `only_paws_unlocked`, `paws_income_rate`; emits `cat_purchased`
-- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.5, reduced to 1.25 by breeder contract)
+- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.2, reduced to 1.25 by breeder contract)
 - [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `cats * 0.25` $/sec (e.g. $0.75/sec at unlock); each Manager-Bot adds one additional multiplier step linearly: `(1 + manager_bots)` total (0 bots = 1×, 1 bot = 2×, 2 bots = 3×, etc.)
 - [x] **OnlyPaws button + income label** — revealed together when `only_paws_unlocked`; first reveal shows modal popup (pauses tree) explaining the feature
 - [x] **OnlyPaws info panel** — PanelContainer with static description text (legacy node, permanently hidden)
@@ -336,14 +336,14 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **OnlyPaws ON/OFF toggle** — `OnlyPawsButton` flips `only_paws_active`; income only runs while active; toggling OFF also sets `bots_active = false` stopping token drain; toggling ON re-enables bots if tokens > 0; button label and green modulate reflect state
 - [x] **Upgrade stubs (GameState only)** — `buy_breeder_contract()` exists in GameState but is not wired to any UI
 - [x] **Flat shop list** — ShopPanel contains a ScrollContainer with a single VBoxContainer; items are individual Button nodes sorted ascending by cost each time visibility changes; no tabs
-- [x] **Housing upgrade chain** — in Home tab; 4 purchasable tiers (Basic Studio is free starting state); each tier costs 3× all previous tiers combined (1.5k / 10k / 34.5k / 138k); each purchased tier adds 10 to max_cats (20 → 30 → 40 → 50 → 60); UI shows current tier (green label) + next tier (name, cost, buy button), or "Max Upgrade Reached" at cap; sliding window: always exactly one current + one next visible
+- [x] **Housing upgrade chain** — in Home tab; 4 purchasable tiers (Basic Studio is free starting state); costs: 500 / 3.5k / 11.5k / 46k; tier 1 renamed to "Luxury Cat Trees"; each purchased tier adds 10 to max_cats (20 → 30 → 40 → 50 → 60); UI shows current tier (green label) + next tier (name, cost, buy button), or "Max Upgrade Reached" at cap; sliding window: always exactly one current + one next visible
 - [x] **Shop panel always visible** — `ShopPanel` is shown from game start; no unlock gate
 - [x] **Cat food** — `cat_food` starts at 1000; drains at `cats / 10` per second (always, not gated); clamped to 0; `CatFoodLabel` shows `floor(cat_food)` in the HUD
 - [x] **Cat Food Pack shop item** — buy x1 ($10, +100 food) or x10 ($100, +1000 food); both buttons disabled when `money < 10`
 - [x] **Token system** — `tokens` drains at `manager_bots * token_drain_per_bot` per second (clamped to 0); `TokensLabel` shows `floor(tokens)` in HUD; unlocks alongside Token Pack shop item on first bot purchase
 - [x] **Token Pack shop item** — hidden until `tokens_shop_unlocked`; buy x1 ($20, +100 tokens) or x10 ($200, +1000 tokens); both buttons disabled when `money < 20`
-- [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 6 bots owned); one-time $40,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
-- [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (10+ cats or food has ever hit 0); one-time $20,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
+- [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 6 bots owned); one-time $4,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
+- [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (10+ cats or food has ever hit 0); one-time $2,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
 - [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: two-segment quadratic ease-in decay scaled by housing tier. `fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index` (happiness = 50%); `zero_break = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2` (happiness = 0%). Drops from 100%→50% on segment 1 then 50%→0% on segment 2, each using `t^2` (slow start, accelerating end); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0%, sets `happiness_riot_triggered`
 - [x] **Cramped popup** — shown once when `cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD` (8 cats); pauses game loop; on dismiss sets `home_shop_unlocked = true`
 
