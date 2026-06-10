@@ -129,6 +129,31 @@ func _process(_delta: float) -> void:
 			if GameState.research_points.get("cat_power_unite", 0.0) <= pts_before:
 				_fail("inspiration click added no research points")
 			print("PASS: inspiration bubble spawns 💡 and grants research points")
+		51:
+			# Click-through: one left-click collects the clicked bubble AND any stacked under the cursor.
+			GameState.research_cat_fraction = 0.0  # force viral
+			GameState.money = 100000.0
+			_main._try_spawn_bubble_for_cat(_cat_node)
+			_main._try_spawn_bubble_for_cat(_cat_node)
+			if _main._active_bubbles.size() != 2:
+				_fail("expected 2 stacked bubbles, got %d" % _main._active_bubbles.size())
+			# Overlap both bubble rects on the cursor point so one click hits both.
+			var click_pos: Vector2 = get_viewport().get_mouse_position()
+			for b: Dictionary in _main._active_bubbles:
+				var btn: Button = b.node
+				btn.size = Vector2(80, 80)
+				btn.position = click_pos - Vector2(40, 40)
+			var first: Dictionary = _main._active_bubbles[0]
+			var money_before: float = GameState.money
+			var ev: InputEventMouseButton = InputEventMouseButton.new()
+			ev.button_index = MOUSE_BUTTON_LEFT
+			ev.pressed = true
+			_main._on_bubble_gui_input(ev, first)
+			if _main._active_bubbles.size() != 0:
+				_fail("stacked bubbles not all collected (left=%d)" % _main._active_bubbles.size())
+			if GameState.money <= money_before:
+				_fail("stacked collect granted no money")
+			print("PASS: one click collects stacked bubbles (2 at once)")
 		52:
 			print("ALL GAMEPLAY CHECKS PASSED")
 			get_tree().quit(0)

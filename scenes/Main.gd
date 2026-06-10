@@ -413,8 +413,10 @@ func _spawn_bubble(cat_node: Node2D) -> void:
 
 	var button: Button = Button.new()
 	button.text = "💡" if type == "inspiration" else "💰"
+	button.add_theme_font_size_override("font_size", 48)
+	button.custom_minimum_size = Vector2(80, 80)
 	button.position = spawn_pos
-	button.z_index = 10
+	button.z_index = 100
 	add_child(button)
 
 	var bubble: Dictionary = {
@@ -423,7 +425,9 @@ func _spawn_bubble(cat_node: Node2D) -> void:
 		"type": type,
 		"research_id": active_research_id,
 	}
-	button.pressed.connect(_on_bubble_pressed.bind(bubble))
+	# gui_input used instead of pressed so we can read cursor position and
+	# collect any additional bubbles stacked at the same screen location.
+	button.gui_input.connect(_on_bubble_gui_input.bind(bubble))
 	_active_bubbles.append(bubble)
 
 
@@ -463,6 +467,28 @@ func _show_viral_popup() -> void:
 	)
 
 	get_tree().paused = true
+
+
+# Handles a left-click on a bubble: collects the clicked bubble, then collects any other
+# active bubbles whose rect also contains the cursor (stacked bubbles share one click).
+func _on_bubble_gui_input(event: InputEvent, bubble: Dictionary) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mb: InputEventMouseButton = event as InputEventMouseButton
+	if mb.button_index != MOUSE_BUTTON_LEFT or not mb.pressed:
+		return
+	# a. Collect the directly-clicked bubble first.
+	_on_bubble_pressed(bubble)
+	# b. Cursor position in viewport space.
+	var click_pos: Vector2 = get_viewport().get_mouse_position()
+	# c. Find any remaining bubbles stacked under the same point.
+	var stacked: Array = []
+	for other: Dictionary in _active_bubbles:
+		if (other.node as Button).get_global_rect().has_point(click_pos):
+			stacked.append(other)
+	# d. Collect each stacked bubble too.
+	for other: Dictionary in stacked:
+		_on_bubble_pressed(other)
 
 
 # Collects a bubble: removes it from the active list, frees its node, and grants the reward.
