@@ -252,7 +252,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `token_pack_cost` | `float` | `20.0` | Cost per token pack |
 | `token_pack_amount` | `float` | `100.0` | Tokens added per token pack |
 | `cat_cost_base` | `float` | `5.0` | Starting cost of the first cat |
-| `cat_cost_growth_rate` | `float` | `1.2` | Default multiplier applied to cat cost after each purchase |
+| `cat_cost_growth_rate` | `float` | `1.4` | Default multiplier applied to cat cost after each purchase |
 | `only_paws_unlock_cats` | `int` | `3` | Cat count that unlocks OnlyPaws |
 | `only_paws_cats_per_tier` | `int` | `3` | Cats per $1/sec OnlyPaws income tier |
 | `onlypaws_income_per_cat` | `float` | `0.25` | Base $/sec per cat for OnlyPaws income; at unlock (3 cats) = $0.75/sec |
