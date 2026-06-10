@@ -38,6 +38,14 @@ const auto_feeder_cost: float = 2000.0
 const auto_feeder_unlock_cats: int = 10
 const auto_feeder_food_threshold: float = 1.0
 
+# PawsCo Membership upgrade
+const pawsco_membership_cost: float = 800.0
+const cat_food_pack_cost_discounted: float = 9.0  # active when pawsco_membership_purchased
+
+# AI Enterprise Membership upgrade
+const ai_enterprise_membership_cost: float = 1000.0
+const token_pack_cost_discounted: float = 15.0  # active when ai_enterprise_purchased
+
 # Cat Happiness
 const base_max_cats: int = 10  # baseline cat cap before any housing upgrades
 # Base cats-over-max_cats where happiness hits 50% (fifty) and 0% (zero) at housing tier 0.

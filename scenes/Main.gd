@@ -52,6 +52,8 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var research_item_list: VBoxContainer = $CenterColumn/ResearchItemList
 
 
+var _pawsco_membership_button: Button
+var _ai_enterprise_membership_button: Button
 var _only_paws_popup_shown: bool = false
 var _starvation_popup_shown: bool = false
 var _starvation_2_popup_shown: bool = false
@@ -116,6 +118,18 @@ func _ready() -> void:
 	housing_button.set_meta("shop_cost", 0.0)
 	auto_feeder_button.text = "Auto-Feeder\n$" + Util.format_number(Config.auto_feeder_cost)
 	bot_manager_shop_button.text = "Manager-Bot Manager\n$" + Util.format_number(Config.bot_manager_cost)
+	_pawsco_membership_button = Button.new()
+	_pawsco_membership_button.text = "PawsCo Membership\nStart buying food in bulk\n$" + Util.format_number(Config.pawsco_membership_cost)
+	_pawsco_membership_button.visible = false
+	_pawsco_membership_button.set_meta("shop_cost", Config.pawsco_membership_cost)
+	_pawsco_membership_button.pressed.connect(_on_buy_pawsco_membership_button_pressed)
+	shop_list.add_child(_pawsco_membership_button)
+	_ai_enterprise_membership_button = Button.new()
+	_ai_enterprise_membership_button.text = "AI Enterprise Membership\nReduce token price\n$" + Util.format_number(Config.ai_enterprise_membership_cost)
+	_ai_enterprise_membership_button.visible = false
+	_ai_enterprise_membership_button.set_meta("shop_cost", Config.ai_enterprise_membership_cost)
+	_ai_enterprise_membership_button.pressed.connect(_on_buy_ai_enterprise_membership_button_pressed)
+	shop_list.add_child(_ai_enterprise_membership_button)
 
 
 func _process(_delta: float) -> void:
@@ -189,6 +203,24 @@ func _process(_delta: float) -> void:
 			_sort_shop_list()
 	elif bot_manager_shop_button.visible:
 		bot_manager_shop_button.visible = false
+		_sort_shop_list()
+
+	# PawsCo membership button — visible when bot_manager_unlocked, disappears on purchase
+	if GameState.bot_manager_unlocked and not GameState.pawsco_membership_purchased:
+		if not _pawsco_membership_button.visible:
+			_pawsco_membership_button.visible = true
+			_sort_shop_list()
+	elif _pawsco_membership_button.visible:
+		_pawsco_membership_button.visible = false
+		_sort_shop_list()
+
+	# AI Enterprise membership button — visible when bot_manager_unlocked, disappears on purchase
+	if GameState.bot_manager_unlocked and not GameState.ai_enterprise_purchased:
+		if not _ai_enterprise_membership_button.visible:
+			_ai_enterprise_membership_button.visible = true
+			_sort_shop_list()
+	elif _ai_enterprise_membership_button.visible:
+		_ai_enterprise_membership_button.visible = false
 		_sort_shop_list()
 
 	# OnlyPaws toggle state — green tint when active, default when inactive
@@ -403,6 +435,13 @@ func _on_buy_bot_manager_button_pressed() -> void:
 func _on_buy_auto_feeder_button_pressed() -> void:
 	GameState.buy_auto_feeder()
 
+
+func _on_buy_pawsco_membership_button_pressed() -> void:
+	GameState.buy_pawsco_membership()
+
+
+func _on_buy_ai_enterprise_membership_button_pressed() -> void:
+	GameState.buy_ai_enterprise_membership()
 
 
 func _on_buy_housing_button_pressed() -> void:

@@ -32,6 +32,8 @@ var bot_manager_purchased: bool = false
 var food_hit_zero: bool = false
 var auto_feeder_unlocked: bool = false
 var auto_feeder_purchased: bool = false
+var pawsco_membership_purchased: bool = false
+var ai_enterprise_purchased: bool = false
 var first_cat_popup_shown: bool = false
 var starvation_count: int = 0
 var starvation_active: bool = false
@@ -78,7 +80,7 @@ func _process(delta: float) -> void:
 	# Starvation: food depleted and player cannot afford a food pack.
 	# starvation_active debounces so count only increments once per contiguous window.
 	# Resets when cat_food > 0 OR money >= cat_food_pack_cost.
-	var _starving: bool = cat_food <= 0.0 and money < Config.cat_food_pack_cost
+	var _starving: bool = cat_food <= 0.0 and money < get_cat_food_pack_cost()
 	if _starving and not starvation_active:
 		starvation_active = true
 		starvation_count += 1
@@ -206,9 +208,9 @@ func buy_breeder_contract() -> void:
 	next_cat_cost = Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats))
 
 
-## Returns how many cat food packs ($10 each) the player can currently afford.
+## Returns how many cat food packs the player can currently afford at the current price.
 func get_cat_food_packs_affordable() -> int:
-	return int(money / Config.cat_food_pack_cost)
+	return int(money / get_cat_food_pack_cost())
 
 
 ## Grants one cat food pack worth of food without charging the player.
@@ -231,17 +233,17 @@ func starvation_lose_cat() -> void:
 
 ## Purchases quantity cat food packs, adding cat_food_pack_amount per pack.
 func buy_cat_food_pack(quantity: int) -> void:
-	if money < Config.cat_food_pack_cost * float(quantity):
+	if money < get_cat_food_pack_cost() * float(quantity):
 		return
-	money -= Config.cat_food_pack_cost * float(quantity)
+	money -= get_cat_food_pack_cost() * float(quantity)
 	cat_food += Config.cat_food_pack_amount * float(quantity)
 
 
 ## Purchases quantity token packs, adding token_pack_amount per pack.
 func buy_tokens(quantity: int) -> void:
-	if money < Config.token_pack_cost * float(quantity):
+	if money < get_token_pack_cost() * float(quantity):
 		return
-	money -= Config.token_pack_cost * float(quantity)
+	money -= get_token_pack_cost() * float(quantity)
 	tokens += Config.token_pack_amount * float(quantity)
 	if tokens > 0.0:
 		bots_active = true
@@ -263,6 +265,38 @@ func buy_auto_feeder() -> void:
 		return
 	money -= Config.auto_feeder_cost
 	auto_feeder_purchased = true
+
+
+## Returns the cat food pack cost; discounted to cat_food_pack_cost_discounted
+## when pawsco_membership_purchased, otherwise Config.cat_food_pack_cost.
+func get_cat_food_pack_cost() -> float:
+	if pawsco_membership_purchased:
+		return Config.cat_food_pack_cost_discounted
+	return Config.cat_food_pack_cost
+
+
+## Returns the token pack cost; discounted to token_pack_cost_discounted
+## when ai_enterprise_purchased, otherwise Config.token_pack_cost.
+func get_token_pack_cost() -> float:
+	if ai_enterprise_purchased:
+		return Config.token_pack_cost_discounted
+	return Config.token_pack_cost
+
+
+## Purchases PawsCo Membership: reduces cat food pack cost from $10 to $9.
+func buy_pawsco_membership() -> void:
+	if money < Config.pawsco_membership_cost or pawsco_membership_purchased:
+		return
+	money -= Config.pawsco_membership_cost
+	pawsco_membership_purchased = true
+
+
+## Purchases AI Enterprise Membership: reduces token pack cost from $20 to $15.
+func buy_ai_enterprise_membership() -> void:
+	if money < Config.ai_enterprise_membership_cost or ai_enterprise_purchased:
+		return
+	money -= Config.ai_enterprise_membership_cost
+	ai_enterprise_purchased = true
 
 
 ## Returns the current cat cap: base_max_cats plus max_cats_increase for each
