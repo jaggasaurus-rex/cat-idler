@@ -176,6 +176,8 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `food_hit_zero` | `bool` | `false` | One-way latch; set to `true` in `_process()` the first time `cat_food <= 0`; used as second unlock trigger for Auto-Feeder |
 | `auto_feeder_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `cats >= 10` or `food_hit_zero` |
 | `auto_feeder_purchased` | `bool` | `false` | One-way latch; set by `buy_auto_feeder()`; enables auto-food-purchase in `_process()` |
+| `pawsco_membership_purchased` | `bool` | `false` | One-way latch; set by `buy_pawsco_membership()`; activates discounted cat food pack price |
+| `ai_enterprise_purchased` | `bool` | `false` | One-way latch; set by `buy_ai_enterprise_membership()`; activates discounted token pack price |
 | `first_cat_popup_shown` | `bool` | `false` | Set to `true` in Main.gd the first time `cats >= 1`; gates the first-cat achievement popup so it fires exactly once |
 | `starvation_count` | `int` | `0` | Increments each time the starvation condition transitions from inactive to active (cat_food <= 0 AND money < 10) |
 | `starvation_active` | `bool` | `false` | Frame-level debounce; `true` while the starvation condition persists; resets when cat_food > 0 or money >= 10 |
@@ -219,6 +221,10 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `buy_tokens` | `(quantity: int) -> void` | Guards `money >= Config.token_pack_cost * quantity`; deducts cost; adds `Config.token_pack_amount * quantity` to `tokens`; sets `bots_active = true` if `tokens > 0` |
 | `buy_bot_manager` | `() -> void` | Guards `money >= Config.bot_manager_cost and not bot_manager_purchased`; deducts cost; sets `bot_manager_purchased = true` |
 | `buy_auto_feeder` | `() -> void` | Guards `money >= Config.auto_feeder_cost and not auto_feeder_purchased`; deducts cost; sets `auto_feeder_purchased = true` |
+| `get_cat_food_pack_cost` | `() -> float` | Returns `Config.cat_food_pack_cost_discounted` if `pawsco_membership_purchased`, else `Config.cat_food_pack_cost`; used by `buy_cat_food_pack`, starvation check, `get_cat_food_packs_affordable` |
+| `get_token_pack_cost` | `() -> float` | Returns `Config.token_pack_cost_discounted` if `ai_enterprise_purchased`, else `Config.token_pack_cost`; used by `buy_tokens` |
+| `buy_pawsco_membership` | `() -> void` | Guards `money >= Config.pawsco_membership_cost and not pawsco_membership_purchased`; deducts cost; sets `pawsco_membership_purchased = true` |
+| `buy_ai_enterprise_membership` | `() -> void` | Guards `money >= Config.ai_enterprise_membership_cost and not ai_enterprise_purchased`; deducts cost; sets `ai_enterprise_purchased = true` |
 | `buy_breeder_contract` | `() -> void` | Guards `money >= 2000 and not breeder_purchased`; sets `cat_cost_growth_rate = 1.25`; retroactively recalculates `next_cat_cost = 5.0 * pow(1.25, cats)` |
 | `buy_cat_trees` | `() -> void` | Guards `money >= Config.cat_trees_cost (10000) and not cat_trees_purchased`; deducts cost; sets `cat_trees_purchased = true`; happiness recalculates immediately via `get_happiness()` |
 | `get_max_cats` | `() -> int` | Returns `Config.base_max_cats` plus the sum of `max_cats_increase` for each purchased housing tier (1..housing_tier_index) |
@@ -261,6 +267,10 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `auto_feeder_cost` | `float` | `2000.0` | Cost of the Auto-Feeder upgrade |
 | `auto_feeder_unlock_cats` | `int` | `10` | Cat count that unlocks the Auto-Feeder shop item |
 | `auto_feeder_food_threshold` | `float` | `1.0` | Food level at or below which the auto feeder buys a cat food pack |
+| `pawsco_membership_cost` | `float` | `800.0` | Cost of the PawsCo Membership upgrade |
+| `cat_food_pack_cost_discounted` | `float` | `9.0` | Cat food pack cost after PawsCo membership purchased |
+| `ai_enterprise_membership_cost` | `float` | `1000.0` | Cost of the AI Enterprise Membership upgrade |
+| `token_pack_cost_discounted` | `float` | `15.0` | Token pack cost after AI Enterprise membership purchased |
 | `base_max_cats` | `int` | `10` | Baseline cat cap before any housing upgrades; used by `get_max_cats()` |
 | `HOUSING_UPGRADE_PROMPT_THRESHOLD` | `int` | `8` | Cat count that fires the "cats are cramped" popup and reveals the Home tab; shared by GameState._process() and Main.gd._process() |
 | `happiness_fifty_break_offset` | `int` | `2` | Cats over max_cats where happiness hits 50% (before housing bonus); ratio 2:5 with zero_break_offset |
@@ -344,6 +354,8 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **Token Pack shop item** — hidden until `tokens_shop_unlocked`; buy x1 ($20, +100 tokens) or x10 ($200, +1000 tokens); both buttons disabled when `money < 20`
 - [x] **Manager-bot Manager upgrade** — hidden until `bot_manager_unlocked` (tokens hit 0 or 6 bots owned); one-time $4,000 purchase; after purchase auto-calls `buy_tokens(1)` each frame tokens fall to ≤ 1; button turns green and disables on purchase
 - [x] **Auto-Feeder upgrade** — hidden until `auto_feeder_unlocked` (10+ cats or food has ever hit 0); one-time $2,000 purchase; after purchase auto-calls `buy_cat_food_pack(1)` each frame food falls to ≤ 1; button turns green and disables on purchase; description hides on purchase
+- [x] **PawsCo Membership upgrade** — hidden until `bot_manager_unlocked`; one-time $800 purchase; reduces cat food pack cost from $10 to $9 via `get_cat_food_pack_cost()`; button created dynamically in `_ready()`, disappears on purchase
+- [x] **AI Enterprise Membership upgrade** — hidden until `bot_manager_unlocked`; one-time $1,000 purchase; reduces token pack cost from $20 to $15 via `get_token_pack_cost()`; button created dynamically in `_ready()`, disappears on purchase
 - [x] **Cat Happiness** — reactive value 0–100%; 100% while cats ≤ max_cats; above max: two-segment quadratic ease-in decay scaled by housing tier. `fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index` (happiness = 50%); `zero_break = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2` (happiness = 0%). Drops from 100%→50% on segment 1 then 50%→0% on segment 2, each using `t^2` (slow start, accelerating end); always-visible progress bar at top-centre; fill colour transitions red→green via lerp; applies OnlyPaws income debuff (×0.80 below 50%, ×0.50 below 10%); riot popup appears once when happiness first hits 0%, sets `happiness_riot_triggered`
 - [x] **Cramped popup** — shown once when `cats >= Config.HOUSING_UPGRADE_PROMPT_THRESHOLD` (8 cats); pauses game loop; on dismiss sets `home_shop_unlocked = true`
 
