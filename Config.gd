@@ -16,7 +16,7 @@ const token_pack_amount: float = 100.0
 
 # Cats
 const cat_cost_base: float = 5.0
-const cat_cost_growth_rate: float = 1.5
+const cat_cost_growth_rate: float = 1.2
 const only_paws_unlock_cats: int = 3
 const only_paws_cats_per_tier: int = 3  # floor(cats / N) = base OnlyPaws income tier
 const onlypaws_income_per_cat: float = 0.25  # base $/sec per cat; at unlock (3 cats): 3 * 0.25 = $0.75/sec
@@ -24,17 +24,17 @@ const bot_shop_unlock_cats: int = 6
 
 # Bots
 const bot_cost_base: float = 50.0
-const bot_cost_multiplier: float = 2.0
+const bot_cost_multiplier: float = 1.6
 
 # Upgrades
 const breeder_contract_cost: float = 2000.0
 const breeder_contract_growth_rate: float = 1.25
-const bot_manager_cost: float = 40000.0
+const bot_manager_cost: float = 4000.0
 const bot_manager_unlock_bots: int = 6
 const bot_manager_token_threshold: float = 1.0
 
 # Auto-Feeder upgrade
-const auto_feeder_cost: float = 20000.0
+const auto_feeder_cost: float = 2000.0
 const auto_feeder_unlock_cats: int = 10
 const auto_feeder_food_threshold: float = 1.0
 
@@ -56,15 +56,15 @@ const happiness_income_range: float = 0.70
 const HOUSING_UPGRADE_PROMPT_THRESHOLD: int = 8
 
 # Housing upgrade chain — ordered from cheapest to most expensive.
-# cost[n] = sum(cost[0..n-1]) * 3  (verified: 0, 1.5k, 10k, 34.5k, 138k)
+# cost[n]: 0, 500, 3500, 11500, 46000
 # max_cats_increase is summed for tiers 1..housing_tier_index and added to base_max_cats.
 # Each entry: {id: String, label: String, cost: float, max_cats_increase: int}
 const housing_tiers: Array = [
-	{"id": "studio_basic",    "label": "Basic Studio",    "cost": 0.0,      "max_cats_increase": 0},
-	{"id": "studio_upgraded", "label": "Upgraded Studio", "cost": 1500.0,   "max_cats_increase": 10},
-	{"id": "bedroom_1",       "label": "1 Bedroom",       "cost": 10000.0,  "max_cats_increase": 10},
-	{"id": "bedroom_2",       "label": "2 Bedroom",       "cost": 34500.0,  "max_cats_increase": 10},
-	{"id": "bedroom_3",       "label": "3 Bedroom",       "cost": 138000.0, "max_cats_increase": 10},
+	{"id": "studio_basic",    "label": "Basic Studio",      "cost": 0.0,     "max_cats_increase": 0},
+	{"id": "studio_upgraded", "label": "Luxury Cat Trees",  "cost": 500.0,   "max_cats_increase": 10},
+	{"id": "bedroom_1",       "label": "1 Bedroom",         "cost": 3500.0,  "max_cats_increase": 10},
+	{"id": "bedroom_2",       "label": "2 Bedroom",         "cost": 11500.0, "max_cats_increase": 10},
+	{"id": "bedroom_3",       "label": "3 Bedroom",         "cost": 46000.0, "max_cats_increase": 10},
 ]
 
 # Research items — each entry defines a fundable, cat-powered research project.
