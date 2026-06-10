@@ -233,7 +233,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `get_research_cats` | `() -> int` | Returns `floor(cats * research_cat_fraction)`; number of cats assigned to research |
 | `get_onlypaws_cats` | `() -> int` | Returns `cats - get_research_cats()`; number of cats contributing to OnlyPaws income |
 | `fund_research` | `(id: String) -> void` | Finds item in `Config.RESEARCH_ITEMS` by id; if `money >= fund_cost` and not yet funded: deducts cost, sets `research_funded[id] = true`, initialises `research_points[id] = 0.0` |
-| `_update_paws_rate` | `() -> void` | `paws_income_rate = float(get_onlypaws_cats()) * Config.onlypaws_income_per_cat * float(1 + manager_bots)` — linear additive scaling; 0 bots = 1×, 1 bot = 2×, 2 bots = 3×, etc. |
+| `_update_paws_rate` | `() -> void` | `paws_income_rate = float(get_onlypaws_cats()) * (onlypaws_income_per_cat + onlypaws_income_per_bot * manager_bots)` — base $0.25/cat/sec plus $0.50/cat/sec per bot; 10 cats: 0 bots=$2.50/s, 1 bot=$7.50/s, 2 bots=$12.50/s |
 
 ### Config (`res://Config.gd`)
 
@@ -255,6 +255,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `only_paws_unlock_cats` | `int` | `3` | Cat count that unlocks OnlyPaws |
 | `only_paws_cats_per_tier` | `int` | `3` | Cats per $1/sec OnlyPaws income tier |
 | `onlypaws_income_per_cat` | `float` | `0.25` | Base $/sec per cat for OnlyPaws income; at unlock (3 cats) = $0.75/sec |
+| `onlypaws_income_per_bot` | `float` | `0.50` | Additional $/sec per cat added per bot; stacks additively with base rate |
 | `bot_shop_unlock_cats` | `int` | `6` | Cat count that unlocks the bot shop |
 | `bot_cost_base` | `float` | `50.0` | Starting cost of the first bot |
 | `bot_cost_multiplier` | `float` | `1.6` | Multiplier applied to bot cost after each purchase |
@@ -341,7 +342,7 @@ Drives the root scene. No mutable state lives here — reads from and delegates 
 - [x] **OnlyPaws unlock popup** — modal overlay shown once when `only_paws_unlocked` first triggers; pauses game loop; dismissed with OK button
 - [x] **Cat spawning** — each purchase instances `CatCharacter` at scale 0.4 into `CatContainer`; placed at a random viewport position avoiding UI elements (16 px padding) and other cats (64 px radius); cats keep their position when new ones are added or one is lost
 - [x] **Sprite-based cat character** — `CatCharacter` scene contains an `AnimatedSprite2D` child; animations configured in the Godot editor
-- [x] **OnlyPaws Manager-Bot** — unlocks at 6 cats; costs $50 (multiplies by 1.6× each purchase); each bot adds one linear multiplier step: `(1 + manager_bots)` total (0 bots = 1×, 1 bot = 2×, 2 bots = 3×, etc.); button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count
+- [x] **OnlyPaws Manager-Bot** — unlocks at 6 cats; costs $50 (multiplies by 1.6× each purchase); each bot adds $0.50/cat/sec on top of the $0.25/cat/sec base (`onlypaws_income_per_bot`); formula: `cats * (0.25 + 0.50 * bots)`; button shows live cost, disabled when unaffordable; `BotsRateLabel` shows bot count
 - [x] **OnlyPaws ON/OFF toggle** — `OnlyPawsButton` flips `only_paws_active`; income only runs while active; toggling OFF also sets `bots_active = false` stopping token drain; toggling ON re-enables bots if tokens > 0; button label and green modulate reflect state
 - [x] **Upgrade stubs (GameState only)** — `buy_breeder_contract()` exists in GameState but is not wired to any UI
 - [x] **Flat shop list** — ShopPanel contains a ScrollContainer with a single VBoxContainer; items are individual Button nodes sorted ascending by cost each time visibility changes; no tabs
