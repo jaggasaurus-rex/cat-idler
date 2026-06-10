@@ -60,7 +60,7 @@ Main (Control, full-rect)             ← Main.gd
 │                                       label = "OnlyPaws: ON/OFF"; green modulate when active
 ├── OnlyPawsIncomeLabel (Label)       ← shown with OnlyPawsButton; "OnlyPaws: $X.XX/sec" updates every frame
 ├── CatFoodLabel (Label)              ← directly below PurchaseCatButton (offset_top=165); hidden until cats_ever_purchased >= 1 (one-way latch); "Cat Food: X" where X = floor(cat_food); updated every frame
-├── BuyCatFoodButton (Button "Buy Food ($10)") ← directly below CatFoodLabel (offset_top=197); revealed with CatFoodLabel; calls buy_cat_food_pack(1); label gains " ∞" suffix (one-way latch) when auto_feeder_purchased
+├── BuyCatFoodButton (Button "Buy Food ($N)") ← directly below CatFoodLabel (offset_top=197); revealed with CatFoodLabel; calls buy_cat_food_pack(1); when auto_feeder_purchased, label reads live cost each frame via GameState.get_cat_food_pack_cost() with ∞ suffix
 ├── OnlyPawsInfoPanel (PanelContainer)← hidden permanently (legacy node, not wired to button anymore)
 │   └── InfoLabel (Label)             ← static info text, autowrap enabled
 ├── HappinessBarContainer (VBoxContainer) ← always visible; top=20, left=420–760; shows Cat Happiness title + progress bar
@@ -102,7 +102,7 @@ Main (Control, full-rect)             ← Main.gd
 ├── BotTokenRow (HBoxContainer)       ← layout_mode=0 at offset_top=350; always visible; contains BotsRateLabel and TokensLabel side by side with 16px separation
 │   ├── BotsRateLabel (Label)         ← hidden until bot_shop_unlocked; "Bots: X" updates every frame
 │   └── TokensLabel (Label)           ← hidden until tokens_shop_unlocked; "Tokens: X" updates every frame
-├── BuyTokensButton (Button "Buy Tokens ($20)") ← hidden until tokens_shop_unlocked; calls buy_tokens(1); label gains " ∞" suffix (one-way latch) when bot_manager_purchased
+├── BuyTokensButton (Button "Buy Tokens ($N)") ← hidden until tokens_shop_unlocked; calls buy_tokens(1); when bot_manager_purchased, label reads live cost each frame via GameState.get_token_pack_cost() with ∞ suffix
 ├── CenterColumn (VBoxContainer)      ← fixed pos offset_left=430, offset_top=110, offset_right=830, offset_bottom=600; hidden until housing_tier_index >= 1 (one-way latch in Main.gd._process()); contains research UI
 │   ├── ResearchTitle (Label)         ← static "Research" heading
 │   ├── ResearchActiveLabel (Label)   ← "No Active Research" or active item name; updated every frame

@@ -64,8 +64,6 @@ var _happiness_cramped_popup_shown: bool = false
 var _happiness_riot_popup_shown: bool = false
 var _cat_crusher_popup_shown: bool = false
 var _happiness_fill_style: StyleBoxFlat
-var _cat_food_button_auto_set: bool = false
-var _tokens_button_auto_set: bool = false
 var _center_column_shown: bool = false
 var _research_panels: Dictionary = {}
 var _research_fund_buttons: Dictionary = {}
@@ -174,9 +172,8 @@ func _process(_delta: float) -> void:
 		buy_cat_food_button.visible = true
 	cat_food_label.text = "Cat Food: " + Util.format_number(GameState.cat_food)
 	# GameState buy methods guard against insufficient funds; buttons stay enabled
-	if GameState.auto_feeder_purchased and not _cat_food_button_auto_set:
-		_cat_food_button_auto_set = true
-		buy_cat_food_button.text = "Buy Food ($10) ∞"
+	if GameState.auto_feeder_purchased:
+		buy_cat_food_button.text = "Buy Food ($" + Util.format_number(GameState.get_cat_food_pack_cost()) + ") ∞" # reads GameState.get_cat_food_pack_cost()
 
 	# One-way latch — tokens label and buy button appear on first bot purchase
 	if GameState.tokens_shop_unlocked and not tokens_label.visible:
@@ -184,9 +181,8 @@ func _process(_delta: float) -> void:
 		buy_tokens_button.visible = true
 
 	tokens_label.text = "Tokens: " + Util.format_number(GameState.tokens)
-	if GameState.bot_manager_purchased and not _tokens_button_auto_set:
-		_tokens_button_auto_set = true
-		buy_tokens_button.text = "Buy Tokens ($20) ∞"
+	if GameState.bot_manager_purchased:
+		buy_tokens_button.text = "Buy Tokens ($" + Util.format_number(GameState.get_token_pack_cost()) + ") ∞" # reads GameState.get_token_pack_cost()
 
 	if (GameState.bot_manager_unlocked or GameState.auto_feeder_unlocked) and not GameState.upgrades_tab_popup_shown:
 		GameState.upgrades_tab_popup_shown = true
