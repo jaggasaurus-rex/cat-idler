@@ -155,5 +155,26 @@ func _process(_delta: float) -> void:
 				_fail("stacked collect granted no money")
 			print("PASS: one click collects stacked bubbles (2 at once)")
 		52:
+			# Burst gate (closed): an expiring per-cat timer must reset but NOT spawn.
+			GameState.research_cat_fraction = 0.0
+			GameState.money = 100000.0
+			_main._burst_window_active = false
+			_main._global_cd_timer = 100.0  # hold the window closed across the test
+			_main._cat_bubble_timers[_cat_node.get_instance_id()] = 0.001  # about to expire
+		54:
+			if _main._active_bubbles.size() != 0:
+				_fail("bubble spawned while burst window closed")
+			if _main._cat_bubble_timers[_cat_node.get_instance_id()] <= 0.0:
+				_fail("per-cat timer did not reset on expiry while window closed")
+			print("PASS: closed window discards expired timer (resets, no spawn)")
+			# Burst gate (open): force the window open and expire the timer again.
+			_main._burst_window_active = true
+			_main._burst_window_timer = 100.0  # hold the window open across the test
+			_main._cat_bubble_timers[_cat_node.get_instance_id()] = 0.001
+		56:
+			if _main._active_bubbles.size() != 1:
+				_fail("no bubble spawned during open burst window (size=%d)" % _main._active_bubbles.size())
+			print("PASS: open window allows per-cat spawn")
+		58:
 			print("ALL GAMEPLAY CHECKS PASSED")
 			get_tree().quit(0)

@@ -77,6 +77,12 @@ var _research_panel_hidden: Dictionary = {}
 var _cat_bubble_timers: Dictionary = {}
 # Active bubble dicts: { "node": Button, "timer": float, "type": String, "research_id": String }
 var _active_bubbles: Array = []
+# Global burst window system: per-cat timers run continuously but only fire during
+# an open window. Windows are separated by a randomized global cooldown. Triggers
+# that land outside a window are discarded — never queued or cached.
+var _burst_window_active: bool = false
+var _burst_window_timer: float = 0.0
+var _global_cd_timer: float = randf_range(Config.BUBBLE_GLOBAL_CD_MIN, Config.BUBBLE_GLOBAL_CD_MAX)
 
 
 func _ready() -> void:
@@ -354,18 +360,33 @@ func _process(delta: float) -> void:
 	if _cat_intelligence_label.visible:
 		_cat_intelligence_label.text = "Cat Intelligence: " + str(GameState.cat_intelligence)
 
-	# Per-cat bubble cooldowns — each cat independently attempts a spawn when its timer expires.
+	# Global burst window: alternates between an idle cooldown and a brief open window.
+	# Per-cat timers below only spawn while a window is open; this runs every frame.
+	if not _burst_window_active:
+		_global_cd_timer -= delta
+		if _global_cd_timer <= 0.0:
+			_burst_window_active = true
+			_burst_window_timer = randf_range(Config.BUBBLE_BURST_WINDOW_MIN, Config.BUBBLE_BURST_WINDOW_MAX)
+	else:
+		_burst_window_timer -= delta
+		if _burst_window_timer <= 0.0:
+			_burst_window_active = false
+			_global_cd_timer = randf_range(Config.BUBBLE_GLOBAL_CD_MIN, Config.BUBBLE_GLOBAL_CD_MAX)
+
+	# Per-cat bubble cooldowns — each cat's timer runs continuously and always resets on
+	# expiry, but only fires a spawn if the burst window is open at that moment.
 	for key: int in _cat_bubble_timers.keys():
 		_cat_bubble_timers[key] -= delta
 		if _cat_bubble_timers[key] <= 0.0:
 			_cat_bubble_timers[key] = randf_range(Config.BUBBLE_SPAWN_MIN, Config.BUBBLE_SPAWN_MAX)
-			var cat_node: Node2D = null
-			for child: Node in cat_container.get_children():
-				if child.get_instance_id() == key:
-					cat_node = child as Node2D
-					break
-			if cat_node != null:
-				_try_spawn_bubble_for_cat(cat_node)
+			if _burst_window_active:
+				var cat_node: Node2D = null
+				for child: Node in cat_container.get_children():
+					if child.get_instance_id() == key:
+						cat_node = child as Node2D
+						break
+				if cat_node != null:
+					_try_spawn_bubble_for_cat(cat_node)
 
 	# Bubble lifetime & fade — advance timers, fade out, and collect expired bubbles
 	var _expired: Array = []

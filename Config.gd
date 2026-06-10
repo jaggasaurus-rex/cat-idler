@@ -97,3 +97,7 @@ const BUBBLE_LIFETIME: float = 4.5            # seconds before a bubble fades ou
 const BUBBLE_MAX_ON_SCREEN: int = 4           # cap on simultaneous bubbles
 const BUBBLE_VIRAL_MULTIPLIER: float = 4.0    # viral reward = paws_income_rate × this
 const BUBBLE_INSPIRATION_SECONDS: float = 3.0 # inspiration reward = research_cats × this many seconds of points
+const BUBBLE_GLOBAL_CD_MIN: float = 20.0      # min seconds between burst windows
+const BUBBLE_GLOBAL_CD_MAX: float = 40.0      # max seconds between burst windows
+const BUBBLE_BURST_WINDOW_MIN: float = 2.0    # min seconds a burst window stays open
+const BUBBLE_BURST_WINDOW_MAX: float = 10.0   # max seconds a burst window stays open
