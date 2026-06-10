@@ -125,7 +125,7 @@ func _process(delta: float) -> void:
 			if _cat_loss_timer >= 10.0:
 				_cat_loss_timer -= 10.0
 				_lose_cat()
-	if only_paws_active:
+	if only_paws_active and cat_food > 0.0:
 		var happiness_multiplier: float = Config.happiness_income_floor + (happiness / 100.0) * Config.happiness_income_range
 		var effective_rate: float = paws_income_rate if bots_active else float(get_onlypaws_cats()) * Config.onlypaws_income_per_cat
 		money += effective_rate * happiness_multiplier * delta
