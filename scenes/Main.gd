@@ -360,6 +360,13 @@ func _process(delta: float) -> void:
 	if _cat_intelligence_label.visible:
 		_cat_intelligence_label.text = "Cat Intelligence: " + str(GameState.cat_intelligence)
 
+	# One-way latch — whale popup fires the instant the mechanic unlocks (manager_bots >= 2
+	# and the 20s delay elapsed), like every other popup. Decoupled from the spawn pipeline
+	# so it no longer waits for a random burst window to coincide with a per-cat timer.
+	if GameState.viral_bubbles_unlocked and not GameState.viral_popup_shown:
+		GameState.viral_popup_shown = true
+		_show_viral_popup()
+
 	# Global burst window: alternates between an idle cooldown and a brief open window.
 	# Per-cat timers below only spawn while a window is open; this runs every frame.
 	if not _burst_window_active:
@@ -426,12 +433,6 @@ func _spawn_bubble(cat_node: Node2D, force_type: String = "") -> void:
 		type = "viral"
 	else:
 		type = "inspiration" if randf() < GameState.research_cat_fraction else "viral"
-
-	# First viral event fires the achievement popup instead of a bubble; bubbles flow after dismiss.
-	if type == "viral" and not GameState.viral_popup_shown:
-		GameState.viral_popup_shown = true
-		_show_viral_popup()
-		return
 
 	var offset := Vector2(randf_range(-30.0, 30.0), randf_range(-50.0, -20.0))
 	var spawn_pos: Vector2 = cat_node.global_position + offset

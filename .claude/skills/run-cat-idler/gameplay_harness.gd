@@ -52,12 +52,27 @@ func _process(_delta: float) -> void:
 			GameState.manager_bots = 2
 			GameState._viral_delay_timer = 19.8
 		40:
+			# Popup must fire from the _process unlock latch the moment viral_bubbles_unlocked
+			# flips (2 bots + 20s) — NOT from the spawn pipeline (the bug this fixes). By now
+			# the latch has fired and paused the tree on its own.
 			if not GameState.viral_bubbles_unlocked:
 				_fail("viral_bubbles_unlocked did not flip after 20s (timer=%f)" % GameState._viral_delay_timer)
-			print("PASS: 20s timer flips viral_bubbles_unlocked")
+			if not GameState.viral_popup_shown:
+				_fail("whale popup did not auto-fire on unlock")
+			if not get_tree().paused:
+				_fail("tree not paused by whale popup")
+			var overlay: Node = null
+			for c: Node in _main.get_children():
+				if c is ColorRect and (c as ColorRect).z_index == 20:
+					overlay = c
+			if overlay == null:
+				_fail("whale popup overlay (ColorRect z_index 20) not found")
+			print("PASS: whale popup fires on unlock via _process latch (not the spawn pipeline)")
+			# Dismiss the popup and set up for bubble spawn tests.
+			get_tree().paused = false
+			overlay.queue_free()
 			GameState.money = 100000.0
 			GameState.cats = 5
-			GameState.only_paws_active = true
 			GameState._update_paws_rate()
 			_main._on_cat_purchased()  # spawn a real CatCharacter to anchor bubbles
 			_cat_node = _main.cat_container.get_children().back()
@@ -67,40 +82,22 @@ func _process(_delta: float) -> void:
 			# Guard: no spawn while OnlyPaws is off.
 			GameState.only_paws_active = false
 			_main._try_spawn_bubble_for_cat(_cat_node)
-			if _main._active_bubbles.size() != 0 or GameState.viral_popup_shown:
+			if _main._active_bubbles.size() != 0:
 				_fail("spawn not blocked while only_paws_active == false")
 			print("PASS: spawn blocked while only_paws_active is false")
 			GameState.only_paws_active = true
 		44:
-			# First viral spawn fires the whale popup (not a bubble) and pauses the tree.
-			_main._try_spawn_bubble_for_cat(_cat_node)
-			if not GameState.viral_popup_shown:
-				_fail("viral_popup_shown not set on first viral spawn")
-			if _main._active_bubbles.size() != 0:
-				_fail("bubble spawned instead of popup on first viral event")
-			if not get_tree().paused:
-				_fail("tree not paused by whale popup")
-			var overlay: Node = null
-			for c: Node in _main.get_children():
-				if c is ColorRect and (c as ColorRect).z_index == 20:
-					overlay = c
-			if overlay == null:
-				_fail("whale popup overlay (ColorRect z_index 20) not found")
-			print("PASS: first viral spawn shows whale popup and pauses tree")
-			get_tree().paused = false
-			overlay.queue_free()
-		46:
-			# After dismiss, a viral bubble Button spawns.
+			# A viral bubble Button spawns once unlocked and OnlyPaws is on.
 			_main._try_spawn_bubble_for_cat(_cat_node)
 			if _main._active_bubbles.size() != 1:
-				_fail("no bubble after popup dismissed (size=%d)" % _main._active_bubbles.size())
+				_fail("no viral bubble spawned (size=%d)" % _main._active_bubbles.size())
 			_bubble = _main._active_bubbles[0]
 			if _bubble.type != "viral":
 				_fail("expected viral, got " + str(_bubble.type))
 			if (_bubble.node as Button).text != "💰":
 				_fail("viral text wrong: '" + (_bubble.node as Button).text + "'")
 			print("PASS: viral bubble spawns with 💰 text")
-		48:
+		46:
 			# Clicking the viral bubble grants money and removes it.
 			var before: float = GameState.money
 			_main._on_bubble_pressed(_bubble)
