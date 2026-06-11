@@ -24,7 +24,7 @@ func _ready() -> void:
 	GameState.only_paws_active = true
 	GameState.viral_bubbles_unlocked = true
 	GameState.viral_popup_shown = true  # skip the one-time whale popup
-	GameState._update_paws_rate()
+	GameState.update_paws_rate()
 	# Spawn a few cat sprites to anchor bubbles to.
 	for i: int in 5:
 		_main._on_cat_purchased()

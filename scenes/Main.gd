@@ -769,7 +769,10 @@ func _on_buy_housing_button_pressed() -> void:
 
 
 func _on_research_slider_value_changed(value: float) -> void:
+	# research_cat_fraction affects get_onlypaws_cats(), which is read by
+	# update_paws_rate(). Must call immediately so paws_income_rate stays current.
 	GameState.research_cat_fraction = value
+	GameState.update_paws_rate()
 
 
 func _on_research_completed(id: String) -> void:

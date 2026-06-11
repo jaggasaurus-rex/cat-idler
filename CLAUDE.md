@@ -20,6 +20,7 @@ Commit message format: brief imperative sentence describing what changed.
 - Prefer composition over inheritance. Build behavior by combining nodes, not subclassing.
 - Do not subclass unless there is a clear, reusable abstraction that cannot be achieved with composition.
 - Scenes are self-contained. A scene should not directly manipulate the internals of another scene -- communicate via signals or injected references.
+- All user-visible strings must be defined as named constants in `res://Strings.gd` and referenced from there. Never hardcode display text inline in scripts or scene files.
 ## Naming Conventions
 - Variables and functions: `snake_case`
 - Constants: `ALL_CAPS_SNAKE_CASE`

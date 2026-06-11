@@ -200,7 +200,7 @@ func buy_cat() -> void:
 		only_paws_active = true
 	if not bot_shop_unlocked and cats >= Config.bot_shop_unlock_cats:
 		bot_shop_unlocked = true
-	_update_paws_rate()
+	update_paws_rate()
 	cat_purchased.emit()
 
 
@@ -213,7 +213,7 @@ func buy_bot() -> void:
 	money -= next_bot_cost
 	manager_bots += 1
 	next_bot_cost *= Config.bot_cost_multiplier
-	_update_paws_rate()
+	update_paws_rate()
 	if not tokens_shop_unlocked and manager_bots >= 1:
 		tokens_shop_unlocked = true
 	if manager_bots == 4:
@@ -229,7 +229,7 @@ func buy_mega_bot() -> void:
 	money -= next_mega_bot_cost
 	mega_bots += 1
 	next_mega_bot_cost *= Config.bot_cost_multiplier
-	_update_paws_rate()
+	update_paws_rate()
 
 
 ## Purchases the breeder contract: reduces cat_cost_growth_rate from 1.5 to 1.25
@@ -262,7 +262,7 @@ func starvation_lose_cat() -> void:
 	if cats <= 0:
 		return
 	cats -= 1
-	_update_paws_rate()
+	update_paws_rate()
 	starvation_cats_lost += 1
 	cat_lost.emit()
 
@@ -406,7 +406,9 @@ func fund_research(id: String) -> void:
 # 10 cats: 0 bots = $2.50/s, 1 bot = $7.50/s, 2 bots = $12.50/s, 3 bots = $17.50/s
 # Mega bots add MEGA_BOT_INCOME_PER_CAT per cat on top:
 #   10 cats / 1 normal bot / 1 mega bot: 10 * (0.25 + 0.50*1 + 1.00*1) = 10 * 1.75 = $17.50/sec
-func _update_paws_rate() -> void:
+## Recalculates paws_income_rate from the current cat count, research fraction,
+## manager bot count, and mega bot count. Call whenever any of those values change.
+func update_paws_rate() -> void:
 	paws_income_rate = float(get_onlypaws_cats()) * (
 		Config.onlypaws_income_per_cat
 		+ Config.onlypaws_income_per_bot * float(manager_bots)
@@ -420,5 +422,5 @@ func _lose_cat() -> void:
 	if cats <= 0:
 		return
 	cats -= 1
-	_update_paws_rate()
+	update_paws_rate()
 	cat_lost.emit()

@@ -73,7 +73,7 @@ func _process(_delta: float) -> void:
 			overlay.queue_free()
 			GameState.money = 100000.0
 			GameState.cats = 5
-			GameState._update_paws_rate()
+			GameState.update_paws_rate()
 			_main._on_cat_purchased()  # spawn a real CatCharacter to anchor bubbles
 			_cat_node = _main.cat_container.get_children().back()
 		42:
