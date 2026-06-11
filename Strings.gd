@@ -1,5 +1,5 @@
 extends Node
-# 52 string constants — edit this file to change all user-visible text.
+# 53 string constants — edit this file to change all user-visible text.
 
 ## HUD — live labels updated every frame (use %s as the placeholder slot)
 const HUD_MONEY           := "Money: $%s"
@@ -86,6 +86,8 @@ const POPUP_STARVATION_ASSHOLE := "Asshole"
 const POPUP_GAME_OVER_1 := "NEW ACHIEVEMENT: Literally Hitler\n\nYou really aren't supposed to be at this point. That means you purposefully got yourself here. You purposefully let those poor little innocent kitties suffer. TIME AND TIME AGAIN. And let's be honest. You enjoyed it. You sick bastard.\n\nREWARD: Nothing\n\nYou don't get shit for being a terrible cat parent. In fact, you know what. Game over."
 
 const POPUP_GAME_OVER_2 := "Fuck you"
+
+const POPUP_INSPIRATION := "[PLACEHOLDER — edit this string in Strings.gd]"
 
 const POPUP_VIRAL := "NEW ACHIEVEMENT: Whale Hunting Baby!\n\nOne of your furry little charaltan's has caught the eye of a particularly \"giving\" patron. Snatch that money before they change their mind!\n\nREWARD: Dirty Filthy Disgusting Money\nEver so often one of your cats will go viral. When they do, a bubble will pop up over their head. Click the bubble before it goes away to get a small burst of money."
 

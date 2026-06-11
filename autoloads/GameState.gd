@@ -68,6 +68,7 @@ var cat_intelligence: int = 0
 var _viral_delay_timer: float = 0.0
 var viral_bubbles_unlocked: bool = false
 var viral_popup_shown: bool = false
+var inspiration_popup_shown: bool = false
 
 
 func _ready() -> void:

@@ -45,7 +45,7 @@ cat-idler/
 |---|---|---|
 | `Util` | `res://autoloads/Util.gd` | Stateless helper functions; no mutable state |
 | `Config` | `res://Config.gd` | Static tuning constants; no mutable state; referenced by GameState and Main |
-| `Strings` | `res://Strings.gd` | All user-visible text as named string consts (52 of them); registered after Config, before GameState; `Config.RESEARCH_ITEMS` references its research-name consts and Main.gd pulls every label/popup/button string from here |
+| `Strings` | `res://Strings.gd` | All user-visible text as named string consts (53 of them); registered after Config, before GameState; `Config.RESEARCH_ITEMS` references its research-name consts and Main.gd pulls every label/popup/button string from here |
 | `GameState` | `res://autoloads/GameState.gd` | Holds all persistent game state; the single source of truth for currency and rates |
 
 ### Scene structure
@@ -210,6 +210,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `_viral_delay_timer` | `float` | `0.0` | Private accumulator; counts up in `_process()` once `manager_bots >= 2` toward the 20s viral-bubble unlock delay |
 | `viral_bubbles_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `manager_bots >= 2` and `_viral_delay_timer >= 20.0`; gates all bubble spawning in Main.gd `_try_spawn_bubble_for_cat()` |
 | `viral_popup_shown` | `bool` | `false` | One-way latch; set to `true` by the Main.gd `_process()` popup latch the instant `viral_bubbles_unlocked` flips, which shows the whale popup |
+| `inspiration_popup_shown` | `bool` | `false` | One-way latch; set to `true` by Main.gd `_on_bubble_pressed()` the first time an inspiration (💡) bubble is collected, which shows the one-time inspiration popup |
 
 | Signal | Description |
 |---|---|
@@ -312,7 +313,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 
 ### Strings (`res://Strings.gd`)
 
-Autoloaded singleton holding **every user-visible string** as a named `const` (52 string
+Autoloaded singleton holding **every user-visible string** as a named `const` (53 string
 constants; registered in `project.godot` after `Config`, before `GameState`). No mutable state.
 Edit this one file to change any displayed text. Sections:
 
@@ -321,7 +322,7 @@ Edit this one file to change any displayed text. Sections:
 - **Buttons** — static labels (`BTN_EARN_MONEY`, `BTN_ONLY_PAWS`, `BTN_ONLY_PAWS_ON/OFF`), per-frame cost templates (`BTN_PURCHASE_CAT`, `BTN_MANAGER_BOT`, `BTN_MEGA_BOT`, `BTN_BUY_FOOD`(`_AUTO`), `BTN_BUY_TOKENS`(`_AUTO`), `BTN_FUND_RESEARCH`), and shop items with embedded `\n$%s` cost (`BTN_AUTO_FEEDER`, `BTN_BOT_MANAGER`, `BTN_PAWSCO`, `BTN_AI_ENTERPRISE`).
 - **Bubbles** (`BUBBLE_VIRAL` = 💰, `BUBBLE_INSPIRATION` = 💡).
 - **Research item copy** (`RESEARCH_CAT_POWER_NAME/SUB/DESC`, `RESEARCH_AI_MODEL_NAME/SUB/DESC`) — referenced directly by `Config.RESEARCH_ITEMS`; a `const` cross-autoload reference that compiles because Strings has no initialization dependency on Config. `RESEARCH_NAMES: Dictionary` maps item id → display name for the active-research label.
-- **Popups** (`POPUP_*`, 16 of them) — the body text of every scene popup. `_ready()` overrides each `Main.tscn` PopupLabel from these consts via `_set_popup_text()`, so the `.tscn` text is now editor-placeholder only. Text matches the original `.tscn` copy exactly (centralization was a pure refactor, no visible change). `POPUP_VIRAL` and `POPUP_AI_OVERLORDS` are also used by the in-code popup builders.
+- **Popups** (`POPUP_*`, 17 of them) — the body text of every scene popup. `_ready()` overrides each `Main.tscn` PopupLabel from these consts via `_set_popup_text()`, so the `.tscn` text is now editor-placeholder only. Text matches the original `.tscn` copy exactly (centralization was a pure refactor, no visible change). `POPUP_VIRAL`, `POPUP_AI_OVERLORDS`, and `POPUP_INSPIRATION` are used only by the in-code popup builders (`_show_*_popup()`); `POPUP_INSPIRATION` is a placeholder string awaiting final copy.
 
 ### Util (`res://autoloads/Util.gd`)
 
@@ -381,9 +382,10 @@ Drives the root scene. Reads from and delegates to `GameState`; the only local m
 | `_show_viral_popup()` | Builds the one-time "Whale Hunting Baby!" achievement popup entirely in code (full-screen `ColorRect` overlay with `process_mode = WHEN_PAUSED` and `z_index = 20` → `CenterContainer` → `PanelContainer` → `VBoxContainer` with an autowrapped `Label` and OK `Button`); pauses the tree on show; OK button frees the overlay, unpauses, and calls `_force_first_viral_bubble()` |
 | `_on_research_completed(id)` | Hides and latches the completed item's panel (`_research_panel_hidden[id] = true`); if `id == "ai_model_upgrade"`, calls `_show_ai_overlords_popup()` |
 | `_show_ai_overlords_popup()` | Builds the one-time "AI Overlords" achievement popup in code, mirroring `_show_viral_popup()` but with a 600×360 `PanelContainer`; pauses the tree on show; OK button frees the overlay and unpauses |
+| `_show_inspiration_popup()` | Builds the one-time inspiration-bubble popup in code, mirroring `_show_viral_popup()` (overlay → CenterContainer → PanelContainer → VBox → autowrapped `Strings.POPUP_INSPIRATION` label + OK); pauses on show; OK frees the overlay and unpauses. Gated by `GameState.inspiration_popup_shown` so it fires exactly once |
 | `_force_first_viral_bubble()` | Called once when the viral popup is dismissed. Picks a random `CatContainer` child (returns if none) and calls `_spawn_bubble(cat_node, "viral")`, bypassing every guard (burst window, `viral_bubbles_unlocked`, `BUBBLE_MAX_ON_SCREEN`) so the player sees their first bubble immediately. Normal burst-window scheduling resumes afterward |
 | `_on_bubble_gui_input(event, bubble)` | On a left mouse-button press (`InputEventMouseButton`, `MOUSE_BUTTON_LEFT`, `pressed`): collects the clicked `bubble` via `_on_bubble_pressed`, then reads the cursor position (`get_viewport().get_mouse_position()`) and collects every other bubble in `_active_bubbles` whose `node.get_global_rect().has_point(click_pos)` — so one click harvests all bubbles stacked at that spot (intentional) |
-| `_on_bubble_pressed(bubble)` | Removes the bubble from `_active_bubbles`; if `bubble.cat_node` is still valid, calls `resume_from_bubble()` on it; then frees its node. Viral: adds `max(paws_income_rate × Config.BUBBLE_VIRAL_MULTIPLIER, 1.0)` to `GameState.money`. Inspiration: if `bubble.research_id` is still funded and not complete, adds `max(get_research_cats() × Config.BUBBLE_INSPIRATION_SECONDS, 1.0)` to `research_points[id]`, clamped to the item's `points_cost` |
+| `_on_bubble_pressed(bubble)` | Removes the bubble from `_active_bubbles`; if `bubble.cat_node` is still valid, calls `resume_from_bubble()` on it; then frees its node. Viral: adds `max(paws_income_rate × Config.BUBBLE_VIRAL_MULTIPLIER, 1.0)` to `GameState.money`. Inspiration: if `bubble.research_id` is still funded and not complete, adds `max(get_research_cats() × Config.BUBBLE_INSPIRATION_SECONDS, 1.0)` to `research_points[id]`, clamped to the item's `points_cost`; on the first such successful award (gated by `GameState.inspiration_popup_shown`), sets that flag and calls `_show_inspiration_popup()` |
 | `_overlaps_ui(pos, ui_rects)` | Returns `true` if `pos` falls inside any rect in `ui_rects`. |
 | `_too_close_to_cats(pos, existing_positions)` | Returns `true` if `pos` is within `CAT_SPACING_RADIUS` of any element in `existing_positions`. |
 

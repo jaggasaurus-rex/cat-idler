@@ -592,6 +592,45 @@ func _show_ai_overlords_popup() -> void:
 	get_tree().paused = true
 
 
+# Builds and shows the one-time inspiration-bubble achievement popup entirely in code,
+# mirroring _show_viral_popup(). Gated by GameState.inspiration_popup_shown (set true by
+# the caller before this runs) so it fires exactly once, on the first inspiration collect.
+func _show_inspiration_popup() -> void:
+	var overlay: ColorRect = ColorRect.new()
+	overlay.color = Color(0.0, 0.0, 0.0, 0.6)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	overlay.z_index = 20
+	add_child(overlay)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var dialog: PanelContainer = PanelContainer.new()
+	center.add_child(dialog)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	dialog.add_child(vbox)
+
+	var label: Label = Label.new()
+	label.text = Strings.POPUP_INSPIRATION
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(560.0, 0.0)
+	vbox.add_child(label)
+
+	var ok_button: Button = Button.new()
+	ok_button.text = "OK"
+	vbox.add_child(ok_button)
+	ok_button.pressed.connect(func() -> void:
+		overlay.queue_free()
+		get_tree().paused = false
+	)
+
+	get_tree().paused = true
+
+
 # Called once on viral popup dismiss. Bypasses all spawn guards to guarantee
 # the player sees their first bubble immediately after the achievement fires.
 # Normal burst-window scheduling takes over from this point.
@@ -646,6 +685,9 @@ func _on_bubble_pressed(bubble: Dictionary) -> void:
 				if item["id"] == rid:
 					GameState.research_points[rid] = min(GameState.research_points[rid], float(item["points_cost"]))
 					break
+			if not GameState.inspiration_popup_shown:
+				GameState.inspiration_popup_shown = true
+				_show_inspiration_popup()
 
 
 func _on_earn_money_button_pressed() -> void:
