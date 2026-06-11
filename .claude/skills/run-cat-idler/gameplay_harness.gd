@@ -48,8 +48,8 @@ func _process(_delta: float) -> void:
 			if GameState.money != before + 1.0:
 				_fail("click() did not add $1")
 			print("PASS: click() earns money")
-			# Bubble unlock timer: needs a bot, then 20s of accumulation.
-			GameState.manager_bots = 1
+			# Bubble unlock timer: needs two bots, then 20s of accumulation.
+			GameState.manager_bots = 2
 			GameState._viral_delay_timer = 19.8
 		40:
 			if not GameState.viral_bubbles_unlocked:
@@ -206,5 +206,21 @@ func _process(_delta: float) -> void:
 			c.queue_free()
 			print("PASS: cat wanders, freezes on pause, and resumes")
 		58:
+			# Forced first bubble: bypasses ALL guards (locked unlock, closed window) and
+			# forces viral type even though research is active. viral_popup_shown stays true
+			# so it spawns a bubble rather than re-showing the popup.
+			GameState.viral_popup_shown = true
+			GameState.viral_bubbles_unlocked = false
+			_main._burst_window_active = false
+			_main._global_cd_timer = 100.0
+			var before_count: int = _main._active_bubbles.size()
+			_main._force_first_viral_bubble()
+			if _main._active_bubbles.size() != before_count + 1:
+				_fail("forced first bubble did not spawn despite bypass")
+			var fb: Dictionary = _main._active_bubbles.back()
+			if fb.type != "viral":
+				_fail("forced bubble was not viral: " + str(fb.type))
+			print("PASS: forced first bubble spawns viral despite locked/closed guards")
+		60:
 			print("ALL GAMEPLAY CHECKS PASSED")
 			get_tree().quit(0)

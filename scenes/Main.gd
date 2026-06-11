@@ -402,7 +402,7 @@ func _process(delta: float) -> void:
 		_active_bubbles.erase(bubble)
 
 
-# Viral spawn gates: viral_bubbles_unlocked (manager_bots >= 1 AND 20s elapsed),
+# Viral spawn gates: viral_bubbles_unlocked (manager_bots >= 2 AND 20s elapsed),
 # only_paws_active, below BUBBLE_MAX_ON_SCREEN. Called per-cat when that cat's cooldown expires.
 # Type: "viral" when no active research. When research active:
 #   "inspiration" with probability = research_cat_fraction, else "viral".
@@ -417,10 +417,12 @@ func _try_spawn_bubble_for_cat(cat_node: Node2D) -> void:
 	_spawn_bubble(cat_node)
 
 
-func _spawn_bubble(cat_node: Node2D) -> void:
+func _spawn_bubble(cat_node: Node2D, force_type: String = "") -> void:
 	var active_research_id: String = GameState.get_active_research_id()
 	var type: String
-	if active_research_id == "":
+	if force_type != "":
+		type = force_type
+	elif active_research_id == "":
 		type = "viral"
 	else:
 		type = "inspiration" if randf() < GameState.research_cat_fraction else "viral"
@@ -480,7 +482,7 @@ func _show_viral_popup() -> void:
 	dialog.add_child(vbox)
 
 	var label: Label = Label.new()
-	label.text = "NEW ACHIEVEMENT: Whale Hunting Baby!\n\nOne of your furry has caught the eye of a particularly \"giving\" patron. Snatch that money before they change their mind!\n\nREWARD: Dirty Filthy Disgusting Money\nEver so often one of your cats will go viral. When they do, a bubble will pop up over their head. Click the bubble before it goes away to get a small burst of money."
+	label.text = "NEW ACHIEVEMENT: Whale Hunting Baby!\n\nOne of your furry little charaltan's has caught the eye of a particularly \"giving\" patron. Snatch that money before they change their mind!\n\nREWARD: Dirty Filthy Disgusting Money\nEver so often one of your cats will go viral. When they do, a bubble will pop up over their head. Click the bubble before it goes away to get a small burst of money."
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size = Vector2(560.0, 0.0)
 	vbox.add_child(label)
@@ -491,9 +493,21 @@ func _show_viral_popup() -> void:
 	ok_button.pressed.connect(func() -> void:
 		overlay.queue_free()
 		get_tree().paused = false
+		_force_first_viral_bubble()
 	)
 
 	get_tree().paused = true
+
+
+# Called once on viral popup dismiss. Bypasses all spawn guards to guarantee
+# the player sees their first bubble immediately after the achievement fires.
+# Normal burst-window scheduling takes over from this point.
+func _force_first_viral_bubble() -> void:
+	var children: Array[Node] = cat_container.get_children()
+	if children.is_empty():
+		return
+	var cat_node: Node2D = children[randi() % children.size()] as Node2D
+	_spawn_bubble(cat_node, "viral")
 
 
 # Handles a left-click on a bubble: collects the clicked bubble, then collects any other

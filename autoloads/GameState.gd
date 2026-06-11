@@ -62,7 +62,7 @@ var research_points: Dictionary = {}
 var research_complete: Dictionary = {}
 var cat_intelligence: int = 0
 
-# Viral bubble unlock: gates on owning a bot, then a 20s delay before bubbles can appear.
+# Viral bubble unlock: gates on owning two bots, then a 20s delay before bubbles can appear.
 var _viral_delay_timer: float = 0.0
 var viral_bubbles_unlocked: bool = false
 var viral_popup_shown: bool = false
@@ -151,8 +151,8 @@ func _process(delta: float) -> void:
 			# Increments cat_intelligence by item["cat_intelligence_gain"] from Config.RESEARCH_ITEMS
 			cat_intelligence += int(item.get("cat_intelligence_gain", 0))
 			research_completed.emit(item_id)
-	# Viral bubble unlock: once a bot is owned, count up 20s before enabling bubbles.
-	if manager_bots >= 1 and not viral_bubbles_unlocked:
+	# Viral bubble unlock: once two bots are owned, count up 20s before enabling bubbles.
+	if manager_bots >= 2 and not viral_bubbles_unlocked:
 		_viral_delay_timer += delta
 		if _viral_delay_timer >= 20.0:
 			viral_bubbles_unlocked = true
