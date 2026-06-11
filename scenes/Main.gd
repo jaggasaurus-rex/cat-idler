@@ -91,6 +91,10 @@ var _global_cd_timer: float = randf_range(Config.BUBBLE_GLOBAL_CD_MIN, Config.BU
 
 
 func _ready() -> void:
+	# Sets the global fallback so all labels/buttons inherit UI_BASE_FONT_SIZE
+	# without per-node overrides. Individual overrides (headers, bubbles) are
+	# applied below and will take precedence.
+	ThemeDB.fallback_font_size = Config.UI_BASE_FONT_SIZE
 	GameState.cat_purchased.connect(_on_cat_purchased)
 	GameState.cat_lost.connect(_on_cat_lost)
 	GameState.research_completed.connect(_on_research_completed)
@@ -123,12 +127,6 @@ func _ready() -> void:
 		# Housing-gated panels start hidden until the housing tier requirement is met.
 		if int(item.get("min_housing_tier", 0)) > 0:
 			panel.visible = false
-	# Hero stat: bold + 30% larger than the base metric font size
-	var base_size: int = money_label.get_theme_font_size("font_size")
-	cats_label.add_theme_font_size_override("font_size", roundi(float(base_size) * 1.3))
-	var bold_font := SystemFont.new()
-	bold_font.font_weight = 700
-	cats_label.add_theme_font_override("font", bold_font)
 	# Dynamic fill colour for the happiness bar; updated in _process()
 	_happiness_fill_style = StyleBoxFlat.new()
 	_happiness_fill_style.bg_color = Color.GREEN
@@ -174,6 +172,18 @@ func _ready() -> void:
 	_set_popup_text(starvation_asshole_popup, Strings.POPUP_STARVATION_ASSHOLE)
 	_set_popup_text(game_over_popup, Strings.POPUP_GAME_OVER_1)
 	_set_popup_text(game_over_2_popup, Strings.POPUP_GAME_OVER_2)
+	# Section headers: larger + bold, applied after the fallback base is set above.
+	_style_as_header(cats_label)
+	_style_as_header($HappinessBarContainer/HappinessTitleLabel)
+	_style_as_header($ShopPanel/ShopLabel)
+
+
+# Applies the section-header style (larger size + bold) to a Label node.
+func _style_as_header(label: Label) -> void:
+	label.add_theme_font_size_override("font_size", Config.UI_HEADER_FONT_SIZE)
+	var bold_font := SystemFont.new()
+	bold_font.font_weight = 700
+	label.add_theme_font_override("font", bold_font)
 
 
 func _process(delta: float) -> void:
@@ -486,7 +496,7 @@ func _spawn_bubble(cat_node: Node2D, force_type: String = "") -> void:
 
 	var button: Button = Button.new()
 	button.text = Strings.BUBBLE_VIRAL if type == "viral" else Strings.BUBBLE_INSPIRATION
-	button.add_theme_font_size_override("font_size", 48)
+	button.add_theme_font_size_override("font_size", roundi(Config.UI_BASE_FONT_SIZE * 2.2))
 	button.custom_minimum_size = Vector2(80, 80)
 	button.position = spawn_pos
 	button.z_index = 100
