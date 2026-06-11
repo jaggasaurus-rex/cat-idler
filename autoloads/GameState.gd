@@ -14,6 +14,8 @@ var only_paws_active: bool = false
 var paws_income_rate: float = 0.0
 var manager_bots: int = 0
 var next_bot_cost: float = Config.bot_cost_base
+var mega_bots: int = 0
+var next_mega_bot_cost: float = Config.MEGA_BOT_COST_BASE
 var bot_shop_unlocked: bool = false
 var shop_unlocked_bots: bool = false
 var cat_cost_growth_rate: float = Config.cat_cost_growth_rate
@@ -93,7 +95,7 @@ func _process(delta: float) -> void:
 	elif not _starving and starvation_active:
 		starvation_active = false
 	if bots_active:
-		tokens -= float(manager_bots) * Config.token_drain_per_bot * delta
+		tokens -= ((float(manager_bots) * Config.token_drain_per_bot) + (float(mega_bots) * Config.MEGA_BOT_TOKEN_DRAIN)) * delta
 		if tokens <= 0.0:
 			tokens = 0.0
 			bots_active = false
@@ -216,6 +218,18 @@ func buy_bot() -> void:
 		tokens_shop_unlocked = true
 	if manager_bots == 4:
 		shop_unlocked_bots = true
+
+
+## Purchases one Mega Manager-Bot. Deducts money, increments mega_bots,
+## multiplies next_mega_bot_cost by Config.bot_cost_multiplier, and
+## recalculates income rate.
+func buy_mega_bot() -> void:
+	if money < next_mega_bot_cost:
+		return
+	money -= next_mega_bot_cost
+	mega_bots += 1
+	next_mega_bot_cost *= Config.bot_cost_multiplier
+	_update_paws_rate()
 
 
 ## Purchases the breeder contract: reduces cat_cost_growth_rate from 1.5 to 1.25
@@ -390,8 +404,14 @@ func fund_research(id: String) -> void:
 
 # Base rate: get_onlypaws_cats() * onlypaws_income_per_cat, plus onlypaws_income_per_bot per bot per cat.
 # 10 cats: 0 bots = $2.50/s, 1 bot = $7.50/s, 2 bots = $12.50/s, 3 bots = $17.50/s
+# Mega bots add MEGA_BOT_INCOME_PER_CAT per cat on top:
+#   10 cats / 1 normal bot / 1 mega bot: 10 * (0.25 + 0.50*1 + 1.00*1) = 10 * 1.75 = $17.50/sec
 func _update_paws_rate() -> void:
-	paws_income_rate = float(get_onlypaws_cats()) * (Config.onlypaws_income_per_cat + Config.onlypaws_income_per_bot * float(manager_bots))
+	paws_income_rate = float(get_onlypaws_cats()) * (
+		Config.onlypaws_income_per_cat
+		+ Config.onlypaws_income_per_bot * float(manager_bots)
+		+ Config.MEGA_BOT_INCOME_PER_CAT * float(mega_bots)
+	)
 
 
 # Removes one cat from the count, recalculates paws rate, and signals Main.gd

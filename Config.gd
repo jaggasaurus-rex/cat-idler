@@ -27,6 +27,12 @@ const bot_shop_unlock_cats: int = 6
 const bot_cost_base: float = 50.0
 const bot_cost_multiplier: float = 1.6
 
+# Mega Manager-Bots — unlocked by the "ai_model_upgrade" research item.
+# Double the cost, double the per-cat income, and double the token drain of normal bots.
+const MEGA_BOT_COST_BASE: float = 100.0       # double the normal bot_cost_base of 50.0
+const MEGA_BOT_INCOME_PER_CAT: float = 1.0    # $1.00/cat/sec per mega bot
+const MEGA_BOT_TOKEN_DRAIN: float = 4.0       # double the normal token_drain_per_bot of 2.0
+
 # Upgrades
 const breeder_contract_cost: float = 2000.0
 const breeder_contract_growth_rate: float = 1.25
@@ -87,6 +93,19 @@ const RESEARCH_ITEMS: Array = [
 		"points_cost": 200.0,
 		"min_cats_required": 10,
 		"cat_intelligence_gain": 1,
+		"min_housing_tier": 0,
+	},
+	{
+		"id": "ai_model_upgrade",
+		"name": "Research AI model Upgrade",
+		"subtitle": "",
+		"description": "This will unlock better Manager-Bots",
+		"fund_cost": 2000.0,
+		# 1 cat × 60 sec/min × 20 min = 1200 research points; more cats reduce time linearly.
+		"points_cost": 1200.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 1,
 	},
 ]
 

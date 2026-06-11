@@ -16,7 +16,9 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var only_paws_popup: ColorRect = $OnlyPawsPopup
 @onready var upgrades_tab_popup: ColorRect = $UpgradesTabPopup
 @onready var manager_bot_button: Button = $ManagerBotButton
+@onready var mega_manager_bot_button: Button = $MegaManagerBotButton
 @onready var bots_rate_label: Label = $BotTokenRow/BotsRateLabel
+@onready var mega_bots_rate_label: Label = $BotTokenRow/MegaBotsRateLabel
 @onready var shop_panel: VBoxContainer = $ShopPanel
 @onready var shop_list: VBoxContainer = $ShopPanel/ShopScroll/ShopList
 @onready var housing_button: Button = $ShopPanel/ShopScroll/ShopList/HousingButton
@@ -72,6 +74,9 @@ var _research_panels: Dictionary = {}
 var _research_fund_buttons: Dictionary = {}
 var _research_progress_labels: Dictionary = {}
 var _research_panel_hidden: Dictionary = {}
+# id -> bool; one-way latch for housing-gated research panels (min_housing_tier > 0).
+# false until GameState.housing_tier_index reaches the item's min_housing_tier; never re-hides.
+var _research_panel_unlocked: Dictionary = {}
 # Each cat tracks its own randomized cooldown. Keys = instance_id, values = seconds remaining.
 # Timers reset to a new random value in [BUBBLE_SPAWN_MIN, BUBBLE_SPAWN_MAX] after each attempt.
 var _cat_bubble_timers: Dictionary = {}
@@ -114,6 +119,10 @@ func _ready() -> void:
 		vbox.add_child(progress_label)
 		_research_progress_labels[item_id] = progress_label
 		_research_panel_hidden[item_id] = false
+		_research_panel_unlocked[item_id] = false
+		# Housing-gated panels start hidden until the housing tier requirement is met.
+		if int(item.get("min_housing_tier", 0)) > 0:
+			panel.visible = false
 	# Hero stat: bold + 30% larger than the base metric font size
 	var base_size: int = money_label.get_theme_font_size("font_size")
 	cats_label.add_theme_font_size_override("font_size", roundi(float(base_size) * 1.3))
@@ -251,6 +260,17 @@ func _process(delta: float) -> void:
 	manager_bot_button.text = "OnlyPaws Manager-Bot ($" + Util.format_number(GameState.next_bot_cost) + ")"
 	bots_rate_label.text = "Bots: " + Util.format_number(GameState.manager_bots)
 
+	# One-way latch — Mega Manager-Bot button appears once the ai_model_upgrade research completes
+	if GameState.research_complete.get("ai_model_upgrade", false) and not mega_manager_bot_button.visible:
+		mega_manager_bot_button.visible = true
+	if mega_manager_bot_button.visible:
+		mega_manager_bot_button.text = "Mega-Bot ($" + Util.format_number(GameState.next_mega_bot_cost) + ")"
+		mega_manager_bot_button.disabled = GameState.money < GameState.next_mega_bot_cost
+		# One-way latch — mega bots count label appears with the button
+		if not mega_bots_rate_label.visible:
+			mega_bots_rate_label.visible = true
+		mega_bots_rate_label.text = "Mega-Bots: " + str(GameState.mega_bots)
+
 	# Happiness bar: colour transitions smoothly from red (0%) to green (100%)
 	var happiness: float = GameState.get_happiness()
 	happiness_bar.value = happiness
@@ -269,6 +289,16 @@ func _process(delta: float) -> void:
 		research_active_label.text = active_item["name"]
 		research_progress_bar.value = GameState.research_points.get(active_item["id"], 0.0) / float(active_item["points_cost"])
 	research_cats_label.text = "Cats researching: " + str(GameState.get_research_cats())
+	# One-way latch — housing-gated research panels stay hidden until the player's
+	# housing tier reaches the item's min_housing_tier, then remain visible thereafter.
+	for item: Dictionary in Config.RESEARCH_ITEMS:
+		var gate_id: String = item["id"]
+		var min_tier: int = int(item.get("min_housing_tier", 0))
+		if min_tier > 0 and not _research_panel_unlocked.get(gate_id, false):
+			if GameState.housing_tier_index >= min_tier:
+				_research_panel_unlocked[gate_id] = true
+				if not _research_panel_hidden.get(gate_id, false):
+					(_research_panels[gate_id] as PanelContainer).visible = true
 	for item: Dictionary in Config.RESEARCH_ITEMS:
 		var item_id: String = item["id"]
 		if _research_panel_hidden.get(item_id, false):
@@ -500,6 +530,45 @@ func _show_viral_popup() -> void:
 	get_tree().paused = true
 
 
+# Builds and shows the one-time "AI Overlords" achievement popup entirely in code,
+# mirroring _show_viral_popup(): full-screen overlay + centered 600×360 dialog, pauses tree.
+func _show_ai_overlords_popup() -> void:
+	var overlay: ColorRect = ColorRect.new()
+	overlay.color = Color(0.0, 0.0, 0.0, 0.6)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	overlay.z_index = 20
+	add_child(overlay)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var dialog: PanelContainer = PanelContainer.new()
+	dialog.custom_minimum_size = Vector2(600.0, 360.0)
+	center.add_child(dialog)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	dialog.add_child(vbox)
+
+	var label: Label = Label.new()
+	label.text = "NEW ACHIEVEMENT: AI Overlords\n\nLooks like your cute little guy figured out how to upgrade your manager bots to a better model. This totally won't have any negative consequences later down the line.\n\nREWARD: Mega Manager-Bots\n\nJon Meowremy rejoices as your cats usher a new age of truly heinous manager practices to the forefront of capitalism. These mega-bots provide double the benefits of the puny little normal bots, but also at double the price."
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(560.0, 0.0)
+	vbox.add_child(label)
+
+	var ok_button: Button = Button.new()
+	ok_button.text = "OK"
+	vbox.add_child(ok_button)
+	ok_button.pressed.connect(func() -> void:
+		overlay.queue_free()
+		get_tree().paused = false
+	)
+
+	get_tree().paused = true
+
+
 # Called once on viral popup dismiss. Bypasses all spawn guards to guarantee
 # the player sees their first bubble immediately after the achievement fires.
 # Normal burst-window scheduling takes over from this point.
@@ -575,6 +644,10 @@ func _on_only_paws_button_pressed() -> void:
 
 func _on_manager_bot_button_pressed() -> void:
 	GameState.buy_bot()
+
+
+func _on_mega_manager_bot_button_pressed() -> void:
+	GameState.buy_mega_bot()
 
 
 func _on_buy_cat_food_x1_button_pressed() -> void:
@@ -680,6 +753,8 @@ func _on_research_completed(id: String) -> void:
 	if _research_panels.has(id):
 		(_research_panels[id] as PanelContainer).visible = false
 		_research_panel_hidden[id] = true
+	if id == "ai_model_upgrade":
+		_show_ai_overlords_popup()
 
 
 func _on_fund_button_pressed(item_id: String) -> void:

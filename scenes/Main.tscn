@@ -116,6 +116,15 @@ offset_right = 360.0
 offset_bottom = 345.0
 text = "OnlyPaws Manager-Bot ($50.00)"
 
+[node name="MegaManagerBotButton" type="Button" parent="." unique_id=641728504]
+visible = false
+layout_mode = 0
+offset_left = 20.0
+offset_top = 380.0
+offset_right = 360.0
+offset_bottom = 410.0
+text = "Mega-Bot ($100.00)"
+
 [node name="BotTokenRow" type="HBoxContainer" parent="." unique_id=400000500]
 layout_mode = 0
 offset_left = 20.0
@@ -133,6 +142,11 @@ text = "Bots: 0 | Rate: $0.00/sec"
 visible = false
 layout_mode = 2
 text = "Tokens: 0"
+
+[node name="MegaBotsRateLabel" type="Label" parent="BotTokenRow" unique_id=982341621]
+visible = false
+layout_mode = 2
+text = "Mega-Bots: 0"
 
 [node name="BuyTokensButton" type="Button" parent="." unique_id=400000016]
 visible = false
@@ -802,6 +816,7 @@ text = "OK"
 [connection signal="pressed" from="BuyCatFoodButton" to="." method="_on_buy_cat_food_x1_button_pressed"]
 [connection signal="pressed" from="OnlyPawsButton" to="." method="_on_only_paws_button_pressed"]
 [connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
+[connection signal="pressed" from="MegaManagerBotButton" to="." method="_on_mega_manager_bot_button_pressed"]
 [connection signal="pressed" from="BuyTokensButton" to="." method="_on_buy_token_x1_button_pressed"]
 [connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/HousingButton" to="." method="_on_buy_housing_button_pressed"]
 [connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/AutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
