@@ -672,14 +672,17 @@ func _on_bubble_pressed(bubble: Dictionary) -> void:
 	(bubble.node as Button).queue_free()
 
 	if bubble.type == "viral":
-		var reward: float = GameState.paws_income_rate * Config.BUBBLE_VIRAL_MULTIPLIER
-		reward = max(reward, 1.0)
+		# Reward = one cat's $/sec × multiplier (not total income — one cat went viral)
+		var per_cat_rate: float = Config.onlypaws_income_per_cat \
+			+ Config.onlypaws_income_per_bot * float(GameState.manager_bots) \
+			+ Config.MEGA_BOT_INCOME_PER_CAT * float(GameState.mega_bots)
+		var reward: float = max(per_cat_rate * Config.BUBBLE_VIRAL_MULTIPLIER, 1.0)
 		GameState.money += reward
 	elif bubble.type == "inspiration":
 		var rid: String = bubble.research_id
 		if GameState.research_funded.get(rid, false) and not GameState.research_complete.get(rid, false):
-			var reward_points: float = float(GameState.get_research_cats()) * Config.BUBBLE_INSPIRATION_SECONDS
-			reward_points = max(reward_points, 1.0)
+			# Reward = one cat's research contribution × seconds (not all research cats)
+			var reward_points: float = max(1.0 * Config.BUBBLE_INSPIRATION_SECONDS, 1.0)
 			GameState.research_points[rid] = GameState.research_points.get(rid, 0.0) + reward_points
 			for item: Dictionary in Config.RESEARCH_ITEMS:
 				if item["id"] == rid:
