@@ -86,9 +86,9 @@ const housing_tiers: Array = [
 const RESEARCH_ITEMS: Array = [
 	{
 		"id": "cat_power_unite",
-		"name": "Cat Power Unite",
-		"subtitle": "Cat Intelligence +1",
-		"description": "This will make your cats smart enough to research upgrades for you, but they're not exactly tiny geniuses right now. So, it's going to take a LOT of cats to kick it off.",
+		"name": Strings.RESEARCH_CAT_POWER_NAME,
+		"subtitle": Strings.RESEARCH_CAT_POWER_SUB,
+		"description": Strings.RESEARCH_CAT_POWER_DESC,
 		"fund_cost": 1000.0,
 		"points_cost": 200.0,
 		"min_cats_required": 10,
@@ -97,9 +97,9 @@ const RESEARCH_ITEMS: Array = [
 	},
 	{
 		"id": "ai_model_upgrade",
-		"name": "Research AI model Upgrade",
-		"subtitle": "",
-		"description": "This will unlock better Manager-Bots",
+		"name": Strings.RESEARCH_AI_MODEL_NAME,
+		"subtitle": Strings.RESEARCH_AI_MODEL_SUB,
+		"description": Strings.RESEARCH_AI_MODEL_DESC,
 		"fund_cost": 2000.0,
 		# 1 cat × 60 sec/min × 20 min = 1200 research points; more cats reduce time linearly.
 		"points_cost": 1200.0,

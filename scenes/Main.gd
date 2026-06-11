@@ -110,7 +110,7 @@ func _ready() -> void:
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(desc_label)
 		var fund_btn: Button = Button.new()
-		fund_btn.text = "Fund Research ($" + Util.format_number(float(item["fund_cost"])) + ")"
+		fund_btn.text = Strings.BTN_FUND_RESEARCH % Util.format_number(float(item["fund_cost"]))
 		fund_btn.pressed.connect(_on_fund_button_pressed.bind(item_id))
 		vbox.add_child(fund_btn)
 		_research_fund_buttons[item_id] = fund_btn
@@ -137,16 +137,16 @@ func _ready() -> void:
 	auto_feeder_button.set_meta("shop_cost", Config.auto_feeder_cost)
 	bot_manager_shop_button.set_meta("shop_cost", Config.bot_manager_cost)
 	housing_button.set_meta("shop_cost", 0.0)
-	auto_feeder_button.text = "Auto-Feeder\n$" + Util.format_number(Config.auto_feeder_cost)
-	bot_manager_shop_button.text = "Manager-Bot Manager\n$" + Util.format_number(Config.bot_manager_cost)
+	auto_feeder_button.text = Strings.BTN_AUTO_FEEDER % Util.format_number(Config.auto_feeder_cost)
+	bot_manager_shop_button.text = Strings.BTN_BOT_MANAGER % Util.format_number(Config.bot_manager_cost)
 	_pawsco_membership_button = Button.new()
-	_pawsco_membership_button.text = "PawsCo Membership\nStart buying food in bulk\n$" + Util.format_number(Config.pawsco_membership_cost)
+	_pawsco_membership_button.text = Strings.BTN_PAWSCO % Util.format_number(Config.pawsco_membership_cost)
 	_pawsco_membership_button.visible = false
 	_pawsco_membership_button.set_meta("shop_cost", Config.pawsco_membership_cost)
 	_pawsco_membership_button.pressed.connect(_on_buy_pawsco_membership_button_pressed)
 	shop_list.add_child(_pawsco_membership_button)
 	_ai_enterprise_membership_button = Button.new()
-	_ai_enterprise_membership_button.text = "AI Enterprise Membership\nReduce token price\n$" + Util.format_number(Config.ai_enterprise_membership_cost)
+	_ai_enterprise_membership_button.text = Strings.BTN_AI_ENTERPRISE % Util.format_number(Config.ai_enterprise_membership_cost)
 	_ai_enterprise_membership_button.visible = false
 	_ai_enterprise_membership_button.set_meta("shop_cost", Config.ai_enterprise_membership_cost)
 	_ai_enterprise_membership_button.pressed.connect(_on_buy_ai_enterprise_membership_button_pressed)
@@ -156,18 +156,36 @@ func _ready() -> void:
 	_cat_intelligence_label.visible = false
 	center_column.add_child(_cat_intelligence_label)
 	center_column.move_child(_cat_intelligence_label, 1)
+	# Override all static scene-node text from Strings so this script is the single
+	# source of truth (Main.tscn text becomes editor placeholder only).
+	earn_money_button.text = Strings.BTN_EARN_MONEY
+	only_paws_button.text = Strings.BTN_ONLY_PAWS
+	_set_popup_text(only_paws_popup, Strings.POPUP_ONLY_PAWS)
+	_set_popup_text(first_cat_popup, Strings.POPUP_FIRST_CAT)
+	_set_popup_text(happiness_cramped_popup, Strings.POPUP_CRAMPED)
+	_set_popup_text(happiness_riot_popup, Strings.POPUP_RIOT)
+	_set_popup_text(bot_unlock_popup, Strings.POPUP_BOT_UNLOCK)
+	_set_popup_text(bot_manager_unlock_popup, Strings.POPUP_BOT_MANAGER_UNLOCK)
+	_set_popup_text(upgrades_tab_popup, Strings.POPUP_UPGRADES_TAB)
+	_set_popup_text(cat_crusher_popup, Strings.POPUP_CAT_CRUSHER)
+	_set_popup_text(starvation_popup, Strings.POPUP_STARVATION_1)
+	_set_popup_text(starvation_2_popup, Strings.POPUP_STARVATION_2)
+	_set_popup_text(starvation_recurring_popup, Strings.POPUP_STARVATION_RECURRING)
+	_set_popup_text(starvation_asshole_popup, Strings.POPUP_STARVATION_ASSHOLE)
+	_set_popup_text(game_over_popup, Strings.POPUP_GAME_OVER_1)
+	_set_popup_text(game_over_2_popup, Strings.POPUP_GAME_OVER_2)
 
 
 func _process(delta: float) -> void:
-	money_label.text = "Money: $" + Util.format_number(GameState.money)
+	money_label.text = Strings.HUD_MONEY % Util.format_number(GameState.money)
 	var max_cats: int = GameState.get_max_cats()
-	cats_label.text = "Cats: " + Util.format_number(float(GameState.cats)) + "/" + Util.format_number(float(max_cats))
+	cats_label.text = Strings.HUD_CATS % [Util.format_number(float(GameState.cats)), Util.format_number(float(max_cats))]
 	cats_label.modulate = Color.RED if GameState.cats > max_cats else Color.WHITE
-	purchase_cat_button.text = "Purchase Cat ($" + Util.format_number(GameState.next_cat_cost) + ")"
+	purchase_cat_button.text = Strings.BTN_PURCHASE_CAT % Util.format_number(GameState.next_cat_cost)
 	purchase_cat_button.disabled = GameState.get_happiness() <= 0.0
 	var display_rate: float = GameState.paws_income_rate if GameState.bots_active \
 		else float(GameState.get_onlypaws_cats()) * Config.onlypaws_income_per_cat
-	only_paws_income_label.text = "OnlyPaws: $%.2f/sec" % display_rate
+	only_paws_income_label.text = Strings.HUD_ONLY_PAWS_RATE % display_rate
 
 	if GameState.cats >= 1 and not GameState.first_cat_popup_shown:
 		GameState.first_cat_popup_shown = true
@@ -198,19 +216,18 @@ func _process(delta: float) -> void:
 	if GameState.cats_ever_purchased >= 1 and not cat_food_label.visible:
 		cat_food_label.visible = true
 		buy_cat_food_button.visible = true
-	cat_food_label.text = "Cat Food: " + Util.format_number(GameState.cat_food)
-	# GameState buy methods guard against insufficient funds; buttons stay enabled
-	if GameState.auto_feeder_purchased:
-		buy_cat_food_button.text = "Buy Food ($" + Util.format_number(GameState.get_cat_food_pack_cost()) + ") ∞" # reads GameState.get_cat_food_pack_cost()
+	cat_food_label.text = Strings.HUD_CAT_FOOD % Util.format_number(GameState.cat_food)
+	# GameState buy methods guard against insufficient funds; buttons stay enabled.
+	# Auto-feeder/auto-token variants append ∞; both read the live (possibly discounted) cost.
+	buy_cat_food_button.text = (Strings.BTN_BUY_FOOD_AUTO if GameState.auto_feeder_purchased else Strings.BTN_BUY_FOOD) % Util.format_number(GameState.get_cat_food_pack_cost())
 
 	# One-way latch — tokens label and buy button appear on first bot purchase
 	if GameState.tokens_shop_unlocked and not tokens_label.visible:
 		tokens_label.visible = true
 		buy_tokens_button.visible = true
 
-	tokens_label.text = "Tokens: " + Util.format_number(GameState.tokens)
-	if GameState.bot_manager_purchased:
-		buy_tokens_button.text = "Buy Tokens ($" + Util.format_number(GameState.get_token_pack_cost()) + ") ∞" # reads GameState.get_token_pack_cost()
+	tokens_label.text = Strings.HUD_TOKENS % Util.format_number(GameState.tokens)
+	buy_tokens_button.text = (Strings.BTN_BUY_TOKENS_AUTO if GameState.bot_manager_purchased else Strings.BTN_BUY_TOKENS) % Util.format_number(GameState.get_token_pack_cost())
 
 	if (GameState.bot_manager_unlocked or GameState.auto_feeder_unlocked) and not GameState.upgrades_tab_popup_shown:
 		GameState.upgrades_tab_popup_shown = true
@@ -251,25 +268,25 @@ func _process(delta: float) -> void:
 
 	# OnlyPaws toggle state — green tint when active, default when inactive
 	if GameState.only_paws_active:
-		only_paws_button.text = "OnlyPaws: ON"
+		only_paws_button.text = Strings.BTN_ONLY_PAWS_ON
 		only_paws_button.modulate = Color(0.4, 1.0, 0.4)
 	else:
-		only_paws_button.text = "OnlyPaws: OFF"
+		only_paws_button.text = Strings.BTN_ONLY_PAWS_OFF
 		only_paws_button.modulate = Color(1.0, 1.0, 1.0)
 
-	manager_bot_button.text = "OnlyPaws Manager-Bot ($" + Util.format_number(GameState.next_bot_cost) + ")"
-	bots_rate_label.text = "Bots: " + Util.format_number(GameState.manager_bots)
+	manager_bot_button.text = Strings.BTN_MANAGER_BOT % Util.format_number(GameState.next_bot_cost)
+	bots_rate_label.text = Strings.HUD_BOTS % Util.format_number(float(GameState.manager_bots))
 
 	# One-way latch — Mega Manager-Bot button appears once the ai_model_upgrade research completes
 	if GameState.research_complete.get("ai_model_upgrade", false) and not mega_manager_bot_button.visible:
 		mega_manager_bot_button.visible = true
 	if mega_manager_bot_button.visible:
-		mega_manager_bot_button.text = "Mega-Bot ($" + Util.format_number(GameState.next_mega_bot_cost) + ")"
+		mega_manager_bot_button.text = Strings.BTN_MEGA_BOT % Util.format_number(GameState.next_mega_bot_cost)
 		mega_manager_bot_button.disabled = GameState.money < GameState.next_mega_bot_cost
 		# One-way latch — mega bots count label appears with the button
 		if not mega_bots_rate_label.visible:
 			mega_bots_rate_label.visible = true
-		mega_bots_rate_label.text = "Mega-Bots: " + str(GameState.mega_bots)
+		mega_bots_rate_label.text = Strings.HUD_MEGA_BOTS % Util.format_number(float(GameState.mega_bots))
 
 	# Happiness bar: colour transitions smoothly from red (0%) to green (100%)
 	var happiness: float = GameState.get_happiness()
@@ -283,12 +300,12 @@ func _process(delta: float) -> void:
 			active_item = item
 			break
 	if active_item.is_empty():
-		research_active_label.text = "No Active Research"
+		research_active_label.text = Strings.RESEARCH_NO_ACTIVE
 		research_progress_bar.value = 0.0
 	else:
-		research_active_label.text = active_item["name"]
+		research_active_label.text = Strings.RESEARCH_NAMES.get(active_item["id"], active_item["id"])
 		research_progress_bar.value = GameState.research_points.get(active_item["id"], 0.0) / float(active_item["points_cost"])
-	research_cats_label.text = "Cats researching: " + str(GameState.get_research_cats())
+	research_cats_label.text = Strings.HUD_RESEARCH_CATS % str(GameState.get_research_cats())
 	# One-way latch — housing-gated research panels stay hidden until the player's
 	# housing tier reaches the item's min_housing_tier, then remain visible thereafter.
 	for item: Dictionary in Config.RESEARCH_ITEMS:
@@ -309,9 +326,9 @@ func _process(delta: float) -> void:
 			fund_btn.visible = false
 			prog_label.visible = true
 			if int(item["min_cats_required"]) > 0 and GameState.get_research_cats() < int(item["min_cats_required"]):
-				prog_label.text = "Needs " + str(int(item["min_cats_required"])) + "+ cats assigned to begin"
+				prog_label.text = Strings.RESEARCH_NEEDS_CATS % str(int(item["min_cats_required"]))
 			else:
-				prog_label.text = "In Progress…"
+				prog_label.text = Strings.RESEARCH_IN_PROGRESS
 		else:
 			fund_btn.visible = true
 			fund_btn.disabled = GameState.money < float(item["fund_cost"])
@@ -388,7 +405,7 @@ func _process(delta: float) -> void:
 		_cat_intelligence_shown = true
 		_cat_intelligence_label.visible = true
 	if _cat_intelligence_label.visible:
-		_cat_intelligence_label.text = "Cat Intelligence: " + str(GameState.cat_intelligence)
+		_cat_intelligence_label.text = Strings.HUD_CAT_INTELLIGENCE % str(GameState.cat_intelligence)
 
 	# One-way latch — whale popup fires the instant the mechanic unlocks (manager_bots >= 2
 	# and the 20s delay elapsed), like every other popup. Decoupled from the spawn pipeline
@@ -468,7 +485,7 @@ func _spawn_bubble(cat_node: Node2D, force_type: String = "") -> void:
 	var spawn_pos: Vector2 = cat_node.global_position + offset
 
 	var button: Button = Button.new()
-	button.text = "💡" if type == "inspiration" else "💰"
+	button.text = Strings.BUBBLE_VIRAL if type == "viral" else Strings.BUBBLE_INSPIRATION
 	button.add_theme_font_size_override("font_size", 48)
 	button.custom_minimum_size = Vector2(80, 80)
 	button.position = spawn_pos
@@ -489,6 +506,12 @@ func _spawn_bubble(cat_node: Node2D, force_type: String = "") -> void:
 	# Only viral bubbles freeze the cat under them while the bubble is live.
 	if type == "viral" and is_instance_valid(cat_node):
 		cat_node.pause_for_bubble()
+
+
+# Sets the body text of a scene-built popup. Every popup ColorRect shares the same
+# inner path DialogPanel/VBoxContainer/PopupLabel, so the body lives at a fixed offset.
+func _set_popup_text(popup: ColorRect, body: String) -> void:
+	(popup.get_node("DialogPanel/VBoxContainer/PopupLabel") as Label).text = body
 
 
 # Builds and shows the one-time "Whale Hunting" achievement popup entirely in code,
@@ -513,7 +536,7 @@ func _show_viral_popup() -> void:
 	dialog.add_child(vbox)
 
 	var label: Label = Label.new()
-	label.text = "NEW ACHIEVEMENT: Whale Hunting Baby!\n\nOne of your furry little charaltan's has caught the eye of a particularly \"giving\" patron. Snatch that money before they change their mind!\n\nREWARD: Dirty Filthy Disgusting Money\nEver so often one of your cats will go viral. When they do, a bubble will pop up over their head. Click the bubble before it goes away to get a small burst of money."
+	label.text = Strings.POPUP_VIRAL
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size = Vector2(560.0, 0.0)
 	vbox.add_child(label)
@@ -553,7 +576,7 @@ func _show_ai_overlords_popup() -> void:
 	dialog.add_child(vbox)
 
 	var label: Label = Label.new()
-	label.text = "NEW ACHIEVEMENT: AI Overlords\n\nLooks like your cute little guy figured out how to upgrade your manager bots to a better model. This totally won't have any negative consequences later down the line.\n\nREWARD: Mega Manager-Bots\n\nJon Meowremy rejoices as your cats usher a new age of truly heinous manager practices to the forefront of capitalism. These mega-bots provide double the benefits of the puny little normal bots, but also at double the price."
+	label.text = Strings.POPUP_AI_OVERLORDS
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.custom_minimum_size = Vector2(560.0, 0.0)
 	vbox.add_child(label)

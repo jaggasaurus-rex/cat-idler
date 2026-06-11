@@ -33,6 +33,7 @@ cat-idler/
 ├── scripts/
 │   └── CatCharacter.gd     # Cat character root (AnimatedSprite2D configured in editor)
 ├── Config.gd               # Autoloaded singleton; all static tuning constants
+├── Strings.gd              # Autoloaded singleton; all user-visible text as named string consts
 ├── CONTEXT.md              # This file
 ├── ROADMAP.md              # Phase plan and design intent
 └── project.godot
@@ -44,6 +45,7 @@ cat-idler/
 |---|---|---|
 | `Util` | `res://autoloads/Util.gd` | Stateless helper functions; no mutable state |
 | `Config` | `res://Config.gd` | Static tuning constants; no mutable state; referenced by GameState and Main |
+| `Strings` | `res://Strings.gd` | All user-visible text as named string consts (52 of them); registered after Config, before GameState; `Config.RESEARCH_ITEMS` references its research-name consts and Main.gd pulls every label/popup/button string from here |
 | `GameState` | `res://autoloads/GameState.gd` | Holds all persistent game state; the single source of truth for currency and rates |
 
 ### Scene structure
@@ -252,7 +254,7 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 
 | Constant | Type | Value | Description |
 |---|---|---|---|
-| `RESEARCH_ITEMS` | `Array` | 2 entries | Research item definitions. Each entry: `{id, name, subtitle, description, fund_cost: float, points_cost: float, min_cats_required: int, cat_intelligence_gain: int, min_housing_tier: int}`. `min_housing_tier` gates the panel's visibility in Main.gd (panel hidden until `housing_tier_index >= min_housing_tier`; one-way latch). Items: `cat_power_unite` ($1,000 fund, 200 pts, 10 cats, +1 cat_intelligence, min_housing_tier 0) and `ai_model_upgrade` ($2,000 fund, 1,200 pts, 1 cat, +0 cat_intelligence, min_housing_tier 1; unlocks Mega Manager-Bots, fires the "AI Overlords" popup on completion). |
+| `RESEARCH_ITEMS` | `Array` | 2 entries | Research item definitions. Each entry: `{id, name, subtitle, description, fund_cost: float, points_cost: float, min_cats_required: int, cat_intelligence_gain: int, min_housing_tier: int}`. `min_housing_tier` gates the panel's visibility in Main.gd (panel hidden until `housing_tier_index >= min_housing_tier`; one-way latch). Items: `cat_power_unite` ($1,000 fund, 200 pts, 10 cats, +1 cat_intelligence, min_housing_tier 0) and `ai_model_upgrade` ($2,000 fund, 1,200 pts, 1 cat, +0 cat_intelligence, min_housing_tier 1; unlocks Mega Manager-Bots, fires the "AI Overlords" popup on completion). The `name`/`subtitle`/`description` values reference `Strings.RESEARCH_*` consts rather than inline literals. |
 | `cat_food_start` | `float` | `1000.0` | Initial cat food supply |
 | `cat_food_drain_rate` | `float` | `1.0` | Food drained per cat per second |
 | `cat_food_pack_cost` | `float` | `10.0` | Cost per cat food pack |
@@ -308,6 +310,19 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `CAT_WANDER_MIN` | `float` | `25.0` | Min seconds between a cat's movement decisions |
 | `CAT_WANDER_MAX` | `float` | `60.0` | Max seconds between a cat's movement decisions |
 
+### Strings (`res://Strings.gd`)
+
+Autoloaded singleton holding **every user-visible string** as a named `const` (52 string
+constants; registered in `project.godot` after `Config`, before `GameState`). No mutable state.
+Edit this one file to change any displayed text. Sections:
+
+- **HUD templates** (`HUD_MONEY`, `HUD_CATS`, `HUD_TOKENS`, `HUD_BOTS`, `HUD_MEGA_BOTS`, `HUD_ONLY_PAWS_RATE`, `HUD_CAT_FOOD`, `HUD_RESEARCH_CATS`, `HUD_CAT_INTELLIGENCE`) — use `%s`/`%.2f` slots filled via the `%` operator in `_process()`.
+- **Research panel state** (`RESEARCH_NO_ACTIVE`, `RESEARCH_IN_PROGRESS`, `RESEARCH_NEEDS_CATS`).
+- **Buttons** — static labels (`BTN_EARN_MONEY`, `BTN_ONLY_PAWS`, `BTN_ONLY_PAWS_ON/OFF`), per-frame cost templates (`BTN_PURCHASE_CAT`, `BTN_MANAGER_BOT`, `BTN_MEGA_BOT`, `BTN_BUY_FOOD`(`_AUTO`), `BTN_BUY_TOKENS`(`_AUTO`), `BTN_FUND_RESEARCH`), and shop items with embedded `\n$%s` cost (`BTN_AUTO_FEEDER`, `BTN_BOT_MANAGER`, `BTN_PAWSCO`, `BTN_AI_ENTERPRISE`).
+- **Bubbles** (`BUBBLE_VIRAL` = 💰, `BUBBLE_INSPIRATION` = 💡).
+- **Research item copy** (`RESEARCH_CAT_POWER_NAME/SUB/DESC`, `RESEARCH_AI_MODEL_NAME/SUB/DESC`) — referenced directly by `Config.RESEARCH_ITEMS`; a `const` cross-autoload reference that compiles because Strings has no initialization dependency on Config. `RESEARCH_NAMES: Dictionary` maps item id → display name for the active-research label.
+- **Popups** (`POPUP_*`, 16 of them) — the body text of every scene popup. `_ready()` overrides each `Main.tscn` PopupLabel from these consts via `_set_popup_text()`, so the `.tscn` text is now editor-placeholder only. Text matches the original `.tscn` copy exactly (centralization was a pure refactor, no visible change). `POPUP_VIRAL` and `POPUP_AI_OVERLORDS` are also used by the in-code popup builders.
+
 ### Util (`res://autoloads/Util.gd`)
 
 Autoloaded singleton containing stateless helper functions. No mutable state.
@@ -343,7 +358,8 @@ Drives the root scene. Reads from and delegates to `GameState`; the only local m
 
 | Method | Description |
 |---|---|
-| `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`, `cat_lost` → `_on_cat_lost`, `research_completed` → `_on_research_completed`; styles `CatsLabel` as hero stat; builds per-item research panels in `ResearchItemList` from `Config.RESEARCH_ITEMS` (PanelContainer → VBoxContainer → NameLabel, DescriptionLabel, FundButton, ProgressLabel); stores refs in `_research_panels`, `_research_fund_buttons`, `_research_progress_labels`, `_research_panel_hidden`, and `_research_panel_unlocked` (false per item; housing-gated panels with `min_housing_tier > 0` start `visible = false`) |
+| `_ready()` | Connects `cat_purchased` → `_on_cat_purchased`, `cat_lost` → `_on_cat_lost`, `research_completed` → `_on_research_completed`; styles `CatsLabel` as hero stat; builds per-item research panels in `ResearchItemList` from `Config.RESEARCH_ITEMS` (PanelContainer → VBoxContainer → NameLabel, DescriptionLabel, FundButton, ProgressLabel); stores refs in `_research_panels`, `_research_fund_buttons`, `_research_progress_labels`, `_research_panel_hidden`, and `_research_panel_unlocked` (false per item; housing-gated panels with `min_housing_tier > 0` start `visible = false`); finally overrides all static scene-node text from `Strings` consts — `EarnMoneyButton`, `OnlyPawsButton`, the four dynamic shop-button labels (via `Strings.BTN_*`), and every popup body via `_set_popup_text()` |
+| `_set_popup_text(popup, body)` | Sets `popup`'s body Label text; all popups share the inner path `DialogPanel/VBoxContainer/PopupLabel` |
 | `_process(delta)` | Updates all labels every frame; one-time visibility latches for `shop_unlocked`, `only_paws_unlocked`, `bot_shop_unlocked`, `home_shop_unlocked`, `housing_tier_index >= 1` (reveals CenterColumn), and `bot_manager_unlocked OR auto_feeder_unlocked`; shows `OnlyPawsPopup` and pauses tree the first time `only_paws_unlocked` triggers; updates `CatFoodLabel`; sets `OnlyPawsButton` label and modulate; `PurchaseCatButton` and `ManagerBotButton` cost labels use `Util.format_number()`; reveals `MegaManagerBotButton` + `MegaBotsRateLabel` via one-way latch once `research_complete["ai_model_upgrade"]` is true, updating the button's `Mega-Bot ($X)` label/disabled state and the `Mega-Bots: X` count each frame; reveals housing-gated research panels (`min_housing_tier > 0`) via the `_research_panel_unlocked` one-way latch when `housing_tier_index >= min_housing_tier`; `OnlyPawsIncomeLabel` shows `paws_income_rate` when `bots_active`, else `get_onlypaws_cats() * Config.onlypaws_income_per_cat` (matches effective income rate used by GameState); updates `HappinessBar` value and fill colour (red→green via `Color.lerp`); updates `ResearchActiveLabel`, `ResearchProgressBar`, `ResearchCatsLabel` every frame; shows cramped/riot popups when triggered; updates housing chain display; one-way latch fires the whale popup via `_show_viral_popup()` the instant `GameState.viral_bubbles_unlocked` flips (sets `viral_popup_shown`); ticks the global burst window (when closed, counts `_global_cd_timer` down and, on reaching 0, opens a window of `randf_range(BUBBLE_BURST_WINDOW_MIN, MAX)`; when open, counts `_burst_window_timer` down and, on reaching 0, closes and re-rolls `_global_cd_timer` to `randf_range(BUBBLE_GLOBAL_CD_MIN, MAX)`); decrements each entry in `_cat_bubble_timers` by `delta` and, when a cat's timer expires, always resets it to a new `randf_range(BUBBLE_SPAWN_MIN, BUBBLE_SPAWN_MAX)` but only spawns (finds the cat node by `instance_id` and calls `_try_spawn_bubble_for_cat(cat_node)`) if `_burst_window_active` — triggers that miss the window are discarded, never queued; advances each active bubble's timer, fades its alpha to `1.0 - timer/BUBBLE_LIFETIME`, and frees/removes it once `timer >= BUBBLE_LIFETIME` (calling `bubble.cat_node.resume_from_bubble()` on expiry if that cat is still valid) |
 | `_sort_shop_list` | `() -> void` | Private; updates dynamic `shop_cost` metadata (housing next-tier cost, manager-bot live cost) then sorts `ShopList` children ascending by `shop_cost`; invisible items sink to bottom; called whenever any item's visibility changes |
 | `_on_earn_money_button_pressed()` | Calls `GameState.click()` |
