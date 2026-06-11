@@ -104,5 +104,5 @@ const BUBBLE_BURST_WINDOW_MAX: float = 10.0   # max seconds a burst window stays
 
 # Cat wandering
 const CAT_MOVE_SPEED: float = 40.0     # pixels per second while walking
-const CAT_WANDER_MIN: float = 6.0      # minimum seconds between movement decisions
-const CAT_WANDER_MAX: float = 18.0     # maximum seconds between movement decisions
+const CAT_WANDER_MIN: float = 25.0     # minimum seconds between movement decisions
+const CAT_WANDER_MAX: float = 60.0     # maximum seconds between movement decisions
