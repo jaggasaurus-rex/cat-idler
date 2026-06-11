@@ -247,7 +247,6 @@ text = "No Active Research"
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
-value = 0.0
 show_percentage = false
 
 [node name="ResearchSlider" type="HSlider" parent="CenterColumn" unique_id=400000604]
@@ -267,8 +266,8 @@ text = "OnlyPaws"
 [node name="ResearchHint" type="Label" parent="CenterColumn/SliderLabels" unique_id=400000607]
 layout_mode = 2
 size_flags_horizontal = 3
-horizontal_alignment = 2
 text = "Research"
+horizontal_alignment = 2
 
 [node name="ResearchCatsLabel" type="Label" parent="CenterColumn" unique_id=400000608]
 layout_mode = 2
@@ -277,7 +276,6 @@ text = "Cats researching: 0"
 [node name="ResearchItemList" type="VBoxContainer" parent="CenterColumn" unique_id=400000609]
 layout_mode = 2
 theme_override_constants/separation = 4
-
 
 [node name="OnlyPawsPopup" type="ColorRect" parent="." unique_id=400000040]
 process_mode = 2
@@ -799,16 +797,16 @@ autowrap_mode = 3
 layout_mode = 2
 text = "OK"
 
-[connection signal="value_changed" from="CenterColumn/ResearchSlider" to="." method="_on_research_slider_value_changed"]
 [connection signal="pressed" from="EarnMoneyButton" to="." method="_on_earn_money_button_pressed"]
 [connection signal="pressed" from="PurchaseCatButton" to="." method="_on_purchase_cat_button_pressed"]
+[connection signal="pressed" from="BuyCatFoodButton" to="." method="_on_buy_cat_food_x1_button_pressed"]
 [connection signal="pressed" from="OnlyPawsButton" to="." method="_on_only_paws_button_pressed"]
 [connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
-[connection signal="pressed" from="BuyCatFoodButton" to="." method="_on_buy_cat_food_x1_button_pressed"]
 [connection signal="pressed" from="BuyTokensButton" to="." method="_on_buy_token_x1_button_pressed"]
 [connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/HousingButton" to="." method="_on_buy_housing_button_pressed"]
 [connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/AutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
 [connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/BotManagerShopButton" to="." method="_on_buy_bot_manager_button_pressed"]
+[connection signal="value_changed" from="CenterColumn/ResearchSlider" to="." method="_on_research_slider_value_changed"]
 [connection signal="pressed" from="OnlyPawsPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_only_paws_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessCrampedPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_cramped_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessRiotPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_riot_popup_ok_pressed"]
