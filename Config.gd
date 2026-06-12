@@ -28,9 +28,9 @@ const bot_cost_base: float = 50.0
 const bot_cost_multiplier: float = 1.6
 
 # Mega Manager-Bots — unlocked by the "ai_model_upgrade" research item.
-# Double the cost, double the per-cat income, and double the token drain of normal bots.
+# Double the cost, quadruple the per-cat income, and double the token drain of normal bots.
 const MEGA_BOT_COST_BASE: float = 100.0       # double the normal bot_cost_base of 50.0
-const MEGA_BOT_INCOME_PER_CAT: float = 1.0    # $1.00/cat/sec per mega bot
+const MEGA_BOT_INCOME_PER_CAT: float = 2.0    # $2.00/cat/sec per mega bot
 const MEGA_BOT_TOKEN_DRAIN: float = 4.0       # double the normal token_drain_per_bot of 2.0
 
 # Upgrades

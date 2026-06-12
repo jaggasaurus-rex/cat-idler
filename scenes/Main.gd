@@ -199,10 +199,15 @@ func _process(delta: float) -> void:
 		else float(GameState.get_onlypaws_cats()) * Config.onlypaws_income_per_cat
 	only_paws_income_label.text = Strings.HUD_ONLY_PAWS_RATE % display_rate
 
+	# Popup queue discipline: only show a popup when the tree is not already paused.
+	# The shown-flag is not set until the popup is actually displayed, so if two
+	# conditions become true on the same frame, the second defers until the first
+	# is dismissed and _process() resumes.
 	if GameState.cats >= 1 and not GameState.first_cat_popup_shown:
-		GameState.first_cat_popup_shown = true
-		first_cat_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			GameState.first_cat_popup_shown = true
+			first_cat_popup.visible = true
+			get_tree().paused = true
 
 	# One-way latch — OnlyPaws button and income label appear together
 	if GameState.only_paws_unlocked and not only_paws_button.visible:
@@ -210,9 +215,10 @@ func _process(delta: float) -> void:
 		only_paws_income_label.visible = true
 
 	if GameState.only_paws_unlocked and not _only_paws_popup_shown:
-		_only_paws_popup_shown = true
-		only_paws_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			_only_paws_popup_shown = true
+			only_paws_popup.visible = true
+			get_tree().paused = true
 
 	# One-way latch — bot button and status label appear together
 	if GameState.bot_shop_unlocked and not manager_bot_button.visible:
@@ -220,9 +226,10 @@ func _process(delta: float) -> void:
 		bots_rate_label.visible = true
 
 	if GameState.bot_shop_unlocked and not GameState.bot_unlock_popup_shown:
-		GameState.bot_unlock_popup_shown = true
-		bot_unlock_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			GameState.bot_unlock_popup_shown = true
+			bot_unlock_popup.visible = true
+			get_tree().paused = true
 
 	# One-way latch — cat food controls appear after the first cat purchase
 	if GameState.cats_ever_purchased >= 1 and not cat_food_label.visible:
@@ -242,14 +249,16 @@ func _process(delta: float) -> void:
 	buy_tokens_button.text = (Strings.BTN_BUY_TOKENS_AUTO if GameState.bot_manager_purchased else Strings.BTN_BUY_TOKENS) % Util.format_number(GameState.get_token_pack_cost())
 
 	if (GameState.bot_manager_unlocked or GameState.auto_feeder_unlocked) and not GameState.upgrades_tab_popup_shown:
-		GameState.upgrades_tab_popup_shown = true
-		upgrades_tab_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			GameState.upgrades_tab_popup_shown = true
+			upgrades_tab_popup.visible = true
+			get_tree().paused = true
 
 	if GameState.bot_manager_unlocked and not GameState.bot_manager_unlock_popup_shown:
-		GameState.bot_manager_unlock_popup_shown = true
-		bot_manager_unlock_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			GameState.bot_manager_unlock_popup_shown = true
+			bot_manager_unlock_popup.visible = true
+			get_tree().paused = true
 
 	# Bot manager shop button — visible when unlocked, disappears on purchase
 	if GameState.bot_manager_unlocked and not GameState.bot_manager_purchased:
@@ -338,34 +347,40 @@ func _process(delta: float) -> void:
 			prog_label.visible = false
 
 	if GameState.starvation_count >= 1 and not _starvation_popup_shown:
-		_starvation_popup_shown = true
-		starvation_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			_starvation_popup_shown = true
+			starvation_popup.visible = true
+			get_tree().paused = true
 
 	if GameState.starvation_count >= 2 and not _starvation_2_popup_shown:
-		_starvation_2_popup_shown = true
-		starvation_2_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			_starvation_2_popup_shown = true
+			starvation_2_popup.visible = true
+			get_tree().paused = true
 
 	if GameState.starvation_count >= 3 and GameState.starvation_count > _starvation_handled_count:
-		_starvation_handled_count = GameState.starvation_count
-		starvation_recurring_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			_starvation_handled_count = GameState.starvation_count
+			starvation_recurring_popup.visible = true
+			get_tree().paused = true
 
 	if GameState.happiness_cramped_triggered and not _happiness_cramped_popup_shown:
-		_happiness_cramped_popup_shown = true
-		happiness_cramped_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			_happiness_cramped_popup_shown = true
+			happiness_cramped_popup.visible = true
+			get_tree().paused = true
 
 	if GameState.happiness_riot_triggered and not _happiness_riot_popup_shown:
-		_happiness_riot_popup_shown = true
-		happiness_riot_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			_happiness_riot_popup_shown = true
+			happiness_riot_popup.visible = true
+			get_tree().paused = true
 
 	if GameState.cat_crusher_triggered and not _cat_crusher_popup_shown:
-		_cat_crusher_popup_shown = true
-		cat_crusher_popup.visible = true
-		get_tree().paused = true
+		if not get_tree().paused:
+			_cat_crusher_popup_shown = true
+			cat_crusher_popup.visible = true
+			get_tree().paused = true
 
 	# One-way latch — show 20% cat-loss threshold marker once Cat Crusher is unlocked
 	if GameState.cat_crusher_unlocked and not _cat_loss_marker.visible:
@@ -414,8 +429,9 @@ func _process(delta: float) -> void:
 	# and the 20s delay elapsed), like every other popup. Decoupled from the spawn pipeline
 	# so it no longer waits for a random burst window to coincide with a per-cat timer.
 	if GameState.viral_bubbles_unlocked and not GameState.viral_popup_shown:
-		GameState.viral_popup_shown = true
-		_show_viral_popup()
+		if not get_tree().paused:
+			GameState.viral_popup_shown = true
+			_show_viral_popup()
 
 	# Global burst window: alternates between an idle cooldown and a brief open window.
 	# Per-cat timers below only spawn while a window is open; this runs every frame.
