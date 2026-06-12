@@ -46,6 +46,7 @@ var happiness_riot_triggered: bool = false
 var happiness_zero_count: int = 0
 var cat_crusher_triggered: bool = false
 var cat_crusher_unlocked: bool = false
+var poop_count: int = 0
 var _happiness_was_zero: bool = false
 var _cat_loss_active: bool = false
 var _cat_loss_timer: float = 0.0
@@ -354,9 +355,16 @@ func get_max_cats() -> int:
 ## Segment 1 (max_cats < cats < fifty_break): t^2 ease-in from 100% down to 50%.
 ## Segment 2 (fifty_break <= cats < zero_break): t^2 ease-in from 50% down to 0%.
 func get_happiness() -> float:
-	# Happiness decay logic stripped — always returns 100 while
-	# the mechanic is being redesigned. Bar remains visible.
-	return 100.0
+	# Happiness is driven by accumulated poop relative to cat count.
+	# ratio = poop_count / cats; happiness decays quadratically as ratio
+	# rises toward Config.POOP_MAX_RATIO (the point of total degradation).
+	# Scales to any cat count: 1 poop per cat is only a mild penalty,
+	# but ignoring it compounds quickly.
+	if cats <= 0 or poop_count <= 0:
+		return 100.0
+	var ratio: float = float(poop_count) / float(cats)
+	var t: float = clamp(ratio / Config.POOP_MAX_RATIO, 0.0, 1.0)
+	return 100.0 * (1.0 - t * t)
 
 
 # Returns [fifty_break, zero_break] cat counts for the given max_cats and current housing tier.

@@ -1,5 +1,5 @@
 extends Node
-# 53 string constants — edit this file to change all user-visible text.
+# 54 string constants — edit this file to change all user-visible text.
 
 ## HUD — live labels updated every frame (use %s as the placeholder slot)
 const HUD_MONEY           := "Money: $%s"
@@ -42,6 +42,9 @@ const BTN_AI_ENTERPRISE   := "AI Enterprise Membership\nReduce token price\n$%s"
 ## Bubbles
 const BUBBLE_VIRAL        := "💰"
 const BUBBLE_INSPIRATION  := "💡"
+
+## Poop
+const POOP_EMOJI          := "💩"
 
 ## Research items — name / subtitle / description keyed by item id
 const RESEARCH_CAT_POWER_NAME    := "Cat Power Unite"

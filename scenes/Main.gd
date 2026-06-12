@@ -82,6 +82,11 @@ var _research_panel_unlocked: Dictionary = {}
 var _cat_bubble_timers: Dictionary = {}
 # Active bubble dicts: { "node": Button, "timer": float, "type": String, "research_id": String }
 var _active_bubbles: Array = []
+# Per-cat poop cooldown timers. Keys = instance_id, values = seconds remaining.
+# Same structure as _cat_bubble_timers; initialised on cat purchase, erased on loss.
+var _cat_poop_timers: Dictionary = {}
+# Active poop dicts: { "node": Button }
+var _active_poops: Array = []
 # Global burst window system: per-cat timers run continuously but only fire during
 # an open window. Windows are separated by a randomized global cooldown. Triggers
 # that land outside a window are discarded — never queued or cached.
@@ -460,6 +465,21 @@ func _process(delta: float) -> void:
 						break
 				if cat_node != null:
 					_try_spawn_bubble_for_cat(cat_node)
+
+	# Poop timers: no burst window — each cat's timer fires independently
+	# and continuously. Poop accumulates on screen until clicked.
+	# GameState.poop_count drives get_happiness() which feeds the income multiplier.
+	for key: int in _cat_poop_timers.keys():
+		_cat_poop_timers[key] -= delta
+		if _cat_poop_timers[key] <= 0.0:
+			_cat_poop_timers[key] = randf_range(Config.POOP_SPAWN_MIN, Config.POOP_SPAWN_MAX)
+			var poop_cat: Node2D = null
+			for child: Node in cat_container.get_children():
+				if child.get_instance_id() == key:
+					poop_cat = child as Node2D
+					break
+			if poop_cat != null:
+				_spawn_poop(poop_cat)
 
 	# Bubble lifetime & fade — advance timers, fade out, and collect expired bubbles
 	var _expired: Array = []
@@ -936,6 +956,7 @@ func _on_cat_purchased() -> void:
 	cat_container.add_child(cat)
 	_place_cat(cat)
 	_cat_bubble_timers[cat.get_instance_id()] = randf_range(Config.BUBBLE_SPAWN_MIN, Config.BUBBLE_SPAWN_MAX)
+	_cat_poop_timers[cat.get_instance_id()] = randf_range(Config.POOP_SPAWN_MIN, Config.POOP_SPAWN_MAX)
 
 
 func _on_cat_lost() -> void:
@@ -943,7 +964,35 @@ func _on_cat_lost() -> void:
 	if children.size() > 0:
 		var node: Node = children.back()
 		_cat_bubble_timers.erase(node.get_instance_id())
+		_cat_poop_timers.erase(node.get_instance_id())
 		node.queue_free()
+
+
+# Spawns a poop button near cat_node. Poop accumulates until clicked;
+# it does not expire automatically.
+func _spawn_poop(cat_node: Node2D) -> void:
+	var offset := Vector2(randf_range(-40.0, 40.0), randf_range(10.0, 30.0))
+	var spawn_pos: Vector2 = cat_node.global_position + offset
+
+	var button: Button = Button.new()
+	button.text = Strings.POOP_EMOJI
+	button.add_theme_font_size_override("font_size", 36)
+	button.custom_minimum_size = Vector2(64.0, 64.0)
+	button.position = spawn_pos
+	button.z_index = 50
+	add_child(button)
+
+	var poop: Dictionary = {"node": button}
+	button.pressed.connect(_on_poop_pressed.bind(poop))
+	_active_poops.append(poop)
+	GameState.poop_count += 1
+
+
+# Removes a poop from the screen and decrements the global count.
+func _on_poop_pressed(poop: Dictionary) -> void:
+	_active_poops.erase(poop)
+	(poop.node as Button).queue_free()
+	GameState.poop_count = max(0, GameState.poop_count - 1)
 
 
 # Places cat at a random viewport position that avoids UI elements and existing cats.

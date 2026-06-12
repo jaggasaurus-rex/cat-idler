@@ -121,6 +121,17 @@ const BUBBLE_GLOBAL_CD_MAX: float = 40.0      # max seconds between burst window
 const BUBBLE_BURST_WINDOW_MIN: float = 2.0    # min seconds a burst window stays open
 const BUBBLE_BURST_WINDOW_MAX: float = 10.0   # max seconds a burst window stays open
 
+## Poop
+# Per-cat cooldown range: each cat independently picks a random interval
+# in [POOP_SPAWN_MIN, POOP_SPAWN_MAX] between poops.
+const POOP_SPAWN_MIN: float = 30.0
+const POOP_SPAWN_MAX: float = 90.0
+# Poop-per-cat ratio at which happiness reaches 0%.
+# At ratio 1.0: happiness ≈ 89% (moderate annoyance).
+# At ratio 2.0: happiness ≈ 56% (becoming a real problem).
+# At ratio 3.0: happiness = 0% (fully ignored).
+const POOP_MAX_RATIO: float = 3.0
+
 # Cat wandering
 const CAT_MOVE_SPEED: float = 40.0     # pixels per second while walking
 const CAT_WANDER_MIN: float = 25.0     # minimum seconds between movement decisions
