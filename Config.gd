@@ -127,6 +127,7 @@ const CAT_WANDER_MIN: float = 25.0     # minimum seconds between movement decisi
 const CAT_WANDER_MAX: float = 60.0     # maximum seconds between movement decisions
 
 ## UI
+const RESEARCH_MAX_VISIBLE: int = 4
 const UI_BASE_FONT_SIZE: int = 22
 # Section header labels — slightly larger than base, bold weight
 const UI_HEADER_FONT_SIZE: int = 28

@@ -176,6 +176,8 @@ func _ready() -> void:
 	_style_as_header(cats_label)
 	_style_as_header($HappinessBarContainer/HappinessTitleLabel)
 	_style_as_header($ShopPanel/ShopLabel)
+	# Show any research panels immediately eligible on game start (no first-frame delay).
+	_refresh_research_slots()
 
 
 # Applies the section-header style (larger size + bold) to a Label node.
@@ -316,16 +318,7 @@ func _process(delta: float) -> void:
 		research_active_label.text = Strings.RESEARCH_NAMES.get(active_item["id"], active_item["id"])
 		research_progress_bar.value = GameState.research_points.get(active_item["id"], 0.0) / float(active_item["points_cost"])
 	research_cats_label.text = Strings.HUD_RESEARCH_CATS % str(GameState.get_research_cats())
-	# One-way latch — housing-gated research panels stay hidden until the player's
-	# housing tier reaches the item's min_housing_tier, then remain visible thereafter.
-	for item: Dictionary in Config.RESEARCH_ITEMS:
-		var gate_id: String = item["id"]
-		var min_tier: int = int(item.get("min_housing_tier", 0))
-		if min_tier > 0 and not _research_panel_unlocked.get(gate_id, false):
-			if GameState.housing_tier_index >= min_tier:
-				_research_panel_unlocked[gate_id] = true
-				if not _research_panel_hidden.get(gate_id, false):
-					(_research_panels[gate_id] as PanelContainer).visible = true
+	_refresh_research_slots()
 	for item: Dictionary in Config.RESEARCH_ITEMS:
 		var item_id: String = item["id"]
 		if _research_panel_hidden.get(item_id, false):
@@ -464,6 +457,50 @@ func _process(delta: float) -> void:
 			_expired.append(bubble)
 	for bubble: Dictionary in _expired:
 		_active_bubbles.erase(bubble)
+
+
+# Shows research panels one at a time in RESEARCH_ITEMS order, subject to:
+# housing tier gate, predecessor-complete gate, and RESEARCH_MAX_VISIBLE cap.
+# Called from _process() each frame and immediately after any completion.
+func _refresh_research_slots() -> void:
+	var visible_count: int = 0
+	for item: Dictionary in Config.RESEARCH_ITEMS:
+		var id: String = item["id"]
+		if (_research_panels[id] as PanelContainer).visible and not _research_panel_hidden.get(id, false):
+			visible_count += 1
+
+	for i in range(Config.RESEARCH_ITEMS.size()):
+		var item: Dictionary = Config.RESEARCH_ITEMS[i]
+		var id: String = item["id"]
+
+		# Skip if already visible or already completed/hidden
+		if (_research_panels[id] as PanelContainer).visible:
+			continue
+		if _research_panel_hidden.get(id, false):
+			continue
+
+		# Housing tier gate (existing rule)
+		if GameState.housing_tier_index < int(item.get("min_housing_tier", 0)):
+			continue
+
+		# Predecessor gate: all items before index i must be complete
+		var predecessors_done: bool = true
+		for j in range(i):
+			var pred_id: String = Config.RESEARCH_ITEMS[j]["id"]
+			if not GameState.research_complete.get(pred_id, false):
+				predecessors_done = false
+				break
+		if not predecessors_done:
+			continue
+
+		# Slot gate: stop if already at the max
+		if visible_count >= Config.RESEARCH_MAX_VISIBLE:
+			break
+
+		# All gates passed — show the panel (one-way latch)
+		(_research_panels[id] as PanelContainer).visible = true
+		_research_panel_unlocked[id] = true
+		visible_count += 1
 
 
 # Viral spawn gates: viral_bubbles_unlocked (manager_bots >= 2 AND 20s elapsed),
@@ -834,6 +871,7 @@ func _on_research_completed(id: String) -> void:
 	if _research_panels.has(id):
 		(_research_panels[id] as PanelContainer).visible = false
 		_research_panel_hidden[id] = true
+	_refresh_research_slots()
 	if id == "ai_model_upgrade":
 		_show_ai_overlords_popup()
 
