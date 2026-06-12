@@ -190,7 +190,8 @@ func click() -> void:
 func buy_cat() -> void:
 	if money < next_cat_cost:
 		return
-	if get_happiness() <= 0.0:
+	# Hard cap: player cannot exceed the current housing tier's cat limit.
+	if cats >= get_max_cats():
 		return
 	money -= next_cat_cost
 	cats += 1
@@ -353,19 +354,9 @@ func get_max_cats() -> int:
 ## Segment 1 (max_cats < cats < fifty_break): t^2 ease-in from 100% down to 50%.
 ## Segment 2 (fifty_break <= cats < zero_break): t^2 ease-in from 50% down to 0%.
 func get_happiness() -> float:
-	var max_cats: int = get_max_cats()
-	if cats <= max_cats:
-		return 100.0
-	var bp: Array[int] = _happiness_breakpoints(max_cats)
-	var fifty_break: int = bp[0]
-	var zero_break: int = bp[1]
-	if cats >= zero_break:
-		return 0.0
-	if cats < fifty_break:
-		var t: float = float(cats - max_cats) / float(fifty_break - max_cats)
-		return 100.0 - t * t * 50.0
-	var t: float = float(cats - fifty_break) / float(zero_break - fifty_break)
-	return 50.0 - t * t * 50.0
+	# Happiness decay logic stripped — always returns 100 while
+	# the mechanic is being redesigned. Bar remains visible.
+	return 100.0
 
 
 # Returns [fifty_break, zero_break] cat counts for the given max_cats and current housing tier.
