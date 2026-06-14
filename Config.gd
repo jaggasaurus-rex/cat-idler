@@ -109,6 +109,12 @@ const RESEARCH_ITEMS: Array = [
 	},
 ]
 
+# Passive cat_intelligence accrued while cats are assigned to research but no
+# research item is actively in progress (get_active_research_id() == "").
+# 10 cats × 600s = 10 cat_intelligence per 10 minutes
+# 1 point per cat per 10 minutes = 1/600 ≈ 0.00167 points/cat/sec
+const IDLE_RESEARCH_INTEL_RATE: float = 0.00167
+
 # Bubble mechanic
 const BUBBLE_SPAWN_MIN: float = 5.0           # min seconds of a per-cat bubble cooldown
 const BUBBLE_SPAWN_MAX: float = 15.0          # max seconds of a per-cat bubble cooldown

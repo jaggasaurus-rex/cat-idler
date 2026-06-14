@@ -64,6 +64,7 @@ var research_points: Dictionary = {}
 # id -> bool; true once points_cost reached (named research_complete to avoid clash with signal)
 var research_complete: Dictionary = {}
 var cat_intelligence: int = 0
+var _idle_intel_accumulator: float = 0.0
 
 # Viral bubble unlock: gates on owning two bots, then a 20s delay before bubbles can appear.
 var _viral_delay_timer: float = 0.0
@@ -155,6 +156,16 @@ func _process(delta: float) -> void:
 			# Increments cat_intelligence by item["cat_intelligence_gain"] from Config.RESEARCH_ITEMS
 			cat_intelligence += int(item.get("cat_intelligence_gain", 0))
 			research_completed.emit(item_id)
+	# Idle research intelligence: cats assigned to research with no active item
+	# slowly raise cat_intelligence. Accumulate fractional points, bank whole ones.
+	if get_active_research_id() == "" and get_research_cats() > 0:
+		_idle_intel_accumulator += float(get_research_cats()) * Config.IDLE_RESEARCH_INTEL_RATE * delta
+		var whole_points: int = int(floor(_idle_intel_accumulator))
+		if whole_points > 0:
+			cat_intelligence += whole_points
+			_idle_intel_accumulator -= float(whole_points)
+	else:
+		_idle_intel_accumulator = 0.0
 	# Viral bubble unlock: once two bots are owned, count up 20s before enabling bubbles.
 	if manager_bots >= 2 and not viral_bubbles_unlocked:
 		_viral_delay_timer += delta
