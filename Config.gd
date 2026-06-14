@@ -82,6 +82,13 @@ const housing_tiers: Array = [
 	{"id": "bedroom_3",       "label": "3 Bedroom",         "cost": 46000.0, "max_cats_increase": 10},
 ]
 
+# Robo-Shit Sweeper — research-gated upgrade that automates poop cleanup.
+const ROBO_SWEEPER_FUND_COST: float = 4000.0
+# 2× ai_model_upgrade (1200 pts) = 2400 pts
+const ROBO_SWEEPER_POINTS_COST: float = 2400.0
+# ai_model_upgrade costs 1200 points; this is twice as hard
+const ROBO_SWEEPER_PURCHASE_COST: float = 10000.0
+
 # Research items — each entry defines a fundable, cat-powered research project.
 const RESEARCH_ITEMS: Array = [
 	{
@@ -106,6 +113,20 @@ const RESEARCH_ITEMS: Array = [
 		"min_cats_required": 1,
 		"cat_intelligence_gain": 0,
 		"min_housing_tier": 1,
+	},
+	{
+		"id": "robo_shit_sweeper",
+		"name": Strings.RESEARCH_ROBO_SWEEPER_NAME,
+		"subtitle": Strings.RESEARCH_ROBO_SWEEPER_SUB,
+		"description": Strings.RESEARCH_ROBO_SWEEPER_DESC,
+		"fund_cost": ROBO_SWEEPER_FUND_COST,
+		"points_cost": ROBO_SWEEPER_POINTS_COST,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 0,
+		# Unlocked in the research tree when EITHER cats >= 25 OR ai_model_upgrade is complete.
+		"unlock_requires_cats": 25,
+		"unlock_requires_research": "ai_model_upgrade",
 	},
 ]
 

@@ -56,6 +56,7 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 
 var _pawsco_membership_button: Button
 var _ai_enterprise_membership_button: Button
+var _robo_sweeper_button: Button
 var _cat_intelligence_label: Label
 var _only_paws_popup_shown: bool = false
 var _starvation_popup_shown: bool = false
@@ -154,6 +155,12 @@ func _ready() -> void:
 	_ai_enterprise_membership_button.set_meta("shop_cost", Config.ai_enterprise_membership_cost)
 	_ai_enterprise_membership_button.pressed.connect(_on_buy_ai_enterprise_membership_button_pressed)
 	shop_list.add_child(_ai_enterprise_membership_button)
+	_robo_sweeper_button = Button.new()
+	_robo_sweeper_button.text = Strings.BTN_ROBO_SWEEPER % Util.format_number(Config.ROBO_SWEEPER_PURCHASE_COST)
+	_robo_sweeper_button.visible = false
+	_robo_sweeper_button.set_meta("shop_cost", Config.ROBO_SWEEPER_PURCHASE_COST)
+	_robo_sweeper_button.pressed.connect(_on_buy_robo_sweeper_button_pressed)
+	shop_list.add_child(_robo_sweeper_button)
 	research_slider.visible = false
 	_cat_intelligence_label = Label.new()
 	_cat_intelligence_label.visible = false
@@ -291,6 +298,14 @@ func _process(delta: float) -> void:
 	elif _ai_enterprise_membership_button.visible:
 		_ai_enterprise_membership_button.visible = false
 		_sort_shop_list()
+
+	# Robo-Shit Sweeper button — appears once its research completes, disappears on purchase
+	if GameState.research_complete.get("robo_shit_sweeper", false) and not GameState.robo_sweeper_purchased:
+		if not _robo_sweeper_button.visible:
+			_robo_sweeper_button.visible = true
+		_robo_sweeper_button.disabled = GameState.money < Config.ROBO_SWEEPER_PURCHASE_COST
+	elif GameState.robo_sweeper_purchased and _robo_sweeper_button.visible:
+		_robo_sweeper_button.visible = false
 
 	# OnlyPaws toggle state — green tint when active, default when inactive
 	if GameState.only_paws_active:
@@ -528,6 +543,17 @@ func _refresh_research_slots() -> void:
 				break
 		if not predecessors_done:
 			continue
+
+		# OR unlock gate (additive to the predecessor gate): when an item declares
+		# unlock_requires_cats and/or unlock_requires_research, it stays hidden until
+		# EITHER the cat count threshold OR the named research completion is met.
+		var unlock_cats: int = int(item.get("unlock_requires_cats", 0))
+		var unlock_research: String = str(item.get("unlock_requires_research", ""))
+		if unlock_cats > 0 or unlock_research != "":
+			var cats_gate: bool = unlock_cats > 0 and GameState.cats >= unlock_cats
+			var research_gate: bool = unlock_research != "" and GameState.research_complete.get(unlock_research, false)
+			if not cats_gate and not research_gate:
+				continue
 
 		# Slot gate: stop if already at the max
 		if visible_count >= Config.RESEARCH_MAX_VISIBLE:
@@ -890,6 +916,10 @@ func _on_buy_pawsco_membership_button_pressed() -> void:
 
 func _on_buy_ai_enterprise_membership_button_pressed() -> void:
 	GameState.buy_ai_enterprise_membership()
+
+
+func _on_buy_robo_sweeper_button_pressed() -> void:
+	GameState.buy_robo_sweeper()
 
 
 func _on_buy_housing_button_pressed() -> void:

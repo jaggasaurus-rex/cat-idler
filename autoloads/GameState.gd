@@ -36,6 +36,7 @@ var auto_feeder_unlocked: bool = false
 var auto_feeder_purchased: bool = false
 var pawsco_membership_purchased: bool = false
 var ai_enterprise_purchased: bool = false
+var robo_sweeper_purchased: bool = false
 var first_cat_popup_shown: bool = false
 var starvation_count: int = 0
 var starvation_active: bool = false
@@ -347,6 +348,19 @@ func buy_ai_enterprise_membership() -> void:
 		return
 	money -= Config.ai_enterprise_membership_cost
 	ai_enterprise_purchased = true
+
+
+## Purchases the Robo-Shit Sweeper upgrade once research is complete.
+## No-ops if already purchased, research not complete, or insufficient funds.
+func buy_robo_sweeper() -> void:
+	if robo_sweeper_purchased:
+		return
+	if not research_complete.get("robo_shit_sweeper", false):
+		return
+	if money < Config.ROBO_SWEEPER_PURCHASE_COST:
+		return
+	money -= Config.ROBO_SWEEPER_PURCHASE_COST
+	robo_sweeper_purchased = true
 
 
 ## Returns the current cat cap: base_max_cats plus max_cats_increase for each

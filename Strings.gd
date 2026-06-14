@@ -38,6 +38,7 @@ const BTN_AUTO_FEEDER     := "Auto-Feeder\n$%s"
 const BTN_BOT_MANAGER     := "Manager-Bot Manager\n$%s"
 const BTN_PAWSCO          := "PawsCo Membership\nStart buying food in bulk\n$%s"
 const BTN_AI_ENTERPRISE   := "AI Enterprise Membership\nReduce token price\n$%s"
+const BTN_ROBO_SWEEPER    := "Buy Robo-Shit Sweeper ($%s)"
 
 ## Bubbles
 const BUBBLE_VIRAL        := "💰"
@@ -55,10 +56,15 @@ const RESEARCH_AI_MODEL_NAME     := "Research AI model Upgrade"
 const RESEARCH_AI_MODEL_SUB      := ""
 const RESEARCH_AI_MODEL_DESC     := "This will unlock better Manager-Bots"
 
+const RESEARCH_ROBO_SWEEPER_NAME: String = "Robo-Shit Sweeper"
+const RESEARCH_ROBO_SWEEPER_SUB: String = "Automated waste removal"
+const RESEARCH_ROBO_SWEEPER_DESC: String = "A robot that handles the dirty work so your cats don't have to."
+
 ## Research item id -> display name, for the active-research label lookup
 const RESEARCH_NAMES: Dictionary = {
 	"cat_power_unite":  RESEARCH_CAT_POWER_NAME,
 	"ai_model_upgrade": RESEARCH_AI_MODEL_NAME,
+	"robo_shit_sweeper": RESEARCH_ROBO_SWEEPER_NAME,
 }
 
 ## Popup text — one const per popup, exact text preserved from Main.tscn
