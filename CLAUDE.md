@@ -40,3 +40,18 @@ Commit message format: brief imperative sentence describing what changed.
 - `GameManager` — global game state (scene transitions, session data)
 - `AudioBus` — centralized audio playback and bus management
 -->
+## Agent Pipeline
+Five sub-agents in `.claude/agents/` run automatically at defined points in every task. Do not skip any stage.
+
+**Before starting any task:**
+1. Run `context-validator` — if it reports STALE, update CONTEXT.md before proceeding.
+2. Run `pre-task-scaffolder` with the task description — review SHOULD CHANGE / SHOULD NOT CHANGE before touching any file.
+
+**After implementation, before committing:**
+3. Run `gdscript-reviewer` — fix all reported violations.
+4. Run `strings-guardian` — add any flagged strings to Strings.gd and replace inline occurrences.
+
+**After committing:**
+5. Run `commit-auditor` — resolve any UNCOMMITTED CHANGES or BAD MESSAGE reports.
+
+Do not consider a task complete until all five agents report clean.
