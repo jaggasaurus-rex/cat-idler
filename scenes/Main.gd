@@ -106,6 +106,13 @@ var _sweeper_clean_timer: float = 0.0       # counts down during CLEANING
 var _sweeper_charge_timer: float = 0.0      # counts down during CHARGING
 var _sweeper_poops_this_run: int = 0        # resets each run; stops at SWEEPER_MAX_POOPS_PER_RUN
 
+# Developer debug menu — overlay panel built dynamically in _ready() (never in Main.tscn),
+# toggled by the backtick key via _unhandled_key_input so it never blocks existing input.
+var _debug_menu_visible: bool = false
+var _debug_poop_disabled: bool = false
+var _debug_panel: PanelContainer = null
+var _debug_poop_check: CheckButton = null
+
 
 func _ready() -> void:
 	# Sets the global fallback so all labels/buttons inherit UI_BASE_FONT_SIZE
@@ -211,6 +218,22 @@ func _ready() -> void:
 	_style_as_header($ShopPanel/ShopLabel)
 	# Show any research panels immediately eligible on game start (no first-frame delay).
 	_refresh_research_slots()
+	# Developer debug menu — code-only overlay above everything, hidden until toggled.
+	_debug_panel = PanelContainer.new()
+	_debug_panel.visible = false
+	_debug_panel.z_index = 200   # above everything
+	_debug_panel.set_anchors_preset(Control.PRESET_CENTER)
+	var _debug_vbox: VBoxContainer = VBoxContainer.new()
+	var _debug_title: Label = Label.new()
+	_debug_title.text = Strings.DEBUG_MENU_TITLE
+	_debug_vbox.add_child(_debug_title)
+	_debug_poop_check = CheckButton.new()
+	_debug_poop_check.text = Strings.DEBUG_POOP_OFF_LABEL
+	_debug_poop_check.button_pressed = false
+	_debug_poop_check.toggled.connect(_on_debug_poop_toggled)
+	_debug_vbox.add_child(_debug_poop_check)
+	_debug_panel.add_child(_debug_vbox)
+	add_child(_debug_panel)
 
 
 # Applies the section-header style (larger size + bold) to a Label node.
@@ -219,6 +242,22 @@ func _style_as_header(label: Label) -> void:
 	var bold_font := SystemFont.new()
 	bold_font.font_weight = 700
 	label.add_theme_font_override("font", bold_font)
+
+
+# Toggles the developer debug menu on the backtick key. Uses _unhandled_key_input so
+# it only fires for keys no other control consumed, then marks the event handled to
+# keep it from leaking into other systems.
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_QUOTELEFT:
+			_debug_menu_visible = not _debug_menu_visible
+			_debug_panel.visible = _debug_menu_visible
+			get_viewport().set_input_as_handled()
+
+
+# Debug menu "Poop Off" toggle handler — suppresses poop spawning while pressed.
+func _on_debug_poop_toggled(pressed: bool) -> void:
+	_debug_poop_disabled = pressed
 
 
 func _process(delta: float) -> void:
@@ -515,7 +554,9 @@ func _process(delta: float) -> void:
 					poop_cat = child as Node2D
 					break
 			if poop_cat != null:
-				_spawn_poop(poop_cat)
+				# DEBUG: toggled via debug menu (backtick). Timer still ticks; only spawn is suppressed.
+				if not _debug_poop_disabled:
+					_spawn_poop(poop_cat)
 
 	_process_sweeper(delta)
 

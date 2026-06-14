@@ -50,6 +50,10 @@ const POOP_EMOJI          := "💩"
 ## Robo-Shit Sweeper
 const SWEEPER_EMOJI: String = "🤖"
 
+## Developer debug menu
+const DEBUG_MENU_TITLE: String = "Debug Menu"
+const DEBUG_POOP_OFF_LABEL: String = "Poop Off"
+
 ## Research items — name / subtitle / description keyed by item id
 const RESEARCH_CAT_POWER_NAME    := "Cat Power Unite"
 const RESEARCH_CAT_POWER_SUB     := "Cat Intelligence +1"
