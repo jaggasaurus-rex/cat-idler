@@ -47,6 +47,9 @@ const BUBBLE_INSPIRATION  := "💡"
 ## Poop
 const POOP_EMOJI          := "💩"
 
+## Robo-Shit Sweeper
+const SWEEPER_EMOJI: String = "🤖"
+
 ## Research items — name / subtitle / description keyed by item id
 const RESEARCH_CAT_POWER_NAME    := "Cat Power Unite"
 const RESEARCH_CAT_POWER_SUB     := "Cat Intelligence +1"

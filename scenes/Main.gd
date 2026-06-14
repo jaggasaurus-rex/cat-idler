@@ -95,6 +95,17 @@ var _burst_window_active: bool = false
 var _burst_window_timer: float = 0.0
 var _global_cd_timer: float = randf_range(Config.BUBBLE_GLOBAL_CD_MIN, Config.BUBBLE_GLOBAL_CD_MAX)
 
+# Robo-Shit Sweeper — Node2D visual driven by an inline state machine (no separate scene/script).
+var _sweeper_node: Node2D = null
+var _sweeper_label: Label = null
+
+enum SweeperState { INACTIVE, MOVING, CLEANING, CHARGING }
+var _sweeper_state: SweeperState = SweeperState.INACTIVE
+var _sweeper_target_poop: Dictionary = {}   # the poop dict currently targeted
+var _sweeper_clean_timer: float = 0.0       # counts down during CLEANING
+var _sweeper_charge_timer: float = 0.0      # counts down during CHARGING
+var _sweeper_poops_this_run: int = 0        # resets each run; stops at SWEEPER_MAX_POOPS_PER_RUN
+
 
 func _ready() -> void:
 	# Sets the global fallback so all labels/buttons inherit UI_BASE_FONT_SIZE
@@ -161,6 +172,16 @@ func _ready() -> void:
 	_robo_sweeper_button.set_meta("shop_cost", Config.ROBO_SWEEPER_PURCHASE_COST)
 	_robo_sweeper_button.pressed.connect(_on_buy_robo_sweeper_button_pressed)
 	shop_list.add_child(_robo_sweeper_button)
+	# Robo-Shit Sweeper device — built once, shown only after robo_sweeper_purchased.
+	_sweeper_node = Node2D.new()
+	_sweeper_node.visible = false
+	_sweeper_node.z_index = 60
+	_sweeper_label = Label.new()
+	_sweeper_label.text = Strings.SWEEPER_EMOJI
+	_sweeper_label.add_theme_font_size_override("font_size", 40)
+	_sweeper_label.position = Vector2(-20.0, -20.0)  # center the emoji on the node origin
+	_sweeper_node.add_child(_sweeper_label)
+	add_child(_sweeper_node)
 	research_slider.visible = false
 	_cat_intelligence_label = Label.new()
 	_cat_intelligence_label.visible = false
@@ -496,6 +517,8 @@ func _process(delta: float) -> void:
 			if poop_cat != null:
 				_spawn_poop(poop_cat)
 
+	_process_sweeper(delta)
+
 	# Bubble lifetime & fade — advance timers, fade out, and collect expired bubbles
 	var _expired: Array = []
 	for bubble: Dictionary in _active_bubbles:
@@ -508,6 +531,55 @@ func _process(delta: float) -> void:
 			_expired.append(bubble)
 	for bubble: Dictionary in _expired:
 		_active_bubbles.erase(bubble)
+
+
+# Drives the Robo-Shit Sweeper's inline state machine: it charges, then sweeps to the
+# nearest poops (up to a cap) and removes them via _on_poop_pressed before recharging.
+# MAX_POOPS_PER_RUN poops at CLEAN_DELAY sec each, then CHARGE_TIME sec
+# cooldown. Full cycle example: 3 × 1.5s clean + 60s charge ≈ 64.5s per sweep run.
+func _process_sweeper(delta: float) -> void:
+	match _sweeper_state:
+		SweeperState.INACTIVE:
+			if not GameState.robo_sweeper_purchased:
+				return
+			# Appear in the middle of the screen and start with a short initial charge
+			# so the first sweep doesn't fire the instant the upgrade is bought.
+			_sweeper_node.position = get_viewport_rect().size * 0.5
+			_sweeper_node.visible = true
+			_sweeper_charge_timer = 5.0
+			_sweeper_state = SweeperState.CHARGING
+		SweeperState.CHARGING:
+			_sweeper_charge_timer -= delta
+			if _sweeper_charge_timer <= 0.0:
+				_sweeper_poops_this_run = 0
+				_sweeper_state = SweeperState.MOVING
+		SweeperState.MOVING:
+			if _active_poops.is_empty() or _sweeper_poops_this_run >= Config.SWEEPER_MAX_POOPS_PER_RUN:
+				_sweeper_charge_timer = Config.SWEEPER_CHARGE_TIME
+				_sweeper_state = SweeperState.CHARGING
+				return
+			# Target the poop nearest the sweeper's current position.
+			var nearest_poop: Dictionary = {}
+			var nearest_dist: float = INF
+			for poop: Dictionary in _active_poops:
+				var d: float = _sweeper_node.position.distance_to((poop.node as Control).position)
+				if d < nearest_dist:
+					nearest_dist = d
+					nearest_poop = poop
+			_sweeper_target_poop = nearest_poop
+			var target_pos: Vector2 = (_sweeper_target_poop.node as Control).position
+			_sweeper_node.position = _sweeper_node.position.move_toward(target_pos, Config.SWEEPER_MOVE_SPEED * delta)
+			if _sweeper_node.position.distance_to(target_pos) <= 8.0:
+				_sweeper_state = SweeperState.CLEANING
+				_sweeper_clean_timer = Config.SWEEPER_CLEAN_DELAY
+		SweeperState.CLEANING:
+			_sweeper_clean_timer -= delta
+			if _sweeper_clean_timer <= 0.0:
+				if not _sweeper_target_poop.is_empty() and _active_poops.has(_sweeper_target_poop):
+					_on_poop_pressed(_sweeper_target_poop)
+				_sweeper_target_poop = {}
+				_sweeper_poops_this_run += 1
+				_sweeper_state = SweeperState.MOVING
 
 
 # Shows research panels one at a time in RESEARCH_ITEMS order, subject to:
@@ -996,6 +1068,12 @@ func _on_cat_lost() -> void:
 		_cat_bubble_timers.erase(node.get_instance_id())
 		_cat_poop_timers.erase(node.get_instance_id())
 		node.queue_free()
+	# If the sweeper was cleaning the last poop and it's now gone, recharge instead of
+	# stalling on a target that no longer exists.
+	if _sweeper_state == SweeperState.CLEANING and _active_poops.is_empty():
+		_sweeper_target_poop = {}
+		_sweeper_charge_timer = Config.SWEEPER_CHARGE_TIME
+		_sweeper_state = SweeperState.CHARGING
 
 
 # Spawns a poop button near cat_node. Poop accumulates until clicked;

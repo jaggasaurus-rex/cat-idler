@@ -159,6 +159,19 @@ const POOP_SPAWN_MAX: float = 90.0
 # At ratio 3.0: happiness = 0% (fully ignored).
 const POOP_MAX_RATIO: float = 3.0
 
+# Robo-Shit Sweeper — autonomous device that removes poop once robo_sweeper_purchased.
+const SWEEPER_MOVE_SPEED: float = 80.0
+# pixels per second; slow and deliberate so it feels like a helper, not a solution
+
+const SWEEPER_CLEAN_DELAY: float = 1.5
+# seconds the sweeper lingers at a poop before removing it
+
+const SWEEPER_MAX_POOPS_PER_RUN: int = 3
+# max poops removed per sweep run; player still needs to manage the rest
+
+const SWEEPER_CHARGE_TIME: float = 60.0
+# seconds the sweeper charges before starting the next run
+
 # Cat wandering
 const CAT_MOVE_SPEED: float = 40.0     # pixels per second while walking
 const CAT_WANDER_MIN: float = 25.0     # minimum seconds between movement decisions
