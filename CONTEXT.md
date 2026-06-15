@@ -23,6 +23,9 @@
 
 ```
 cat-idler/
+├── .claude/
+│   ├── agents/             # Five-stage sub-agent pipeline (see Agent Pipeline below)
+│   └── skills/             # run-cat-idler skill (build/run/screenshot harness)
 ├── autoloads/
 │   ├── GameState.gd        # Global state singleton
 │   └── Util.gd             # Stateless helper functions (format_number)
@@ -32,12 +35,19 @@ cat-idler/
 │   └── Main.tscn           # Root scene
 ├── scripts/
 │   └── CatCharacter.gd     # Cat character root (AnimatedSprite2D configured in editor)
+├── CLAUDE.md               # Project instructions + Agent Pipeline workflow
 ├── Config.gd               # Autoloaded singleton; all static tuning constants
 ├── Strings.gd              # Autoloaded singleton; all user-visible text as named string consts
 ├── CONTEXT.md              # This file
 ├── ROADMAP.md              # Phase plan and design intent
 └── project.godot
 ```
+
+### Agent Pipeline
+
+Five sub-agents in `.claude/agents/` run at defined points in every task (see CLAUDE.md):
+`context-validator` and `pre-task-scaffolder` before starting; `gdscript-reviewer` and
+`strings-guardian` after implementation, before committing; `commit-auditor` after committing.
 
 ### Autoloads
 
@@ -425,7 +435,7 @@ Drives the root scene. Reads from and delegates to `GameState`; the only local m
 - [x] **Money counter** — label refreshes every frame, displayed to 2 decimal places (`$X.XX`)
 - [x] **Cats counter** — label refreshes every frame showing `X/MAX` (e.g. `0/10`); MAX from `GameState.get_max_cats()` = `base_max_cats` + 10 per purchased housing tier; turns red when cats exceed MAX
 - [x] **GameState singleton** — autoloaded; holds `money`, `cats`, `next_cat_cost`, `shop_unlocked`, `only_paws_unlocked`, `paws_income_rate`; emits `cat_purchased`
-- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.4, reduced to 1.25 by breeder contract)
+- [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.3, reduced to 1.25 by breeder contract)
 - [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `cats * 0.25` $/sec (e.g. $0.75/sec at unlock); each Manager-Bot adds $0.50/cat/sec additively: formula `cats * (0.25 + 0.50 * bots)`; income only runs when `only_paws_active` and `cat_food > 0`
 - [x] **OnlyPaws button + income label** — revealed together when `only_paws_unlocked`; first reveal shows modal popup (pauses tree) explaining the feature
 - [x] **OnlyPaws info panel** — PanelContainer with static description text (legacy node, permanently hidden)
