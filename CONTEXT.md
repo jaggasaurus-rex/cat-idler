@@ -181,7 +181,6 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `mega_bots` | `int` | `0` | Number of Mega Manager-Bots purchased (unlocked by the `ai_model_upgrade` research); each adds `Config.MEGA_BOT_INCOME_PER_CAT` ($1.00) to the per-cat income rate and drains `Config.MEGA_BOT_TOKEN_DRAIN` (4.0) tokens/sec |
 | `next_mega_bot_cost` | `float` | `Config.MEGA_BOT_COST_BASE` | Cost of the next mega bot ($100 base); multiplied by `Config.bot_cost_multiplier` after every successful purchase |
 | `bot_shop_unlocked` | `bool` | `false` | One-way latch; set to `true` in `buy_cat()` when `cats >= 6` |
-| `shop_unlocked_bots` | `bool` | `false` | One-way latch; set to `true` in `buy_bot()` when `manager_bots == 4`; reveals the attrition-reduction shop |
 | `only_paws_active` | `bool` | `false` | Player-toggled; set to `true` once at unlock in `buy_cat()`; income only ticks when `true` and `cat_food > 0`; toggling OFF also sets `bots_active = false`; toggling ON re-enables bots if tokens > 0 |
 | `cat_cost_growth_rate` | `float` | `Config.cat_cost_growth_rate` | Multiplier applied to `next_cat_cost` each purchase; reduced to `Config.breeder_contract_growth_rate` by breeder contract |
 | `breeder_purchased` | `bool` | `false` | One-way latch; set by `buy_breeder_contract()` |
@@ -239,7 +238,7 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `_lose_cat` | `() -> void` | Private; decrements `cats` (clamped, no-ops at 0), calls `update_paws_rate()`, emits `cat_lost` |
 | `click` | `() -> void` | Adds `1.0` to `money`; sets `shop_unlocked = true` the first time `money >= next_cat_cost` |
 | `buy_cat` | `() -> void` | Guards `money >= next_cat_cost`, then a **hard cap guard** (`cats >= get_max_cats()` → no-op) so the player can never exceed the current housing tier's cat limit; deducts cost, increments `cats`, applies `cat_cost_growth_rate`, sets `only_paws_unlocked` when `cats >= 3`, sets `bot_shop_unlocked` when `cats >= 6`, calls `update_paws_rate()`, emits `cat_purchased`. (The former `get_happiness() <= 0.0` guard was removed — happiness can no longer reach 0, so it was inert.) |
-| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, multiplies `next_bot_cost` by `Config.bot_cost_multiplier` (1.6×), calls `update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1`, sets `shop_unlocked_bots = true` when `manager_bots == 4` |
+| `buy_bot` | `() -> void` | Guards `money >= next_bot_cost`, deducts cost, increments `manager_bots`, multiplies `next_bot_cost` by `Config.bot_cost_multiplier` (1.6×), calls `update_paws_rate()`, sets `tokens_shop_unlocked = true` when `manager_bots >= 1` |
 | `buy_mega_bot` | `() -> void` | Guards `money >= next_mega_bot_cost`, deducts cost, increments `mega_bots`, multiplies `next_mega_bot_cost` by `Config.bot_cost_multiplier` (1.6×), calls `update_paws_rate()` |
 | `get_cat_food_packs_affordable` | `() -> int` | Returns `int(money / 10.0)` |
 | `grant_cat_food_pack` | `() -> void` | Adds `Config.cat_food_pack_amount` food at no cost; used for starvation pity rewards |

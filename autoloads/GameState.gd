@@ -17,7 +17,6 @@ var next_bot_cost: float = Config.bot_cost_base
 var mega_bots: int = 0
 var next_mega_bot_cost: float = Config.MEGA_BOT_COST_BASE
 var bot_shop_unlocked: bool = false
-var shop_unlocked_bots: bool = false
 var cat_cost_growth_rate: float = Config.cat_cost_growth_rate
 var breeder_purchased: bool = false
 # cat_trees_purchased removed — replaced by housing_tier_index >= 1.
@@ -222,7 +221,6 @@ func buy_cat() -> void:
 
 ## Deducts next_bot_cost, increments manager_bots, doubles the cost,
 ## and recalculates income rate.
-## Unlocks the attrition-reduction shop (shop_unlocked_bots) at manager_bots == 4.
 func buy_bot() -> void:
 	if money < next_bot_cost:
 		return
@@ -232,8 +230,6 @@ func buy_bot() -> void:
 	update_paws_rate()
 	if not tokens_shop_unlocked and manager_bots >= 1:
 		tokens_shop_unlocked = true
-	if manager_bots == 4:
-		shop_unlocked_bots = true
 
 
 ## Purchases one Mega Manager-Bot. Deducts money, increments mega_bots,
