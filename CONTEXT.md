@@ -74,8 +74,6 @@ Main (Control, full-rect)             ← Main.gd
 ├── OnlyPawsIncomeLabel (Label)       ← shown with OnlyPawsButton; "OnlyPaws: $X.XX/sec" updates every frame
 ├── CatFoodLabel (Label)              ← directly below PurchaseCatButton (offset_top=165); hidden until cats_ever_purchased >= 1 (one-way latch); "Cat Food: X" where X = floor(cat_food); updated every frame
 ├── BuyCatFoodButton (Button "Buy Food ($N)") ← directly below CatFoodLabel (offset_top=197); revealed with CatFoodLabel; calls buy_cat_food_pack(1); when auto_feeder_purchased, label reads live cost each frame via GameState.get_cat_food_pack_cost() with ∞ suffix
-├── OnlyPawsInfoPanel (PanelContainer)← hidden permanently (legacy node, not wired to button anymore)
-│   └── InfoLabel (Label)             ← static info text, autowrap enabled
 ├── HappinessBarContainer (VBoxContainer) ← always visible; top=20, left=420–760; shows Cat Happiness title + progress bar
 │   ├── HappinessTitleLabel (Label "Cat Happiness")
 │   └── HappinessRow (HBoxContainer)
@@ -437,7 +435,6 @@ Drives the root scene. Reads from and delegates to `GameState`; the only local m
 - [x] **Purchase Cat button** — permanently revealed (one-way latch via `shop_unlocked`) the first time `money >= next_cat_cost`; label shows live cost to 2 decimal places; cost starts at $5.00 and multiplies by `cat_cost_growth_rate` each purchase (default 1.3, reduced to 1.25 by breeder contract)
 - [x] **OnlyPaws passive income** — unlocks at 3 cats; base rate `cats * 0.25` $/sec (e.g. $0.75/sec at unlock); each Manager-Bot adds $0.50/cat/sec additively: formula `cats * (0.25 + 0.50 * bots)`; income only runs when `only_paws_active` and `cat_food > 0`
 - [x] **OnlyPaws button + income label** — revealed together when `only_paws_unlocked`; first reveal shows modal popup (pauses tree) explaining the feature
-- [x] **OnlyPaws info panel** — PanelContainer with static description text (legacy node, permanently hidden)
 - [x] **OnlyPaws unlock popup** — modal overlay shown once when `only_paws_unlocked` first triggers; pauses game loop; dismissed with OK button
 - [x] **Cat spawning** — each purchase instances `CatCharacter` at scale 0.4 into `CatContainer`; placed at a random viewport position avoiding UI elements (16 px padding) and other cats (64 px radius); cats keep their position when new ones are added or one is lost
 - [x] **Sprite-based cat character** — `CatCharacter` scene contains an `AnimatedSprite2D` child; animations configured in the Godot editor
