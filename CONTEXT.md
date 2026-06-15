@@ -39,6 +39,7 @@ cat-idler/
 ├── Config.gd               # Autoloaded singleton; all static tuning constants
 ├── Strings.gd              # Autoloaded singleton; all user-visible text as named string consts
 ├── CONTEXT.md              # This file
+├── DEPRECATION_AUDIT.md    # Read-only dead-code audit (orphaned nodes, inert flags)
 ├── ROADMAP.md              # Phase plan and design intent
 └── project.godot
 ```
