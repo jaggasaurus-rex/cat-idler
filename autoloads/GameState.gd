@@ -8,7 +8,6 @@ var money: float = 0.0
 var cats: int = 0
 var cat_food: float = Config.cat_food_start
 var next_cat_cost: float = Config.cat_cost_base
-var shop_unlocked: bool = false
 var only_paws_unlocked: bool = false
 var only_paws_active: bool = false
 var paws_income_rate: float = 0.0
@@ -196,8 +195,6 @@ func get_onlypaws_cats() -> int:
 
 func click() -> void:
 	money += 1.0
-	if not shop_unlocked and money >= next_cat_cost:
-		shop_unlocked = true
 
 
 func buy_cat() -> void:
