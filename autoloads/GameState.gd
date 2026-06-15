@@ -366,13 +366,12 @@ func get_max_cats() -> int:
 	return total
 
 
-## Returns cat happiness as a percentage (0–100).
-## At or under max_cats: always 100%.
-## Two-segment quadratic ease-in decay above max_cats, breakpoints scaled by housing tier:
-##   fifty_break = max_cats + Config.happiness_fifty_break_offset + housing_tier_index  → happiness = 50%
-##   zero_break  = max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2  → happiness = 0%
-## Segment 1 (max_cats < cats < fifty_break): t^2 ease-in from 100% down to 50%.
-## Segment 2 (fifty_break <= cats < zero_break): t^2 ease-in from 50% down to 0%.
+## Returns cat happiness as a percentage (0–100). Poop-driven model.
+## Returns 100.0 when cats <= 0 or poop_count <= 0; otherwise 100 * (1 - t*t)
+## where t = clamp((poop_count / cats) / Config.POOP_MAX_RATIO, 0, 1).
+## Happiness decays quadratically as the poop-per-cat ratio rises toward
+## Config.POOP_MAX_RATIO (the ratio at which happiness reaches 0%):
+## ratio 1.0 ≈ 89%, 2.0 ≈ 56%, 3.0 = 0%.
 func get_happiness() -> float:
 	# Happiness is driven by accumulated poop relative to cat count.
 	# ratio = poop_count / cats; happiness decays quadratically as ratio
