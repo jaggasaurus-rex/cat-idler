@@ -637,6 +637,12 @@ func _refresh_research_slots() -> void:
 		var item: Dictionary = Config.RESEARCH_ITEMS[i]
 		var id: String = item["id"]
 
+		# Global gate: no research populates until cat_power_unite is complete.
+		# blocked until cat_power_unite research_complete (the cat_power_unite
+		# panel itself is exempt so it can be funded and completed).
+		if not GameState.research_complete.get("cat_power_unite", false) and id != "cat_power_unite":
+			continue
+
 		# Skip if already visible or already completed/hidden
 		if (_research_panels[id] as PanelContainer).visible:
 			continue

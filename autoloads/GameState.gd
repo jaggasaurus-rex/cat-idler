@@ -159,7 +159,8 @@ func _process(delta: float) -> void:
 			research_completed.emit(item_id)
 	# Idle research intelligence: cats assigned to research with no active item
 	# slowly raise cat_intelligence. Accumulate fractional points, bank whole ones.
-	if get_active_research_id() == "" and get_research_cats() > 0:
+	# blocked until cat_power_unite research_complete — no idle accrual before it.
+	if get_active_research_id() == "" and get_research_cats() > 0 and research_complete.get("cat_power_unite", false):
 		_idle_intel_accumulator += float(get_research_cats()) * Config.IDLE_RESEARCH_INTEL_RATE * delta
 		var whole_points: int = int(floor(_idle_intel_accumulator))
 		if whole_points > 0:
