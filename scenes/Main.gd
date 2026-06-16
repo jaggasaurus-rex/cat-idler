@@ -147,9 +147,11 @@ func _ready() -> void:
 		_research_progress_labels[item_id] = progress_label
 		_research_panel_hidden[item_id] = false
 		_research_panel_unlocked[item_id] = false
-		# Housing-gated panels start hidden until the housing tier requirement is met.
-		if int(item.get("min_housing_tier", 0)) > 0:
-			panel.visible = false
+		# Every panel starts hidden; _refresh_research_slots() is the sole authority
+		# that reveals eligible panels. This keeps tier-0 items other than
+		# cat_power_unite (e.g. robo_shit_sweeper) from showing before the global
+		# cat_power_unite gate is satisfied, since the gate only adds visibility.
+		panel.visible = false
 	# Dynamic fill colour for the happiness bar; updated in _process()
 	_happiness_fill_style = StyleBoxFlat.new()
 	_happiness_fill_style.bg_color = Color.GREEN
