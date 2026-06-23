@@ -12,6 +12,11 @@ const HUD_MEGA_BOTS       := "Mega-Bots: %s"
 const HUD_RESEARCH_CATS   := "Cats researching: %s"
 const HUD_CAT_INTELLIGENCE := "Cat Intelligence: %s"
 
+## Cyborg Cats — live label + conversion/upgrade button templates
+const HUD_CYBORG_CATS     := "Cyborg Cats: %s"
+const BTN_MAKE_CYBORG     := "Make Cyborg Cat ($%s) [-1 cat]"
+const BTN_CYBORG_MULTIPLIER := "Cyborg Enhancement x%s\n$%s"
+
 ## HUD — research panel state
 const RESEARCH_NO_ACTIVE  := "No Active Research"
 const RESEARCH_IN_PROGRESS := "In Progress…"
@@ -67,11 +72,16 @@ const RESEARCH_ROBO_SWEEPER_NAME: String = "Robo-Shit Sweeper"
 const RESEARCH_ROBO_SWEEPER_SUB: String = "Automated waste removal"
 const RESEARCH_ROBO_SWEEPER_DESC: String = "A robot that handles the dirty work so your cats don't have to."
 
+const RESEARCH_CYBORG_NAME: String = "Cyborg Cats"
+const RESEARCH_CYBORG_SUB: String = "Biologically enhanced earners"
+const RESEARCH_CYBORG_DESC: String = "Splice some circuitry into your cuddliest moneymakers. Cyborg cats earn a multiplier on the full per-cat income rate and never poop — but it costs a whole cat plus a pretty penny to build each one."
+
 ## Research item id -> display name, for the active-research label lookup
 const RESEARCH_NAMES: Dictionary = {
 	"cat_power_unite":  RESEARCH_CAT_POWER_NAME,
 	"ai_model_upgrade": RESEARCH_AI_MODEL_NAME,
 	"robo_shit_sweeper": RESEARCH_ROBO_SWEEPER_NAME,
+	"cyborg_cats": RESEARCH_CYBORG_NAME,
 }
 
 ## Popup text — one const per popup, exact text preserved from Main.tscn
@@ -108,3 +118,5 @@ const POPUP_INSPIRATION := "[PLACEHOLDER — edit this string in Strings.gd]"
 const POPUP_VIRAL := "NEW ACHIEVEMENT: Whale Hunting Baby!\n\nOne of your furry little charaltan's has caught the eye of a particularly \"giving\" patron. Snatch that money before they change their mind!\n\nREWARD: Dirty Filthy Disgusting Money\nEver so often one of your cats will go viral. When they do, a bubble will pop up over their head. Click the bubble before it goes away to get a small burst of money."
 
 const POPUP_AI_OVERLORDS := "NEW ACHIEVEMENT: AI Overlords\n\nLooks like your cute little guy figured out how to upgrade your manager bots to a better model. This totally won't have any negative consequences later down the line.\n\nREWARD: Mega Manager-Bots\n\nJon Meowremy rejoices as your cats usher a new age of truly heinous manager practices to the forefront of capitalism. These mega-bots provide double the benefits of the puny little normal bots, but also at double the price."
+
+const POPUP_CYBORG := "NEW ACHIEVEMENT: Resistance Is Fur-tile\n\nYour lab cats cracked the secret to bolting hardware onto a housecat without voiding the warranty. Science!\n\nREWARD: Cyborg Cats\n\nConvert a normal cat into a cyborg cat. Cyborgs cost one whole cat plus an escalating pile of money, but they multiply the full per-cat income rate and never, ever poop. Upgrade the multiplier in tiers to keep scaling."

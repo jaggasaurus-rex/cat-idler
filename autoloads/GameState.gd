@@ -3,6 +3,7 @@ extends Node
 signal cat_purchased
 signal cat_lost
 signal research_completed(id: String)
+signal cyborg_cat_created
 
 var money: float = 0.0
 var cats: int = 0
@@ -15,6 +16,11 @@ var manager_bots: int = 0
 var next_bot_cost: float = Config.bot_cost_base
 var mega_bots: int = 0
 var next_mega_bot_cost: float = Config.MEGA_BOT_COST_BASE
+# Cyborg cats: separate population from `cats`. Each earns get_cyborg_multiplier() times
+# the full per-cat income rate and never poops. Conversion costs 1 normal cat + next_cyborg_cost.
+var cyborg_cats: int = 0
+var next_cyborg_cost: float = Config.CYBORG_COST_BASE
+var cyborg_multiplier_tier: int = 0
 var bot_shop_unlocked: bool = false
 var cat_cost_growth_rate: float = Config.cat_cost_growth_rate
 var breeder_purchased: bool = false
@@ -137,7 +143,11 @@ func _process(delta: float) -> void:
 				_lose_cat()
 	if only_paws_active and cat_food > 0.0:
 		var happiness_multiplier: float = Config.happiness_income_floor + (happiness / 100.0) * Config.happiness_income_range
-		var effective_rate: float = paws_income_rate if bots_active else float(get_onlypaws_cats()) * Config.onlypaws_income_per_cat
+		# No-bot fallback mirrors update_paws_rate() but with only the base per-cat rate:
+		# cyborgs still earn M× via the (normal + M*cyborg) earning population.
+		var no_bot_population: float = float(get_onlypaws_normal_cats()) \
+			+ get_cyborg_multiplier() * float(get_onlypaws_cyborg_cats())
+		var effective_rate: float = paws_income_rate if bots_active else no_bot_population * Config.onlypaws_income_per_cat
 		money += effective_rate * happiness_multiplier * delta
 	for item: Dictionary in Config.RESEARCH_ITEMS:
 		var item_id: String = item["id"]
@@ -185,12 +195,37 @@ func get_active_research_id() -> String:
 
 ## Returns the number of cats currently assigned to research.
 func get_research_cats() -> int:
-	return int(floor(float(cats) * research_cat_fraction))
+	return get_research_cats_for(cats)
 
 
 ## Returns the number of cats currently on OnlyPaws income.
 func get_onlypaws_cats() -> int:
 	return cats - get_research_cats()
+
+
+## Returns how many of a given population pool are assigned to research, applying the
+## same floor(pool * research_cat_fraction) split used by get_research_cats(). Used to
+## split the normal-cat and cyborg-cat pools proportionally for income.
+## pool: the population count to split (e.g. cats or cyborg_cats).
+## Returns the integer number of that pool assigned to research.
+func get_research_cats_for(pool: int) -> int:
+	return int(floor(float(pool) * research_cat_fraction))
+
+
+## Returns the number of normal cats currently earning OnlyPaws income (not on research).
+func get_onlypaws_normal_cats() -> int:
+	return cats - get_research_cats_for(cats)
+
+
+## Returns the number of cyborg cats currently earning OnlyPaws income (not on research).
+func get_onlypaws_cyborg_cats() -> int:
+	return cyborg_cats - get_research_cats_for(cyborg_cats)
+
+
+## Returns the current cyborg income multiplier M from Config.CYBORG_MULTIPLIERS,
+## indexed by cyborg_multiplier_tier.
+func get_cyborg_multiplier() -> float:
+	return float(Config.CYBORG_MULTIPLIERS[cyborg_multiplier_tier])
 
 
 func click() -> void:
@@ -238,6 +273,37 @@ func buy_mega_bot() -> void:
 	money -= next_mega_bot_cost
 	mega_bots += 1
 	next_mega_bot_cost *= Config.bot_cost_multiplier
+	update_paws_rate()
+
+
+## Converts one normal cat into a cyborg cat. Requires the cyborg_cats research to be
+## complete, at least one normal cat, and enough money for next_cyborg_cost. On success:
+## deducts the money, removes one normal cat, adds one cyborg cat, escalates the next
+## cost by Config.CYBORG_COST_GROWTH, recalculates income, and emits cyborg_cat_created.
+func buy_cyborg_cat() -> void:
+	if not research_complete.get("cyborg_cats", false):
+		return
+	if cats < 1 or money < next_cyborg_cost:
+		return
+	money -= next_cyborg_cost
+	cats -= 1
+	cyborg_cats += 1
+	next_cyborg_cost *= Config.CYBORG_COST_GROWTH
+	update_paws_rate()
+	cyborg_cat_created.emit()
+
+
+## Upgrades the cyborg income multiplier to the next tier. No-ops if already at the top
+## tier or the player cannot afford Config.CYBORG_MULTIPLIER_UPGRADE_COSTS for the current
+## tier. On success: deducts the cost, advances cyborg_multiplier_tier, recalculates income.
+func buy_cyborg_multiplier_upgrade() -> void:
+	if cyborg_multiplier_tier + 1 >= Config.CYBORG_MULTIPLIERS.size():
+		return
+	var cost: float = float(Config.CYBORG_MULTIPLIER_UPGRADE_COSTS[cyborg_multiplier_tier])
+	if money < cost:
+		return
+	money -= cost
+	cyborg_multiplier_tier += 1
 	update_paws_rate()
 
 
@@ -367,20 +433,21 @@ func get_max_cats() -> int:
 
 
 ## Returns cat happiness as a percentage (0–100). Poop-driven model.
-## Returns 100.0 when cats <= 0 or poop_count <= 0; otherwise 100 * (1 - t*t)
-## where t = clamp((poop_count / cats) / Config.POOP_MAX_RATIO, 0, 1).
+## Returns 100.0 when total cats (cats + cyborg_cats) <= 0 or poop_count <= 0; otherwise
+## 100 * (1 - t*t) where t = clamp((poop_count / total) / Config.POOP_MAX_RATIO, 0, 1).
 ## Happiness decays quadratically as the poop-per-cat ratio rises toward
 ## Config.POOP_MAX_RATIO (the ratio at which happiness reaches 0%):
 ## ratio 1.0 ≈ 89%, 2.0 ≈ 56%, 3.0 = 0%.
 func get_happiness() -> float:
-	# Happiness is driven by accumulated poop relative to cat count.
-	# ratio = poop_count / cats; happiness decays quadratically as ratio
-	# rises toward Config.POOP_MAX_RATIO (the point of total degradation).
-	# Scales to any cat count: 1 poop per cat is only a mild penalty,
-	# but ignoring it compounds quickly.
-	if cats <= 0 or poop_count <= 0:
+	# Happiness is driven by accumulated poop relative to the TOTAL cat population
+	# (normal + cyborg). Cyborgs never poop but still share the litter pressure, so
+	# converting cats to cyborgs lowers the poop-per-cat ratio and raises happiness.
+	# ratio = poop_count / total; happiness decays quadratically as ratio rises toward
+	# Config.POOP_MAX_RATIO (the point of total degradation).
+	var total: int = cats + cyborg_cats
+	if total <= 0 or poop_count <= 0:
 		return 100.0
-	var ratio: float = float(poop_count) / float(cats)
+	var ratio: float = float(poop_count) / float(total)
 	var t: float = clamp(ratio / Config.POOP_MAX_RATIO, 0.0, 1.0)
 	return 100.0 * (1.0 - t * t)
 
@@ -425,13 +492,26 @@ func fund_research(id: String) -> void:
 # Mega bots add MEGA_BOT_INCOME_PER_CAT per cat on top:
 #   10 cats / 1 normal bot / 1 mega bot: 10 * (0.25 + 0.50*1 + 1.00*1) = 10 * 1.75 = $17.50/sec
 ## Recalculates paws_income_rate from the current cat count, research fraction,
-## manager bot count, and mega bot count. Call whenever any of those values change.
+## manager bot count, mega bot count, and cyborg population/multiplier. Call whenever
+## any of those values change.
+## Cyborg cats multiply the WHOLE per-cat rate by M = get_cyborg_multiplier(); the
+## OnlyPaws-earning population is (onlypaws_normal + M * onlypaws_cyborg), each pool
+## split proportionally by research_cat_fraction via get_research_cats_for().
+## Worked example — 20 normal cats + 10 cyborg cats, 10 bots, 5 mega-bots, M = 2.0,
+## research_cat_fraction = 0.0, and a per-mega-bot rate of 1.0:
+##   rate = 0.25 + 0.50*10 + 1.0*5 = 0.25 + 5.0 + 5.0 = 10.25;
+##   income = rate * (onlypaws_normal + M * onlypaws_cyborg)
+##          = 10.25 * (20 + 2.0*10) = 10.25 * 40 = 410.0/sec.
+## (The label/conversion-button UI reads cyborg_cats and next_cyborg_cost respectively.)
 func update_paws_rate() -> void:
-	paws_income_rate = float(get_onlypaws_cats()) * (
+	var rate: float = (
 		Config.onlypaws_income_per_cat
 		+ Config.onlypaws_income_per_bot * float(manager_bots)
 		+ Config.MEGA_BOT_INCOME_PER_CAT * float(mega_bots)
 	)
+	var earning_population: float = float(get_onlypaws_normal_cats()) \
+		+ get_cyborg_multiplier() * float(get_onlypaws_cyborg_cats())
+	paws_income_rate = rate * earning_population
 
 
 # Removes one cat from the count, recalculates paws rate, and signals Main.gd

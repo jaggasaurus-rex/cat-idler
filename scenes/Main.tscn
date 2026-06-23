@@ -142,6 +142,24 @@ offset_right = 275.0
 offset_bottom = 445.0
 text = "Buy Tokens ($20)"
 
+[node name="CyborgCatsLabel" type="Label" parent="." unique_id=400000700]
+visible = false
+layout_mode = 0
+offset_left = 20.0
+offset_top = 450.0
+offset_right = 300.0
+offset_bottom = 480.0
+text = "Cyborg Cats: 0"
+
+[node name="MakeCyborgButton" type="Button" parent="." unique_id=400000701]
+visible = false
+layout_mode = 0
+offset_left = 20.0
+offset_top = 482.0
+offset_right = 360.0
+offset_bottom = 512.0
+text = "Make Cyborg Cat ($250) [-1 cat]"
+
 [node name="HappinessBarContainer" type="VBoxContainer" parent="." unique_id=400000050]
 layout_mode = 0
 offset_left = 358.0
@@ -755,6 +773,40 @@ autowrap_mode = 3
 layout_mode = 2
 text = "OK"
 
+[node name="CyborgPopup" type="ColorRect" parent="." unique_id=400000710]
+process_mode = 2
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="DialogPanel" type="PanelContainer" parent="CyborgPopup" unique_id=400000711]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -140.0
+offset_right = 300.0
+offset_bottom = 140.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CyborgPopup/DialogPanel" unique_id=400000712]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PopupLabel" type="Label" parent="CyborgPopup/DialogPanel/VBoxContainer" unique_id=400000713]
+layout_mode = 2
+text = "Cyborg Cats unlocked"
+autowrap_mode = 3
+
+[node name="OKButton" type="Button" parent="CyborgPopup/DialogPanel/VBoxContainer" unique_id=400000714]
+layout_mode = 2
+text = "OK"
+
 [node name="FirstCatPopup" type="ColorRect" parent="." unique_id=400000300]
 process_mode = 2
 visible = false
@@ -821,3 +873,5 @@ text = "OK"
 [connection signal="pressed" from="GameOverPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_game_over_popup_ok_pressed"]
 [connection signal="pressed" from="GameOver2Popup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_game_over_2_popup_ok_pressed"]
 [connection signal="pressed" from="FirstCatPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_first_cat_popup_ok_pressed"]
+[connection signal="pressed" from="MakeCyborgButton" to="." method="_on_make_cyborg_button_pressed"]
+[connection signal="pressed" from="CyborgPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_cyborg_popup_ok_pressed"]
