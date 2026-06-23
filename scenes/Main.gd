@@ -285,10 +285,12 @@ func _on_debug_poop_toggled(pressed: bool) -> void:
 func _process(delta: float) -> void:
 	money_label.text = Strings.HUD_MONEY % Util.format_number(GameState.money)
 	var max_cats: int = GameState.get_max_cats()
-	cats_label.text = Strings.HUD_CATS % [Util.format_number(float(GameState.cats)), Util.format_number(float(max_cats))]
-	cats_label.modulate = Color.RED if GameState.cats > max_cats else Color.WHITE
+	# Displayed total counts cyborgs too, so converting a cat does not change the count.
+	var total_cats: int = GameState.get_total_cats()
+	cats_label.text = Strings.HUD_CATS % [Util.format_number(float(total_cats)), Util.format_number(float(max_cats))]
+	cats_label.modulate = Color.RED if total_cats > max_cats else Color.WHITE
 	purchase_cat_button.text = Strings.BTN_PURCHASE_CAT % Util.format_number(GameState.next_cat_cost)
-	purchase_cat_button.disabled = GameState.cats >= GameState.get_max_cats()
+	purchase_cat_button.disabled = total_cats >= GameState.get_max_cats()
 	# No-bot fallback mirrors GameState's: cyborgs earn M× via the (normal + M*cyborg) population.
 	var no_bot_population: float = float(GameState.get_onlypaws_normal_cats()) \
 		+ GameState.get_cyborg_multiplier() * float(GameState.get_onlypaws_cyborg_cats())

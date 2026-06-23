@@ -228,6 +228,13 @@ func get_cyborg_multiplier() -> float:
 	return float(Config.CYBORG_MULTIPLIERS[cyborg_multiplier_tier])
 
 
+## Returns the total cat population (normal + cyborg). Cyborgs are still cats for the
+## purposes of the displayed count and the housing cap, so converting a cat keeps the
+## total unchanged. Distinct from `cats`, which counts only un-converted normal cats.
+func get_total_cats() -> int:
+	return cats + cyborg_cats
+
+
 func click() -> void:
 	money += 1.0
 
@@ -235,8 +242,9 @@ func click() -> void:
 func buy_cat() -> void:
 	if money < next_cat_cost:
 		return
-	# Hard cap: player cannot exceed the current housing tier's cat limit.
-	if cats >= get_max_cats():
+	# Hard cap: player cannot exceed the current housing tier's cat limit. Cyborgs still
+	# occupy a slot, so the cap is measured against the total (normal + cyborg) population.
+	if get_total_cats() >= get_max_cats():
 		return
 	money -= next_cat_cost
 	cats += 1
