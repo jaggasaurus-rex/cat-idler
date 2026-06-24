@@ -89,13 +89,13 @@ const POPUP_ONLY_PAWS := "NEW ACHIEVEMENT: Work It Gurl\n\nThose cats sure are c
 
 const POPUP_FIRST_CAT := "NEW ACHIEVEMENT: Cat\n\nYou purchased your first cat. They are cute and cuddly. Enjoy.\nYou definitely won't want more.\n\nREWARD: Responsibilities!\n\nYou gotta keep that cute little guy happily fed!"
 
-const POPUP_CRAMPED := "Your cute furry friends are starting to get a little cramped. Better figure out your space issues if you want them to keep making you money!"
+const POPUP_CRAMPED := "NEW ACHIEVEMENT: Sardine Can Chic\n\nYour cats have begun taking shifts sleeping because there is not enough floor for all of them to lie down simultaneously. Several are standing. Cats despise standing. This is not sustainable.\n\nREWARD: Home Tab Unlocked\n\nThe Home tab is now available. Expand your living situation before the cats start holding committee meetings about it."
 
-const POPUP_RIOT := "The kitties are rioting! They cannot work under these conditions AND DEMAND more space."
+const POPUP_RIOT := "NEW ACHIEVEMENT: Zero Stars on Yelp\n\nHappiness: 0%. A complete and total absence of cat satisfaction. They are not rioting ironically. They have printed pamphlets. Their demand is singular: more space.\n\nREWARD: A Chance to Fix This\n\nExpand your housing before they handle it themselves. They have already selected a spokesperson."
 
 const POPUP_BOT_UNLOCK := "NEW ACHIEVEMENT: Cat Harem\n\nYou're growing quite the little posse of pusses. So many that it's gotta be difficult to manage all those glamour shots on your own.\n\nREWARD: OnlyPaws Manager-Bots Unlocked\n\nHire some AI bots to help you out and boost your income. Just don't forget — bots get hungry too. Gotta feed them those tokens!"
 
-const POPUP_BOT_MANAGER_UNLOCK := "New upgrade available: Manager-Bot Manager."
+const POPUP_BOT_MANAGER_UNLOCK := "NEW ACHIEVEMENT: Management Has Management Now\n\nYour Manager-Bots have multiplied to the point where someone needs to manage the managers. This is how all great empires collapse. Nobody asked the cats.\n\nREWARD: Manager-Bot Manager\n\nPurchase the Manager-Bot Manager from the Upgrades tab. It keeps your bots in line so you can focus on watching the numbers go up."
 
 const POPUP_UPGRADES_TAB := "NEW ACHIEVEMENT! ADHD Cat Parent\n\nYou're just going about your day, hyperfocused on whatever hobby you chose this week. When BAM — you remembered you forgot to buy that important thing needed to keep you alive!\n\nREWARD: Upgrades\nYou can now purchase upgrades to enable your lazine...I mean automate the tedious things in life. Go check out the Upgrades tab for more information!"
 
@@ -105,15 +105,15 @@ const POPUP_STARVATION_1 := "NEW ACHIEVEMENT: Fasting Never Hurt Anyone\n\nI'm g
 
 const POPUP_STARVATION_2 := "NEW ACHIEVEMENT: Third-World Dictator\n\nOh, so you just want all these beautiful, loving creatures to work for free. Well, they gotta eat something.\n\nREWARD: You'll figure it out\n\nYou are going to see some food appear in your inventory, but you will lose a cat. Don't worry about that, totally nothing bad happened to it."
 
-const POPUP_STARVATION_RECURRING := "You know the drill"
+const POPUP_STARVATION_RECURRING := "NEW ACHIEVEMENT: Recidivist\n\nYep, this achievement is awarding itself again. The food button still hasn't moved. You have now been here at least three times.\n\nREWARD: You Know Already\n\nA cat is about to leave. Again. Feed them. The button is right there."
 
-const POPUP_STARVATION_ASSHOLE := "Asshole"
+const POPUP_STARVATION_ASSHOLE := "NEW ACHIEVEMENT: Perfect Consistency\n\nYou clicked through every warning on the way here. The cats noticed.\n\nREWARD: The Consequences\n\nOne cat is not making it through this. Feed the rest. Your intentions are well established."
 
 const POPUP_GAME_OVER_1 := "NEW ACHIEVEMENT: Literally Hitler\n\nYou really aren't supposed to be at this point. That means you purposefully got yourself here. You purposefully let those poor little innocent kitties suffer. TIME AND TIME AGAIN. And let's be honest. You enjoyed it. You sick bastard.\n\nREWARD: Nothing\n\nYou don't get shit for being a terrible cat parent. In fact, you know what. Game over."
 
-const POPUP_GAME_OVER_2 := "Fuck you"
+const POPUP_GAME_OVER_2 := "NEW ACHIEVEMENT: The End\n\nMultiple warnings. Multiple dead cats. Multiple popups. You clicked through all of them. Genuinely impressive in its own way.\n\nREWARD: Nothing\n\nThe game is closing now. You earned this."
 
-const POPUP_INSPIRATION := "[PLACEHOLDER — edit this string in Strings.gd]"
+const POPUP_INSPIRATION := "NEW ACHIEVEMENT: Scientific Method (Probably)\n\nOne of your cats has been staring at the ceiling fan for three hours and has apparently cracked something wide open. Nobody knows what. The cat is not sharing.\n\nREWARD: Inspiration Bubbles\n\nWhen a 💡 bubble appears over a cat, click it before it disappears for a burst of research points. Your first one already paid out. There will be more."
 
 const POPUP_VIRAL := "NEW ACHIEVEMENT: Whale Hunting Baby!\n\nOne of your furry little charaltan's has caught the eye of a particularly \"giving\" patron. Snatch that money before they change their mind!\n\nREWARD: Dirty Filthy Disgusting Money\nEver so often one of your cats will go viral. When they do, a bubble will pop up over their head. Click the bubble before it goes away to get a small burst of money."
 

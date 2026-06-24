@@ -90,13 +90,13 @@ Main (Control, full-rect)             ← Main.gd
 ├── BotUnlockPopup (ColorRect)         ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when bot_shop_unlocked first becomes true; pauses tree; gated by GameState.bot_unlock_popup_shown
 │   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Cat Harem" achievement
 ├── StarvationRecurringPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown each time starvation_count advances past a new count >= 3; gated by _starvation_handled_count (Main.gd local int); chains directly to StarvationAssholePopup on dismiss (tree stays paused)
-│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "You know the drill"
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Recidivist" achievement
 ├── StarvationAssholePopup (ColorRect) ← second popup in recurring sequence; on dismiss: unpauses, grants food, loses cat, checks game-over
-│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Asshole"
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Perfect Consistency" achievement
 ├── GameOverPopup (ColorRect)          ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown when cats==0 AND starvation_cats_lost>=1 AND cats_ever_purchased>0 after any starvation cat loss; chains to GameOver2Popup on dismiss
 │   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Literally Hitler" achievement
 ├── GameOver2Popup (ColorRect)         ← final popup; on dismiss calls get_tree().quit()
-│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "Fuck you"
+│   └── DialogPanel / VBoxContainer / PopupLabel + OKButton ← "The End" achievement
 ├── FirstCatPopup (ColorRect)          ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when cats first reaches 1; pauses tree; gated by GameState.first_cat_popup_shown
 │   └── DialogPanel (PanelContainer)  ← centered 600×260 dialog
 │       └── VBoxContainer
@@ -138,17 +138,17 @@ Main (Control, full-rect)             ← Main.gd
 │           ├── (dynamic) _pawsco_membership_button / _ai_enterprise_membership_button (Button) ← created in _ready() and added to ShopList; hidden until bot_manager_unlocked; disappear on purchase
 │           ├── (dynamic) _robo_sweeper_button (Button) ← created in _ready() and added to ShopList; hidden until research_complete["robo_shit_sweeper"]; disappears when robo_sweeper_purchased; text = BTN_ROBO_SWEEPER; calls buy_robo_sweeper()
 │           └── (dynamic) _cyborg_multiplier_button (Button) ← created in _ready() and added to ShopList; hidden until research_complete["cyborg_cats"]; disappears when cyborg_multiplier_tier is maxed; text = BTN_CYBORG_MULTIPLIER (next M + cost); shop_cost meta updated per frame; calls buy_cyborg_multiplier_upgrade()
-├── HappinessCrampedPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_cramped_triggered first sets (cats>=10); on dismiss sets home_shop_unlocked=true; pauses tree
+├── HappinessCrampedPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_cramped_triggered first sets (cats>=10); on dismiss sets home_shop_unlocked=true; pauses tree; "Sardine Can Chic" achievement; reward = Home Tab Unlocked
 │   └── DialogPanel (PanelContainer)  ← centered 500×200 dialog
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← cramped message, autowrap
 │           └── OKButton (Button)     ← hides popup, unpauses, sets home_shop_unlocked=true
-├── HappinessRiotPopup (ColorRect)    ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_riot_triggered first sets; pauses tree
+├── HappinessRiotPopup (ColorRect)    ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_riot_triggered first sets; pauses tree; "Zero Stars on Yelp" achievement
 │   └── DialogPanel (PanelContainer)  ← centered 500×200 dialog
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← riot message, autowrap
 │           └── OKButton (Button)     ← hides popup and unpauses tree
-├── BotManagerUnlockPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when bot_manager_unlocked first becomes true (gated by GameState.bot_manager_unlock_popup_shown); placeholder text "New upgrade available: Manager-Bot Manager."; pauses tree; dismiss unpauses only
+├── BotManagerUnlockPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when bot_manager_unlocked first becomes true (gated by GameState.bot_manager_unlock_popup_shown); "Management Has Management Now" achievement; pauses tree; dismiss unpauses only
 ├── UpgradesTabPopup (ColorRect)      ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when bot_manager_unlocked OR auto_feeder_unlocked first becomes true (gated by GameState.upgrades_tab_popup_shown); pauses tree; dismiss unpauses only
 │   └── DialogPanel (PanelContainer)  ← centered 600×260 dialog
 │       └── VBoxContainer
@@ -367,7 +367,7 @@ Edit this one file to change any displayed text. Sections:
 - **Developer debug menu** (`DEBUG_MENU_TITLE` = "Debug Menu", `DEBUG_POOP_OFF_LABEL` = "Poop Off") — title and toggle labels for the code-only debug overlay.
 - **Cyborg Cats** (`HUD_CYBORG_CATS` = "Cyborg Cats: %s", `BTN_MAKE_CYBORG` = "Make Cyborg Cat ($%s) [-1 cat]", `BTN_CYBORG_MULTIPLIER` = "Cyborg Enhancement x%s\n$%s") — live count label, per-frame conversion button cost, and multiplier-upgrade shop button label.
 - **Research item copy** (`RESEARCH_CAT_POWER_NAME/SUB/DESC`, `RESEARCH_AI_MODEL_NAME/SUB/DESC`, `RESEARCH_ROBO_SWEEPER_NAME/SUB/DESC`, `RESEARCH_CYBORG_NAME/SUB/DESC`) — referenced directly by `Config.RESEARCH_ITEMS`; a `const` cross-autoload reference that compiles because Strings has no initialization dependency on Config. `RESEARCH_NAMES: Dictionary` maps item id → display name for the active-research label (includes `robo_shit_sweeper` and `cyborg_cats`).
-- **Popups** (`POPUP_*`, incl. `POPUP_CYBORG` for the Cyborg Cats achievement) — the body text of every scene popup. `_ready()` overrides each `Main.tscn` PopupLabel from these consts via `_set_popup_text()`, so the `.tscn` text is now editor-placeholder only. Text matches the original `.tscn` copy exactly (centralization was a pure refactor, no visible change). `POPUP_VIRAL`, `POPUP_AI_OVERLORDS`, and `POPUP_INSPIRATION` are used only by the in-code popup builders (`_show_*_popup()`); `POPUP_INSPIRATION` is a placeholder string awaiting final copy.
+- **Popups** (`POPUP_*`, incl. `POPUP_CYBORG` for the Cyborg Cats achievement) — the body text of every scene popup. `_ready()` overrides each `Main.tscn` PopupLabel from these consts via `_set_popup_text()`, so the `.tscn` text is now editor-placeholder only. Text matches the original `.tscn` copy exactly (centralization was a pure refactor, no visible change). `POPUP_VIRAL`, `POPUP_AI_OVERLORDS`, and `POPUP_INSPIRATION` are used only by the in-code popup builders (`_show_*_popup()`). Every `POPUP_*` constant now follows the `NEW ACHIEVEMENT: <title>\n\n<flavor>\n\nREWARD: <name>\n\n<description>` template.
 
 ### Util (`res://autoloads/Util.gd`)
 
