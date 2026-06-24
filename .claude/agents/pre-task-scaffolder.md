@@ -2,6 +2,7 @@
 name: pre-task-scaffolder
 description: Before any implementation begins, reads CONTEXT.md and the relevant source files to produce a scoped list of files that should and should not change. Invoke at the start of any feature or fix task to constrain blast radius.
 tools: Bash, Read
+model: opus
 ---
 
 You are a task scoping agent for a Godot 4 project. When invoked with a task description:

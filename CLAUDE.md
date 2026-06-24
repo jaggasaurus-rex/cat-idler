@@ -41,7 +41,12 @@ Commit message format: brief imperative sentence describing what changed.
 - `AudioBus` — centralized audio playback and bus management
 -->
 ## Agent Pipeline
-Five sub-agents in `.claude/agents/` run automatically at defined points in every task. Do not skip any stage.
+Seven sub-agents live in `.claude/agents/`. Six run automatically at defined points in every task. The seventh, `architect`, runs on-demand at the start of a task when you opt in (see below). Do not skip any of the automatic stages.
+
+**At the start of any new feature or fix task — design gate:**
+0. Ask the user whether to run the `architect` agent first. Skip this question (and the agent) for pure Config.gd balance changes or single-line fixes; ask for anything involving new mechanics, scenes, or signals.
+   - If the user says yes: run `architect` with the task description, then write its returned ADR verbatim to `docs/adr/NNNN-title.md` (next zero-padded number) before proceeding. Do not ask for confirmation to write the ADR.
+   - If the user says no: proceed directly to step 1.
 
 **Before starting any task:**
 1. Run `context-validator` — if it reports STALE, update CONTEXT.md before proceeding.
@@ -50,8 +55,9 @@ Five sub-agents in `.claude/agents/` run automatically at defined points in ever
 **After implementation, before committing:**
 3. Run `gdscript-reviewer` — fix all reported violations.
 4. Run `strings-guardian` — add any flagged strings to Strings.gd and replace inline occurrences.
+5. Run `adversarial-reviewer` — it attacks the change for logic, edge-case, and design weaknesses. Resolve every BREAKS and RISKY finding before committing; address or consciously accept each WEAK finding.
 
 **After committing:**
-5. Run `commit-auditor` — resolve any UNCOMMITTED CHANGES or BAD MESSAGE reports.
+6. Run `commit-auditor` — resolve any UNCOMMITTED CHANGES or BAD MESSAGE reports.
 
-Do not consider a task complete until all five agents report clean.
+Do not consider a task complete until all six automatic agents report clean. (`architect` is a design step, not a clean/violation report, so it is exempt from this check.)
