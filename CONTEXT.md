@@ -24,8 +24,10 @@
 ```
 cat-idler/
 ├── .claude/
-│   ├── agents/             # Five-stage sub-agent pipeline (see Agent Pipeline below)
+│   ├── agents/             # Seven-agent sub-agent pipeline (see Agent Pipeline below)
 │   └── skills/             # run-cat-idler skill (build/run/screenshot harness)
+├── assets/
+│   └── cats/               # Cat sprite sheets; cat_1..5.png (idle) + cat_walk_1..5.png (walk); cat_frames_1..5.tres (SpriteFrames variants)
 ├── autoloads/
 │   ├── GameState.gd        # Global state singleton
 │   └── Util.gd             # Stateless helper functions (format_number)
@@ -46,9 +48,9 @@ cat-idler/
 
 ### Agent Pipeline
 
-Five sub-agents in `.claude/agents/` run at defined points in every task (see CLAUDE.md):
-`context-validator` and `pre-task-scaffolder` before starting; `gdscript-reviewer` and
-`strings-guardian` after implementation, before committing; `commit-auditor` after committing.
+Seven agents in `.claude/agents/` — six run automatically at defined points in every task; one (`architect`) runs on-demand at the start of a task when opted in (see CLAUDE.md).
+Automatic: `context-validator` and `pre-task-scaffolder` before starting; `gdscript-reviewer`,
+`strings-guardian`, and `adversarial-reviewer` after implementation, before committing; `commit-auditor` after committing.
 
 ### Autoloads
 
@@ -379,14 +381,16 @@ Autoloaded singleton containing stateless helper functions. No mutable state.
 
 ### CatCharacter (`res://scripts/CatCharacter.gd`)
 
-Sprite-based cat with autonomous wander behaviour. Frame data lives in the `AnimatedSprite2D` child configured in the editor; the script never touches SpriteFrames.
+Sprite-based cat with autonomous wander behaviour and randomized color on spawn.
+
+Color-variant system: `const COLOR_VARIANTS: Array[SpriteFrames]` preloads `cat_frames_1.tres` through `cat_frames_5.tres` from `res://assets/cats/`. In `_ready()`, the script picks one at random (`randi() % 5`) and assigns it to `AnimatedSprite2D.sprite_frames`, then plays `"idle"`. All five .tres files define identical animations (`"idle"` 19 frames, `"walk"` 25 frames, 6 fps, loop=true) and only differ in their atlas texture paths (`cat_N.png` / `cat_walk_N.png`). The script never builds or mutates SpriteFrames data — variant selection is the only SpriteFrames assignment.
 
 Wander state machine (`enum State { IDLE, WALKING }`):
-- `_ready()` seeds `_wander_timer` with `randf_range(Config.CAT_WANDER_MIN, CAT_WANDER_MAX)`.
+- `_ready()` picks a random color variant (see above), then seeds `_wander_timer` with `randf_range(Config.CAT_WANDER_MIN, CAT_WANDER_MAX)`.
 - `_process(delta)`: returns early while `_bubble_paused` (no movement, no timer tick). Otherwise counts `_wander_timer` down; on expiry picks a new `_target_pos` inside the safe zone (40px inset, top 10% excluded — same formula as `_place_cat`), enters `WALKING`, re-rolls the timer, flips `AnimatedSprite2D.flip_h` toward the target, and plays `"walk"`. While `WALKING`, moves toward `_target_pos` at `Config.CAT_MOVE_SPEED` px/s; on arrival snaps to target, returns to `IDLE`, and plays `"idle"`.
 - `pause_for_bubble()`: sets `_bubble_paused = true`, forces `IDLE`, plays `"idle"`. Called by Main.gd only for **viral** bubbles spawned over this cat.
 - `resume_from_bubble()`: clears `_bubble_paused` and re-rolls `_wander_timer`. Called by Main.gd when a bubble over this cat is collected or expires.
-- `_play_anim(name)`: private; plays the named animation only if the `AnimatedSprite2D` exists and its SpriteFrames defines that animation, else leaves the current animation unchanged. (The editor SpriteFrames currently only defines `"default"`; `"idle"`/`"walk"` are no-ops until those animations are authored in the editor — never created in code.)
+- `_play_anim(name)`: private; plays the named animation only if the `AnimatedSprite2D` exists and its SpriteFrames defines that animation, else leaves the current animation unchanged. SpriteFrames defines `"idle"` (19 frames, 6 fps, loop) and `"walk"` (25 frames, 6 fps, loop) — both backed by the active color-variant resource assigned in `_ready()`.
 
 Scene tree:
 ```

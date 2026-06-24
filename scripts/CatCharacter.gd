@@ -2,8 +2,20 @@ extends Node2D
 
 # Wander states. IDLE: waiting for next move decision. WALKING: moving toward _target_pos.
 # _bubble_paused = true freezes both movement and timer; only viral bubbles trigger this.
-# Animation names "idle" and "walk" are called by name — frames are added in the editor.
+# Animation names "idle" and "walk" are called by name — frames are authored in .tres resources.
 enum State { IDLE, WALKING }
+
+# Each .tres defines both "idle" (19 frames) and "walk" (25 frames) at 6 fps, loop=true.
+# randi() % COLOR_VARIANTS.size() yields an index in [0, 4] for five variants.
+# All instances share these preloaded resources — never call mutating SpriteFrames methods
+# (add_animation, remove_animation, set_animation_speed, etc.) through sprite.sprite_frames.
+const COLOR_VARIANTS: Array[SpriteFrames] = [
+	preload("res://assets/cats/cat_frames_1.tres"),
+	preload("res://assets/cats/cat_frames_2.tres"),
+	preload("res://assets/cats/cat_frames_3.tres"),
+	preload("res://assets/cats/cat_frames_4.tres"),
+	preload("res://assets/cats/cat_frames_5.tres"),
+]
 
 var _state: State = State.IDLE
 var _wander_timer: float = 0.0
@@ -12,6 +24,10 @@ var _bubble_paused: bool = false
 
 
 func _ready() -> void:
+	var sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if sprite != null:
+		sprite.sprite_frames = COLOR_VARIANTS[randi() % COLOR_VARIANTS.size()]
+		_play_anim("idle")
 	_wander_timer = randf_range(Config.CAT_WANDER_MIN, Config.CAT_WANDER_MAX)
 
 
