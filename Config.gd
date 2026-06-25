@@ -53,6 +53,7 @@ const cat_food_pack_cost_discounted: float = 9.0  # active when pawsco_membershi
 const ai_enterprise_membership_cost: float = 1000.0
 const token_pack_cost_discounted: float = 15.0  # active when ai_enterprise_purchased
 const TOKEN_PACK_COST_OWN_LLM: float = 10.0  # token pack price after research_your_own_llms completes
+const POOP_RECYCLER_INTERVAL_MULTIPLIER: float = 2.0  # poop spawn interval multiplier when cybernetic_poop_recyclers is complete
 
 # Cat Happiness
 const base_max_cats: int = 10  # baseline cat cap before any housing upgrades

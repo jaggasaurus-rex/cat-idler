@@ -52,6 +52,8 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 var _pawsco_membership_button: Button
 var _ai_enterprise_membership_button: Button
 var _robo_sweeper_button: Button
+var _enrichment_store_button: Button
+var _enrichment_store_shown: bool = false
 var _cat_intelligence_label: Label
 var _only_paws_popup_shown: bool = false
 var _starvation_popup_shown: bool = false
@@ -170,6 +172,12 @@ func _ready() -> void:
 	_robo_sweeper_button.set_meta("shop_cost", GameState.next_robo_sweeper_cost)
 	_robo_sweeper_button.pressed.connect(_on_buy_robo_sweeper_button_pressed)
 	shop_list.add_child(_robo_sweeper_button)
+	_enrichment_store_button = Button.new()
+	_enrichment_store_button.text = Strings.ENRICHMENT_STORE_BTN
+	_enrichment_store_button.visible = false
+	_enrichment_store_button.set_meta("shop_cost", 999999999.0)
+	_enrichment_store_button.pressed.connect(_show_enrichment_store)
+	shop_list.add_child(_enrichment_store_button)
 	# Sweeper instances are spawned on demand in _process() via _spawn_sweeper_instance().
 	research_slider.visible = false
 	_cat_intelligence_label = Label.new()
@@ -353,6 +361,12 @@ func _process(delta: float) -> void:
 		while _sweepers.size() < GameState.robo_sweeper_count:
 			_spawn_sweeper_instance()
 
+	# One-way latch — enrichment store button appears once cat_enrichment_program completes
+	if GameState.enrichment_store_unlocked and not _enrichment_store_shown:
+		_enrichment_store_shown = true
+		_enrichment_store_button.visible = true
+		_sort_shop_list()
+
 	# OnlyPaws toggle state — green tint when active, default when inactive
 	if GameState.only_paws_active:
 		only_paws_button.text = Strings.BTN_ONLY_PAWS_ON
@@ -523,7 +537,11 @@ func _process(delta: float) -> void:
 	for key: int in _cat_poop_timers.keys():
 		_cat_poop_timers[key] -= delta
 		if _cat_poop_timers[key] <= 0.0:
-			_cat_poop_timers[key] = randf_range(Config.POOP_SPAWN_MIN, Config.POOP_SPAWN_MAX)
+			# Double the interval when poop recyclers are active (50% less poop)
+			var poop_interval: float = randf_range(Config.POOP_SPAWN_MIN, Config.POOP_SPAWN_MAX)
+			if GameState.poop_recyclers_researched:
+				poop_interval *= Config.POOP_RECYCLER_INTERVAL_MULTIPLIER
+			_cat_poop_timers[key] = poop_interval
 			var poop_cat: Node2D = null
 			for child: Node in cat_container.get_children():
 				if child.get_instance_id() == key:
@@ -675,6 +693,10 @@ func _refresh_research_slots() -> void:
 			var research_gate: bool = unlock_research != "" and GameState.research_complete.get(unlock_research, false)
 			if not cats_gate and not research_gate:
 				continue
+
+		# Intelligence gate: additive; stays hidden until cat_intelligence reaches threshold.
+		if GameState.cat_intelligence < int(item.get("unlock_requires_intelligence", 0)):
+			continue
 
 		# Slot gate: stop if already at the max
 		if visible_count >= Config.RESEARCH_MAX_VISIBLE:
@@ -900,6 +922,102 @@ func _show_inspiration_popup() -> void:
 	get_tree().paused = true
 
 
+# Briefly flickers a cyan full-screen overlay 5 times over ~0.25 seconds via Tween.
+# Called on further_the_cat_race and research_your_own_llms completions. No tree pause.
+func _trigger_glitch_effect() -> void:
+	var rect: ColorRect = ColorRect.new()
+	rect.color = Color(0.0, 1.0, 1.0, 0.6)
+	rect.z_index = 200
+	rect.process_mode = Node.PROCESS_MODE_ALWAYS
+	# MOUSE_FILTER_IGNORE prevents the rect from blocking clicks on overlays beneath it,
+	# which is critical when a glitch fires while the enrichment store or another popup is open.
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(rect)
+	var tween: Tween = create_tween()
+	# TWEEN_PAUSE_PROCESS ensures the flicker completes even when the scene tree is paused
+	# (e.g. a research completes while a popup is shown).
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(rect, "modulate:a", 0.0, 0.05)
+	tween.tween_property(rect, "modulate:a", 1.0, 0.05)
+	tween.tween_property(rect, "modulate:a", 0.0, 0.05)
+	tween.tween_property(rect, "modulate:a", 1.0, 0.05)
+	tween.tween_property(rect, "modulate:a", 0.0, 0.05)
+	tween.tween_callback(rect.queue_free)
+
+
+# Builds and shows the enrichment store overlay: a code-built panel with one
+# purchase button per Config.ENRICHMENT_ITEMS entry. Built fresh each open so
+# owned state (GameState.enrichment_purchases) is always current. Pauses tree on show.
+func _show_enrichment_store() -> void:
+	var overlay: ColorRect = ColorRect.new()
+	overlay.color = Color(0.0, 0.0, 0.0, 0.6)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	overlay.z_index = 20
+	add_child(overlay)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var dialog: PanelContainer = PanelContainer.new()
+	dialog.custom_minimum_size = Vector2(700.0, 500.0)
+	center.add_child(dialog)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	dialog.add_child(vbox)
+
+	var title_label: Label = Label.new()
+	title_label.text = Strings.ENRICHMENT_STORE_TITLE
+	title_label.add_theme_font_size_override("font_size", Config.UI_HEADER_FONT_SIZE)
+	var title_font: SystemFont = SystemFont.new()
+	title_font.font_weight = 700
+	title_label.add_theme_font_override("font", title_font)
+	vbox.add_child(title_label)
+
+	var subtitle_label: Label = Label.new()
+	subtitle_label.text = Strings.ENRICHMENT_STORE_SUBTITLE
+	subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(subtitle_label)
+
+	for item: Dictionary in Config.ENRICHMENT_ITEMS:
+		var item_id: String = str(item["id"])
+		var item_cost: float = float(item["cost"])
+		var btn: Button = Button.new()
+		var is_owned: bool = item_id in GameState.enrichment_purchases
+		btn.text = str(item["label"]) + (Strings.ENRICHMENT_ITEM_COST_FMT % Util.format_number(item_cost)) + (Strings.ENRICHMENT_STORE_OWNED if is_owned else "")
+		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		btn.disabled = is_owned or GameState.money < item_cost
+		btn.pressed.connect(_on_enrichment_purchase.bind(item_id, item_cost, btn, overlay))
+		vbox.add_child(btn)
+
+	var close_btn: Button = Button.new()
+	close_btn.text = Strings.ENRICHMENT_STORE_CLOSE
+	close_btn.pressed.connect(func() -> void:
+		overlay.queue_free()
+		get_tree().paused = false
+	)
+	vbox.add_child(close_btn)
+
+	get_tree().paused = true
+
+
+# Handles an enrichment item purchase: delegates to GameState, then updates the
+# button in-place. No-ops if the purchase fails (insufficient funds or already owned).
+func _on_enrichment_purchase(id: String, cost: float, btn: Button, overlay: ColorRect) -> void:
+	if not is_instance_valid(overlay):
+		return
+	if not GameState.buy_enrichment(id, cost):
+		# Purchase failed (insufficient funds — auto-buys can drain money while store is paused).
+		# Disable the button so it doesn't mislead the player into re-clicking.
+		btn.disabled = true
+		return
+	btn.disabled = true
+	btn.text = btn.text + Strings.ENRICHMENT_STORE_OWNED
+
+
 # Called once on viral popup dismiss. Bypasses all spawn guards to guarantee
 # the player sees their first bubble immediately after the achievement fires.
 # Normal burst-window scheduling takes over from this point.
@@ -1102,6 +1220,21 @@ func _on_research_completed(id: String) -> void:
 		_show_ai_overlords_popup()
 	elif id == "cyborg_cats":
 		_show_cyborg_popup()
+	elif id == "cat_breeder_contract":
+		GameState.multiply_cat_cost_growth(0.9)
+	elif id == "cat_breeders_contract":
+		GameState.multiply_cat_cost_growth(0.8)
+	elif id == "cybernetic_poop_recyclers":
+		GameState.set_poop_recyclers_researched()
+		for cat_id: int in _cat_poop_timers.keys():
+			_cat_poop_timers[cat_id] = randf_range(Config.POOP_SPAWN_MIN, Config.POOP_SPAWN_MAX) * Config.POOP_RECYCLER_INTERVAL_MULTIPLIER
+	elif id == "cat_enrichment_program":
+		GameState.unlock_enrichment_store()
+	elif id == "further_the_cat_race":
+		_trigger_glitch_effect()
+	elif id == "research_your_own_llms":
+		GameState.set_own_llm_researched()
+		_trigger_glitch_effect()
 
 
 func _on_fund_button_pressed(item_id: String) -> void:

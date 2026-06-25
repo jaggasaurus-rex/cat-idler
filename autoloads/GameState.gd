@@ -34,6 +34,10 @@ var auto_feeder_unlocked: bool = false
 var auto_feeder_purchased: bool = false
 var pawsco_membership_purchased: bool = false
 var ai_enterprise_purchased: bool = false
+var poop_recyclers_researched: bool = false
+var enrichment_store_unlocked: bool = false
+var enrichment_purchases: Array[String] = []
+var own_llm_researched: bool = false
 var robo_sweeper_count: int = 0
 var next_robo_sweeper_cost: float = Config.ROBO_SWEEPER_PURCHASE_COST
 var first_cat_popup_shown: bool = false
@@ -300,9 +304,12 @@ func get_cat_food_pack_cost() -> float:
 	return Config.cat_food_pack_cost
 
 
-## Returns the token pack cost; discounted to token_pack_cost_discounted
-## when ai_enterprise_purchased, otherwise Config.token_pack_cost.
+## Returns the token pack cost with three-tier priority:
+## own_llm_researched → ai_enterprise_purchased → base
 func get_token_pack_cost() -> float:
+	# own_llm_researched → ai_enterprise_purchased → base
+	if own_llm_researched:
+		return Config.TOKEN_PACK_COST_OWN_LLM
 	if ai_enterprise_purchased:
 		return Config.token_pack_cost_discounted
 	return Config.token_pack_cost
@@ -322,6 +329,42 @@ func buy_ai_enterprise_membership() -> void:
 		return
 	money -= Config.ai_enterprise_membership_cost
 	ai_enterprise_purchased = true
+
+
+## Multiplies cat_cost_growth_rate by factor and retroactively recalculates next_cat_cost.
+## Used by cat_breeder_contract (0.9) and cat_breeders_contract (0.8) research completions.
+## Stacks correctly on top of buy_breeder_contract() regardless of order.
+## Clamped to a minimum of 1.0 so the cost curve never inverts (cats getting cheaper per purchase).
+func multiply_cat_cost_growth(factor: float) -> void:
+	cat_cost_growth_rate = max(1.0, cat_cost_growth_rate * factor)
+	next_cat_cost = Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats))
+
+
+## Sets poop_recyclers_researched when cybernetic_poop_recyclers research completes.
+func set_poop_recyclers_researched() -> void:
+	poop_recyclers_researched = true
+
+
+## Sets own_llm_researched when research_your_own_llms research completes.
+func set_own_llm_researched() -> void:
+	own_llm_researched = true
+
+
+## Sets enrichment_store_unlocked when cat_enrichment_program research completes.
+func unlock_enrichment_store() -> void:
+	enrichment_store_unlocked = true
+
+
+## Purchases an enrichment item: deducts cost and records the purchase.
+## No-ops if already purchased or insufficient funds.
+func buy_enrichment(id: String, cost: float) -> bool:
+	if id in enrichment_purchases:
+		return false
+	if money < cost:
+		return false
+	money -= cost
+	enrichment_purchases.append(id)
+	return true
 
 
 ## Purchases the next Robo-Shit Sweeper once research is complete.

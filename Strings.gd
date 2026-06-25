@@ -135,6 +135,14 @@ const HOUSING_LABEL_NEIGHBOR_HOUSE: String = "Purchase Your Neighbor's House"
 const HOUSING_LABEL_WHOLE_BLOCK: String    = "Purchase the Whole Goddamn Block"
 const HOUSING_LABEL_WAREHOUSE: String      = "Purchase a Warehouse"
 
+## Enrichment store UI
+const ENRICHMENT_STORE_BTN: String = "Cat Enrichment Store"
+const ENRICHMENT_STORE_TITLE: String = "Cat Enrichment Store"
+const ENRICHMENT_STORE_SUBTITLE: String = "These are very expensive. That's the point."
+const ENRICHMENT_STORE_OWNED: String = "\n[Owned]"
+const ENRICHMENT_STORE_CLOSE: String = "Close"
+const ENRICHMENT_ITEM_COST_FMT: String = " ($%s)"
+
 ## Enrichment store items
 const ENRICHMENT_DIAMOND_LITTER: String = "Diamond-Encrusted Litter Box\nSelf-cleaning optional. Dignity: mandatory."
 const ENRICHMENT_SILK_BED: String       = "Silk Cat Bed\nThread count: unnecessary. Price: inexcusable."
