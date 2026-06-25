@@ -32,10 +32,6 @@ const CYBORG_TINT := Color(0.5, 0.85, 1.0)
 @onready var buy_tokens_button: Button = $BuyTokensButton
 @onready var happiness_bar_container: VBoxContainer = $HappinessBarContainer
 @onready var happiness_bar: ProgressBar = $HappinessBarContainer/HappinessRow/HappinessBar
-# Thin red vertical line at the 20% position on the bar; child of HappinessBar so it
-# sits above the fill layer and stays anchored at 20% of the bar's width regardless of
-# the current fill level. Hidden until cat_crusher_unlocked.
-@onready var _cat_loss_marker: ColorRect = $HappinessBarContainer/HappinessRow/HappinessBar/CatLossMarker
 @onready var first_cat_popup: ColorRect = $FirstCatPopup
 @onready var cyborg_cats_label: Label = $CyborgCatsLabel
 @onready var make_cyborg_button: Button = $MakeCyborgButton
@@ -50,7 +46,6 @@ const CYBORG_TINT := Color(0.5, 0.85, 1.0)
 @onready var game_over_2_popup: ColorRect = $GameOver2Popup
 @onready var happiness_cramped_popup: ColorRect = $HappinessCrampedPopup
 @onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
-@onready var cat_crusher_popup: ColorRect = $CatCrusherPopup
 @onready var center_column: VBoxContainer = $CenterColumn
 @onready var research_active_label: Label = $CenterColumn/ResearchActiveLabel
 @onready var research_progress_bar: ProgressBar = $CenterColumn/ResearchProgressBar
@@ -78,7 +73,6 @@ var _starvation_2_popup_shown: bool = false
 var _starvation_handled_count: int = 0
 var _happiness_cramped_popup_shown: bool = false
 var _happiness_riot_popup_shown: bool = false
-var _cat_crusher_popup_shown: bool = false
 var _happiness_fill_style: StyleBoxFlat
 var _center_column_shown: bool = false
 var _research_slider_shown: bool = false
@@ -226,7 +220,6 @@ func _ready() -> void:
 	_set_popup_text(bot_unlock_popup, Strings.POPUP_BOT_UNLOCK)
 	_set_popup_text(bot_manager_unlock_popup, Strings.POPUP_BOT_MANAGER_UNLOCK)
 	_set_popup_text(upgrades_tab_popup, Strings.POPUP_UPGRADES_TAB)
-	_set_popup_text(cat_crusher_popup, Strings.POPUP_CAT_CRUSHER)
 	_set_popup_text(starvation_popup, Strings.POPUP_STARVATION_1)
 	_set_popup_text(starvation_2_popup, Strings.POPUP_STARVATION_2)
 	_set_popup_text(starvation_recurring_popup, Strings.POPUP_STARVATION_RECURRING)
@@ -482,16 +475,6 @@ func _process(delta: float) -> void:
 			_happiness_riot_popup_shown = true
 			happiness_riot_popup.visible = true
 			get_tree().paused = true
-
-	if GameState.cat_crusher_triggered and not _cat_crusher_popup_shown:
-		if not get_tree().paused:
-			_cat_crusher_popup_shown = true
-			cat_crusher_popup.visible = true
-			get_tree().paused = true
-
-	# One-way latch — show 20% cat-loss threshold marker once Cat Crusher is unlocked
-	if GameState.cat_crusher_unlocked and not _cat_loss_marker.visible:
-		_cat_loss_marker.visible = true
 
 	# Auto feeder shop button — visible when unlocked, disappears on purchase
 	if GameState.auto_feeder_unlocked and not GameState.auto_feeder_purchased:
@@ -820,7 +803,7 @@ func _show_viral_popup() -> void:
 	vbox.add_child(label)
 
 	var ok_button: Button = Button.new()
-	ok_button.text = "OK"
+	ok_button.text = Strings.BTN_OK
 	vbox.add_child(ok_button)
 	ok_button.pressed.connect(func() -> void:
 		overlay.queue_free()
@@ -860,7 +843,7 @@ func _show_ai_overlords_popup() -> void:
 	vbox.add_child(label)
 
 	var ok_button: Button = Button.new()
-	ok_button.text = "OK"
+	ok_button.text = Strings.BTN_OK
 	vbox.add_child(ok_button)
 	ok_button.pressed.connect(func() -> void:
 		overlay.queue_free()
@@ -899,7 +882,7 @@ func _show_inspiration_popup() -> void:
 	vbox.add_child(label)
 
 	var ok_button: Button = Button.new()
-	ok_button.text = "OK"
+	ok_button.text = Strings.BTN_OK
 	vbox.add_child(ok_button)
 	ok_button.pressed.connect(func() -> void:
 		overlay.queue_free()
@@ -1151,12 +1134,6 @@ func _on_happiness_cramped_popup_ok_pressed() -> void:
 func _on_happiness_riot_popup_ok_pressed() -> void:
 	happiness_riot_popup.visible = false
 	get_tree().paused = false
-
-
-func _on_cat_crusher_popup_ok_pressed() -> void:
-	cat_crusher_popup.visible = false
-	get_tree().paused = false
-	GameState.cat_crusher_unlocked = true
 
 
 # Sorts visible shop list items ascending by shop_cost meta; invisible items sink to the bottom.

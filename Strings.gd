@@ -23,10 +23,18 @@ const RESEARCH_IN_PROGRESS := "In Progress…"
 const RESEARCH_NEEDS_CATS := "Needs %s+ cats assigned to begin"
 
 ## Buttons — static labels set once in _ready()
+const BTN_OK              := "OK"
 const BTN_EARN_MONEY      := "Work at McPawnalds"
 const BTN_ONLY_PAWS       := "Sell pics on OnlyPaws"
 const BTN_ONLY_PAWS_ON    := "OnlyPaws: ON"
 const BTN_ONLY_PAWS_OFF   := "OnlyPaws: OFF"
+
+## Housing tier labels — referenced by Config.housing_tiers and displayed in Main.gd
+const HOUSING_LABEL_STUDIO_BASIC     := "Basic Studio"
+const HOUSING_LABEL_STUDIO_UPGRADED  := "Luxury Cat Trees"
+const HOUSING_LABEL_BEDROOM_1        := "1 Bedroom"
+const HOUSING_LABEL_BEDROOM_2        := "2 Bedroom"
+const HOUSING_LABEL_BEDROOM_3        := "3 Bedroom"
 
 ## Buttons — cost templates updated every frame
 const BTN_PURCHASE_CAT    := "Purchase Cat ($%s)"
@@ -98,8 +106,6 @@ const POPUP_BOT_UNLOCK := "NEW ACHIEVEMENT: Cat Harem\n\nYou're growing quite th
 const POPUP_BOT_MANAGER_UNLOCK := "NEW ACHIEVEMENT: Management Has Management Now\n\nYour Manager-Bots have multiplied to the point where someone needs to manage the managers. This is how all great empires collapse. Nobody asked the cats.\n\nREWARD: Manager-Bot Manager\n\nPurchase the Manager-Bot Manager from the Upgrades tab. It keeps your bots in line so you can focus on watching the numbers go up."
 
 const POPUP_UPGRADES_TAB := "NEW ACHIEVEMENT! ADHD Cat Parent\n\nYou're just going about your day, hyperfocused on whatever hobby you chose this week. When BAM — you remembered you forgot to buy that important thing needed to keep you alive!\n\nREWARD: Upgrades\nYou can now purchase upgrades to enable your lazine...I mean automate the tedious things in life. Go check out the Upgrades tab for more information!"
-
-const POPUP_CAT_CRUSHER := "NEW ACHIEVEMENT: Cat Crusher!\nYou managed to squeeze more cats into a space than was originally considered possible by all laws of physics. I guess cats really are liquid.\nREWARD: Your cats are now smart enough to devise escape plans. When happiness is low, they'll start looking for other hoarders to rule over...I mean love."
 
 const POPUP_STARVATION_1 := "NEW ACHIEVEMENT: Fasting Never Hurt Anyone\n\nI'm gonna level with you. This looks bad. Food is the cheapest resource. It's one button click. It's faster than A-Meow-zon delivery. BE BETTER.\n\nREWARD: Pity Food\n\nYour cats are cute, so I'm gonna help you out here. ONCE...Only once. I'm serious. After that, well, just know they gotta eat something."
 

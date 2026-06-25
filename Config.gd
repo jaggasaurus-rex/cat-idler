@@ -60,12 +60,9 @@ const base_max_cats: int = 10  # baseline cat cap before any housing upgrades
 # This means the 50% point drifts later relative to 0% as tier increases — intentional design.
 const happiness_fifty_break_offset: int = 2
 const happiness_zero_break_offset: int = 5
-# Cat-loss drain hysteresis: drain turns on at/below activate, off above deactivate.
-const happiness_cat_loss_activate: float = 20.0
-const happiness_cat_loss_deactivate: float = 60.0
-# Income multiplier: floor at 0% happiness, plus range added linearly up to 100%.
-const happiness_income_floor: float = 0.30
-const happiness_income_range: float = 0.70
+# Income multiplier: 0.90 at 0% happiness, rising linearly to 1.00 at 100% happiness.
+const happiness_income_floor: float = 0.90
+const happiness_income_range: float = 0.10
 
 # Cat count at which the "your cats are cramped" popup fires and the Home tab unlocks.
 const HOUSING_UPGRADE_PROMPT_THRESHOLD: int = 8
@@ -75,11 +72,11 @@ const HOUSING_UPGRADE_PROMPT_THRESHOLD: int = 8
 # max_cats_increase is summed for tiers 1..housing_tier_index and added to base_max_cats.
 # Each entry: {id: String, label: String, cost: float, max_cats_increase: int}
 const housing_tiers: Array = [
-	{"id": "studio_basic",    "label": "Basic Studio",      "cost": 0.0,     "max_cats_increase": 0},
-	{"id": "studio_upgraded", "label": "Luxury Cat Trees",  "cost": 500.0,   "max_cats_increase": 10},
-	{"id": "bedroom_1",       "label": "1 Bedroom",         "cost": 3500.0,  "max_cats_increase": 10},
-	{"id": "bedroom_2",       "label": "2 Bedroom",         "cost": 11500.0, "max_cats_increase": 10},
-	{"id": "bedroom_3",       "label": "3 Bedroom",         "cost": 46000.0, "max_cats_increase": 10},
+	{"id": "studio_basic",    "label": Strings.HOUSING_LABEL_STUDIO_BASIC,    "cost": 0.0,     "max_cats_increase": 0},
+	{"id": "studio_upgraded", "label": Strings.HOUSING_LABEL_STUDIO_UPGRADED, "cost": 500.0,   "max_cats_increase": 10},
+	{"id": "bedroom_1",       "label": Strings.HOUSING_LABEL_BEDROOM_1,       "cost": 3500.0,  "max_cats_increase": 10},
+	{"id": "bedroom_2",       "label": Strings.HOUSING_LABEL_BEDROOM_2,       "cost": 11500.0, "max_cats_increase": 10},
+	{"id": "bedroom_3",       "label": Strings.HOUSING_LABEL_BEDROOM_3,       "cost": 46000.0, "max_cats_increase": 10},
 ]
 
 # Robo-Shit Sweeper — research-gated upgrade that automates poop cleanup.

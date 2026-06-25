@@ -48,13 +48,7 @@ var starvation_cats_lost: int = 0
 var cats_ever_purchased: int = 0
 var happiness_cramped_triggered: bool = false
 var happiness_riot_triggered: bool = false
-var happiness_zero_count: int = 0
-var cat_crusher_triggered: bool = false
-var cat_crusher_unlocked: bool = false
 var poop_count: int = 0
-var _happiness_was_zero: bool = false
-var _cat_loss_active: bool = false
-var _cat_loss_timer: float = 0.0
 var home_shop_unlocked: bool = false
 var upgrades_tab_popup_shown: bool = false
 var bot_unlock_popup_shown: bool = false
@@ -117,30 +111,6 @@ func _process(delta: float) -> void:
 	var happiness: float = get_happiness()
 	if not happiness_riot_triggered and happiness <= 0.0:
 		happiness_riot_triggered = true
-	# Count distinct transitions into 0% happiness; second transition triggers Cat Crusher
-	var _now_zero: bool = happiness <= 0.0
-	if _now_zero and not _happiness_was_zero:
-		happiness_zero_count += 1
-		if happiness_zero_count >= 2 and not cat_crusher_triggered:
-			cat_crusher_triggered = true
-	_happiness_was_zero = _now_zero
-	# Cat loss drain: starts when cat_crusher_unlocked and happiness <= 20%.
-	# Activating immediately loses one cat; further cats lost every 10 seconds.
-	# Drain stops when happiness rises above 80% (naturally includes cats == 0,
-	# since 0 cats → 100% happiness, which exceeds 80% and deactivates the drain).
-	if cat_crusher_unlocked:
-		if _cat_loss_active and happiness > Config.happiness_cat_loss_deactivate:
-			_cat_loss_active = false
-			_cat_loss_timer = 0.0
-		elif not _cat_loss_active and happiness <= Config.happiness_cat_loss_activate:
-			_cat_loss_active = true
-			_lose_cat()
-			_cat_loss_timer = 0.0
-		if _cat_loss_active:
-			_cat_loss_timer += delta
-			if _cat_loss_timer >= 10.0:
-				_cat_loss_timer -= 10.0
-				_lose_cat()
 	if only_paws_active and cat_food > 0.0:
 		var happiness_multiplier: float = Config.happiness_income_floor + (happiness / 100.0) * Config.happiness_income_range
 		# No-bot fallback mirrors update_paws_rate() but with only the base per-cat rate:
@@ -460,16 +430,6 @@ func get_happiness() -> float:
 	return 100.0 * (1.0 - t * t)
 
 
-# Returns [fifty_break, zero_break] cat counts for the given max_cats and current housing tier.
-# fifty_break: cats count where happiness hits 50%; zero_break: where it hits 0%.
-# Both widen as housing_tier_index increases, rewarding housing investment.
-func _happiness_breakpoints(max_cats: int) -> Array[int]:
-	return [
-		max_cats + Config.happiness_fifty_break_offset + housing_tier_index,
-		max_cats + Config.happiness_zero_break_offset + housing_tier_index * 2,
-	]
-
-
 ## Purchases the next housing tier, increasing the max_cats threshold.
 ## No-ops if already at the final tier or money is insufficient.
 func buy_housing_upgrade() -> void:
@@ -521,12 +481,3 @@ func update_paws_rate() -> void:
 		+ get_cyborg_multiplier() * float(get_onlypaws_cyborg_cats())
 	paws_income_rate = rate * earning_population
 
-
-# Removes one cat from the count, recalculates paws rate, and signals Main.gd
-# to remove the corresponding CatCharacter node from CatContainer.
-func _lose_cat() -> void:
-	if cats <= 0:
-		return
-	cats -= 1
-	update_paws_rate()
-	cat_lost.emit()

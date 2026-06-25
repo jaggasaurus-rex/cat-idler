@@ -26,7 +26,6 @@ func _ready() -> void:
 	_main._only_paws_popup_shown = true
 	_main._happiness_cramped_popup_shown = true
 	_main._happiness_riot_popup_shown = true
-	_main._cat_crusher_popup_shown = true
 	_main._starvation_popup_shown = true
 	_main._starvation_2_popup_shown = true
 	GameState.first_cat_popup_shown = true
