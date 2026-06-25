@@ -75,6 +75,9 @@ func _ready() -> void:
 	# Must always process so income and attrition tick even when
 	# the tree is paused (e.g. during the theft warning popup).
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# multiply_cat_cost_growth floors the premium at 0.05 (rate >= 1.05).
+	# If Config starts below that floor the discount research would RAISE costs instead.
+	assert(Config.cat_cost_growth_rate > 1.05, "Config.cat_cost_growth_rate must exceed the 1.05 growth-rate floor")
 
 
 func _process(delta: float) -> void:
@@ -193,8 +196,7 @@ func buy_cat() -> void:
 	money -= next_cat_cost
 	cats += 1
 	cats_ever_purchased += 1
-	# Floor prevents next_cat_cost collapsing to ~$0 when rate < 1.0 (sub-1.0 research reductions).
-	next_cat_cost = max(1.0, next_cat_cost * cat_cost_growth_rate)
+	next_cat_cost *= cat_cost_growth_rate
 	if not only_paws_unlocked and cats >= Config.only_paws_unlock_cats:
 		only_paws_unlocked = true
 		only_paws_active = true
@@ -239,7 +241,7 @@ func buy_breeder_contract() -> void:
 	money -= Config.breeder_contract_cost
 	breeder_purchased = true
 	cat_cost_growth_rate = min(cat_cost_growth_rate, Config.breeder_contract_growth_rate)
-	next_cat_cost = max(1.0, Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats)))
+	next_cat_cost = Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats))
 
 
 ## Returns how many cat food packs the player can currently afford at the current price.
@@ -336,16 +338,16 @@ func buy_ai_enterprise_membership() -> void:
 	ai_enterprise_purchased = true
 
 
-## Multiplies cat_cost_growth_rate by factor and retroactively recalculates next_cat_cost.
+## Reduces cat_cost_growth_rate by applying factor to the premium above 1.0.
 ## Used by cat_breeder_contract (0.9) and cat_breeders_contract (0.8) research completions.
-## Stacks correctly on top of buy_breeder_contract() in any order (shop uses min() so it
-## never raises a rate the research already lowered).
-## Rate may fall below 1.0 when both reductions compound, making cats cheaper per purchase.
-## next_cat_cost is floored at $1.00 to prevent the retroactive calc collapsing to near-zero.
+## Example: rate=1.3, premium=0.3 → factor 0.9 → premium 0.27 → rate 1.27.
+## Premium is floored at 0.05 so rate never falls below 1.05 (cats always get more expensive).
+## Stacks correctly on top of buy_breeder_contract() in any order.
 func multiply_cat_cost_growth(factor: float) -> void:
 	assert(factor > 0.0, "multiply_cat_cost_growth requires a positive factor")
-	cat_cost_growth_rate *= factor
-	next_cat_cost = max(1.0, Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats)))
+	var premium: float = max(0.05, (cat_cost_growth_rate - 1.0) * factor)
+	cat_cost_growth_rate = 1.0 + premium
+	next_cat_cost = Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats))
 
 
 ## Sets poop_recyclers_researched when cybernetic_poop_recyclers research completes.
