@@ -178,10 +178,13 @@ func get_cyborg_multiplier() -> float:
 	return pow(2.0, float(count))
 
 
+## Adds $1.00 to money. Called by EarnMoneyButton.
 func click() -> void:
 	money += 1.0
 
 
+## Purchases one cat if money >= next_cat_cost and cats < get_max_cats().
+## Increments cats, applies cat_cost_growth_rate, sets unlock flags, and emits cat_purchased.
 func buy_cat() -> void:
 	if money < next_cat_cost:
 		return
@@ -190,7 +193,8 @@ func buy_cat() -> void:
 	money -= next_cat_cost
 	cats += 1
 	cats_ever_purchased += 1
-	next_cat_cost *= cat_cost_growth_rate
+	# Floor prevents next_cat_cost collapsing to ~$0 when rate < 1.0 (sub-1.0 research reductions).
+	next_cat_cost = max(1.0, next_cat_cost * cat_cost_growth_rate)
 	if not only_paws_unlocked and cats >= Config.only_paws_unlock_cats:
 		only_paws_unlocked = true
 		only_paws_active = true
@@ -225,16 +229,17 @@ func buy_mega_bot() -> void:
 	update_paws_rate()
 
 
-## Purchases the breeder contract: reduces cat_cost_growth_rate from 1.5 to 1.25
-## and retroactively recalculates next_cat_cost as if all cats had been bought
-## at the new rate, so the player's current position is fairly preserved.
+## Purchases the breeder contract: caps cat_cost_growth_rate at 1.25 (no-ops when research
+## has already brought it lower) and retroactively recalculates next_cat_cost.
+## Using min() instead of a hard assignment makes this safe in any purchase order.
+## Note: not currently wired to a UI button — called only by future shop integration.
 func buy_breeder_contract() -> void:
 	if money < Config.breeder_contract_cost or breeder_purchased:
 		return
 	money -= Config.breeder_contract_cost
 	breeder_purchased = true
-	cat_cost_growth_rate = Config.breeder_contract_growth_rate
-	next_cat_cost = Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats))
+	cat_cost_growth_rate = min(cat_cost_growth_rate, Config.breeder_contract_growth_rate)
+	next_cat_cost = max(1.0, Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats)))
 
 
 ## Returns how many cat food packs the player can currently afford at the current price.
@@ -333,11 +338,14 @@ func buy_ai_enterprise_membership() -> void:
 
 ## Multiplies cat_cost_growth_rate by factor and retroactively recalculates next_cat_cost.
 ## Used by cat_breeder_contract (0.9) and cat_breeders_contract (0.8) research completions.
-## Stacks correctly on top of buy_breeder_contract() regardless of order.
-## Clamped to a minimum of 1.0 so the cost curve never inverts (cats getting cheaper per purchase).
+## Stacks correctly on top of buy_breeder_contract() in any order (shop uses min() so it
+## never raises a rate the research already lowered).
+## Rate may fall below 1.0 when both reductions compound, making cats cheaper per purchase.
+## next_cat_cost is floored at $1.00 to prevent the retroactive calc collapsing to near-zero.
 func multiply_cat_cost_growth(factor: float) -> void:
-	cat_cost_growth_rate = max(1.0, cat_cost_growth_rate * factor)
-	next_cat_cost = Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats))
+	assert(factor > 0.0, "multiply_cat_cost_growth requires a positive factor")
+	cat_cost_growth_rate *= factor
+	next_cat_cost = max(1.0, Config.cat_cost_base * pow(cat_cost_growth_rate, float(cats)))
 
 
 ## Sets poop_recyclers_researched when cybernetic_poop_recyclers research completes.
