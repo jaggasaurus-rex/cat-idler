@@ -12,10 +12,10 @@ const HUD_MEGA_BOTS       := "Mega-Bots: %s"
 const HUD_RESEARCH_CATS   := "Cats researching: %s"
 const HUD_CAT_INTELLIGENCE := "Cat Intelligence: %s"
 
-## Cyborg Cats — live label + conversion/upgrade button templates
+## Cyborg Cats — live label + conversion/level-up button templates
 const HUD_CYBORG_CATS     := "Cyborg Cats: %s"
 const BTN_MAKE_CYBORG     := "Make Cyborg Cat ($%s) [-1 cat]"
-const BTN_CYBORG_MULTIPLIER := "Cyborg Enhancement x%s\n$%s"
+const BTN_LEVEL_UP_CYBORG := "Level Up Cyborg → V%s"
 
 ## HUD — research panel state
 const RESEARCH_NO_ACTIVE  := "No Active Research"
@@ -68,6 +68,9 @@ const SWEEPER_EMOJI: String = "🤖"
 const DEBUG_MENU_TITLE: String = "Debug Menu"
 const DEBUG_POOP_OFF_LABEL: String = "Poop Off"
 
+## Research panel title separator — used between name and subtitle in the research list
+const RESEARCH_NAME_SUBTITLE_SEP: String = " — "
+
 ## Research items — name / subtitle / description keyed by item id
 const RESEARCH_CAT_POWER_NAME    := "Cat Power Unite"
 const RESEARCH_CAT_POWER_SUB     := "Cat Intelligence +1"
@@ -85,12 +88,22 @@ const RESEARCH_CYBORG_NAME: String = "Cyborg Cats"
 const RESEARCH_CYBORG_SUB: String = "Biologically enhanced earners"
 const RESEARCH_CYBORG_DESC: String = "Splice some circuitry into your cuddliest moneymakers. Cyborg cats earn a multiplier on the full per-cat income rate and never poop — but it costs a whole cat plus a pretty penny to build each one."
 
+const RESEARCH_CYBORG_L2_NAME: String = "Cyborg Enhancement: Level 2"
+const RESEARCH_CYBORG_L2_SUB: String = "Cyborg multiplier ×4"
+const RESEARCH_CYBORG_L2_DESC: String = "Push the hardware further. Once this research completes, any V1 cyborg can be leveled up to V2 — doubling their income multiplier from 2× to 4×."
+
+const RESEARCH_CYBORG_L3_NAME: String = "Cyborg Enhancement: Level 3"
+const RESEARCH_CYBORG_L3_SUB: String = "Cyborg multiplier ×8"
+const RESEARCH_CYBORG_L3_DESC: String = "The final augmentation. Once this research completes, any V2 cyborg can be leveled up to V3 — doubling their income multiplier again from 4× to 8×."
+
 ## Research item id -> display name, for the active-research label lookup
 const RESEARCH_NAMES: Dictionary = {
 	"cat_power_unite":  RESEARCH_CAT_POWER_NAME,
 	"ai_model_upgrade": RESEARCH_AI_MODEL_NAME,
 	"robo_shit_sweeper": RESEARCH_ROBO_SWEEPER_NAME,
 	"cyborg_cats": RESEARCH_CYBORG_NAME,
+	"cyborg_level_2": RESEARCH_CYBORG_L2_NAME,
+	"cyborg_level_3": RESEARCH_CYBORG_L3_NAME,
 }
 
 ## Popup text — one const per popup, exact text preserved from Main.tscn
@@ -126,4 +139,4 @@ const POPUP_VIRAL := "NEW ACHIEVEMENT: Whale Hunting Baby!\n\nOne of your furry 
 
 const POPUP_AI_OVERLORDS := "NEW ACHIEVEMENT: AI Overlords\n\nLooks like your cute little guy figured out how to upgrade your manager bots to a better model. This totally won't have any negative consequences later down the line.\n\nREWARD: Mega Manager-Bots\n\nJon Meowremy rejoices as your cats usher a new age of truly heinous manager practices to the forefront of capitalism. These mega-bots provide double the benefits of the puny little normal bots, but also at double the price."
 
-const POPUP_CYBORG := "NEW ACHIEVEMENT: Resistance Is Fur-tile\n\nYour lab cats cracked the secret to bolting hardware onto a housecat without voiding the warranty. Science!\n\nREWARD: Cyborg Cats\n\nConvert a normal cat into a cyborg cat. Cyborgs cost one whole cat plus an escalating pile of money, but they multiply the full per-cat income rate and never, ever poop. Upgrade the multiplier in tiers to keep scaling."
+const POPUP_CYBORG := "NEW ACHIEVEMENT: Resistance Is Fur-tile\n\nYour lab cats cracked the secret to bolting hardware onto a housecat without voiding the warranty. Science!\n\nREWARD: Cyborg Cats\n\nConvert a normal cat into a cyborg cat. Cyborgs cost one whole cat plus an escalating pile of money, but they multiply the full per-cat income rate and never, ever poop. Research further enhancements to level individual cyborgs up to V2 and V3 — each level doubles their multiplier."

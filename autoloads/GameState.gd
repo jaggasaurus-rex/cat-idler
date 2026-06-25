@@ -4,6 +4,7 @@ signal cat_purchased
 signal cat_lost
 signal research_completed(id: String)
 signal cyborg_cat_created
+signal cyborg_leveled(old_level: int, new_level: int)
 
 var money: float = 0.0
 var cats: int = 0
@@ -16,11 +17,13 @@ var manager_bots: int = 0
 var next_bot_cost: float = Config.bot_cost_base
 var mega_bots: int = 0
 var next_mega_bot_cost: float = Config.MEGA_BOT_COST_BASE
-# Cyborg cats: separate population from `cats`. Each earns get_cyborg_multiplier() times
-# the full per-cat income rate and never poops. Conversion costs 1 normal cat + next_cyborg_cost.
+# Cyborg cats: separate population from `cats`. Each earns Config.CYBORG_MULTIPLIERS[level-1]
+# times the full per-cat income rate and never poops. Conversion costs 1 normal cat +
+# next_cyborg_cost. Per-cat levels (1/2/3) are stored in cyborg_levels; leveling is
+# gated on cyborg_level_2 / cyborg_level_3 research completion (no money cost).
 var cyborg_cats: int = 0
 var next_cyborg_cost: float = Config.CYBORG_COST_BASE
-var cyborg_multiplier_tier: int = 0
+var cyborg_levels: Array[int] = []
 var bot_shop_unlocked: bool = false
 var cat_cost_growth_rate: float = Config.cat_cost_growth_rate
 var breeder_purchased: bool = false
@@ -114,10 +117,9 @@ func _process(delta: float) -> void:
 		happiness_riot_triggered = true
 	if only_paws_active and cat_food > 0.0:
 		var happiness_multiplier: float = Config.happiness_income_floor + (happiness / 100.0) * Config.happiness_income_range
-		# No-bot fallback mirrors update_paws_rate() but with only the base per-cat rate:
-		# cyborgs still earn M× via the (normal + M*cyborg) earning population.
+		# No-bot fallback mirrors update_paws_rate() but with only the base per-cat rate.
 		var no_bot_population: float = float(get_onlypaws_normal_cats()) \
-			+ get_cyborg_multiplier() * float(get_onlypaws_cyborg_cats())
+			+ get_onlypaws_cyborg_earning_units()
 		var effective_rate: float = paws_income_rate if bots_active else no_bot_population * Config.onlypaws_income_per_cat
 		money += effective_rate * happiness_multiplier * delta
 	for item: Dictionary in Config.RESEARCH_ITEMS:
@@ -193,10 +195,57 @@ func get_onlypaws_cyborg_cats() -> int:
 	return cyborg_cats - get_research_cats_for(cyborg_cats)
 
 
-## Returns the current cyborg income multiplier M from Config.CYBORG_MULTIPLIERS,
-## indexed by cyborg_multiplier_tier.
-func get_cyborg_multiplier() -> float:
-	return float(Config.CYBORG_MULTIPLIERS[cyborg_multiplier_tier])
+## Returns the research-split, multiplier-weighted cyborg earning contribution.
+## Of cyborg_levels.size() cyborgs, get_research_cats_for(cyborg_cats) are assigned to
+## research and skipped; the remaining earn Config.CYBORG_MULTIPLIERS[level-1] each.
+## The skip is applied to the first N entries in cyborg_levels (deterministic ordering
+## to avoid frame-to-frame jitter when the split changes).
+func get_onlypaws_cyborg_earning_units() -> float:
+	var total: int = cyborg_levels.size()
+	if total == 0:
+		return 0.0
+	var on_research: int = get_research_cats_for(total)
+	var units: float = 0.0
+	for i: int in range(on_research, total):
+		units += float(Config.CYBORG_MULTIPLIERS[cyborg_levels[i] - 1])
+	return units
+
+
+## Returns the number of cyborg cats eligible to be leveled up: counts V1 cyborgs when
+## cyborg_level_2 research is complete, and V2 cyborgs when cyborg_level_3 is complete.
+func count_cyborgs_eligible_to_level() -> int:
+	var count: int = 0
+	var l2_done: bool = research_complete.get("cyborg_level_2", false)
+	var l3_done: bool = research_complete.get("cyborg_level_3", false)
+	for level: int in cyborg_levels:
+		if level == 1 and l2_done:
+			count += 1
+		elif level == 2 and l3_done:
+			count += 1
+	return count
+
+
+## Levels up one eligible cyborg cat (lowest eligible index in cyborg_levels).
+## A V1 cyborg is eligible when cyborg_level_2 research is complete; a V2 when
+## cyborg_level_3 is complete. On success: increments the level, recalculates income,
+## and emits cyborg_leveled(old_level, new_level). Returns the new level (2 or 3),
+## or 0 if no eligible cyborg exists.
+func level_up_cyborg() -> int:
+	var l2_done: bool = research_complete.get("cyborg_level_2", false)
+	var l3_done: bool = research_complete.get("cyborg_level_3", false)
+	for i: int in cyborg_levels.size():
+		var level: int = cyborg_levels[i]
+		if level == 1 and l2_done:
+			cyborg_levels[i] = 2
+			update_paws_rate()
+			cyborg_leveled.emit(1, 2)
+			return 2
+		elif level == 2 and l3_done:
+			cyborg_levels[i] = 3
+			update_paws_rate()
+			cyborg_leveled.emit(2, 3)
+			return 3
+	return 0
 
 
 ## Returns the total cat population (normal + cyborg). Cyborgs are still cats for the
@@ -267,23 +316,12 @@ func buy_cyborg_cat() -> void:
 	money -= next_cyborg_cost
 	cats -= 1
 	cyborg_cats += 1
+	cyborg_levels.append(1)
+	assert(cyborg_levels.size() == cyborg_cats, "cyborg_levels must stay in sync with cyborg_cats")
 	next_cyborg_cost *= Config.CYBORG_COST_GROWTH
 	update_paws_rate()
 	cyborg_cat_created.emit()
 
-
-## Upgrades the cyborg income multiplier to the next tier. No-ops if already at the top
-## tier or the player cannot afford Config.CYBORG_MULTIPLIER_UPGRADE_COSTS for the current
-## tier. On success: deducts the cost, advances cyborg_multiplier_tier, recalculates income.
-func buy_cyborg_multiplier_upgrade() -> void:
-	if cyborg_multiplier_tier + 1 >= Config.CYBORG_MULTIPLIERS.size():
-		return
-	var cost: float = float(Config.CYBORG_MULTIPLIER_UPGRADE_COSTS[cyborg_multiplier_tier])
-	if money < cost:
-		return
-	money -= cost
-	cyborg_multiplier_tier += 1
-	update_paws_rate()
 
 
 ## Purchases the breeder contract: reduces cat_cost_growth_rate from 1.5 to 1.25
@@ -457,22 +495,16 @@ func fund_research(id: String) -> void:
 			return
 
 
-# Base rate: get_onlypaws_cats() * onlypaws_income_per_cat, plus onlypaws_income_per_bot per bot per cat.
-# 10 cats: 0 bots = $2.50/s, 1 bot = $7.50/s, 2 bots = $12.50/s, 3 bots = $17.50/s
-# Mega bots add MEGA_BOT_INCOME_PER_CAT per cat on top:
-#   10 cats / 1 normal bot / 1 mega bot: 10 * (0.25 + 0.50*1 + 1.00*1) = 10 * 1.75 = $17.50/sec
 ## Recalculates paws_income_rate from the current cat count, research fraction,
-## manager bot count, mega bot count, and cyborg population/multiplier. Call whenever
+## manager bot count, mega bot count, and per-cat cyborg levels. Call whenever
 ## any of those values change.
-## Cyborg cats multiply the WHOLE per-cat rate by M = get_cyborg_multiplier(); the
-## OnlyPaws-earning population is (onlypaws_normal + M * onlypaws_cyborg), each pool
-## split proportionally by research_cat_fraction via get_research_cats_for().
-## Worked example — 20 normal cats + 10 cyborg cats, 10 bots, 5 mega-bots, M = 2.0,
+## Income = rate * (onlypaws_normal + get_onlypaws_cyborg_earning_units()), where
+## cyborg earning units = sum of Config.CYBORG_MULTIPLIERS[level-1] for each earning cyborg.
+## Worked example — 20 normal cats + 10 cyborg cats (all V2, M=4), 10 bots, 5 mega-bots,
 ## research_cat_fraction = 0.0, and a per-mega-bot rate of 1.0:
-##   rate = 0.25 + 0.50*10 + 1.0*5 = 0.25 + 5.0 + 5.0 = 10.25;
-##   income = rate * (onlypaws_normal + M * onlypaws_cyborg)
-##          = 10.25 * (20 + 2.0*10) = 10.25 * 40 = 410.0/sec.
-## (The label/conversion-button UI reads cyborg_cats and next_cyborg_cost respectively.)
+##   rate = 0.25 + 0.50*10 + 1.0*5 = 10.25;
+##   cyborg_units = 10 * 4.0 = 40.0;
+##   income = 10.25 * (20 + 40) = 10.25 * 60 = 615.0/sec.
 func update_paws_rate() -> void:
 	var rate: float = (
 		Config.onlypaws_income_per_cat
@@ -480,6 +512,6 @@ func update_paws_rate() -> void:
 		+ Config.MEGA_BOT_INCOME_PER_CAT * float(mega_bots)
 	)
 	var earning_population: float = float(get_onlypaws_normal_cats()) \
-		+ get_cyborg_multiplier() * float(get_onlypaws_cyborg_cats())
+		+ get_onlypaws_cyborg_earning_units()
 	paws_income_rate = rate * earning_population
 

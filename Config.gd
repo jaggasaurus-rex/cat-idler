@@ -93,8 +93,7 @@ const ROBO_SWEEPER_COST_MULTIPLIER: float = 3.0
 # long-term scaling lever and upgrades in tiers.
 const CYBORG_COST_BASE: float = 250.0        # money cost of the first conversion
 const CYBORG_COST_GROWTH: float = 1.4         # multiplier applied to cost per conversion
-const CYBORG_MULTIPLIERS: Array = [2.0, 4.0, 8.0]   # M by cyborg_multiplier_tier index
-const CYBORG_MULTIPLIER_UPGRADE_COSTS: Array = [5000.0, 25000.0]  # cost to go tier 0->1, 1->2
+const CYBORG_MULTIPLIERS: Array = [2.0, 4.0, 8.0]   # M by per-cat level index (level-1)
 
 # Research items — each entry defines a fundable, cat-powered research project.
 const RESEARCH_ITEMS: Array = [
@@ -147,6 +146,28 @@ const RESEARCH_ITEMS: Array = [
 		"min_housing_tier": 2,
 		# Panel appears once cats >= 20 (OR gate, additive to the predecessor-complete gate).
 		"unlock_requires_cats": 20,
+	},
+	{
+		"id": "cyborg_level_2",
+		"name": Strings.RESEARCH_CYBORG_L2_NAME,
+		"subtitle": Strings.RESEARCH_CYBORG_L2_SUB,
+		"description": Strings.RESEARCH_CYBORG_L2_DESC,
+		"fund_cost": 6000.0,
+		"points_cost": 3000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 2,
+	},
+	{
+		"id": "cyborg_level_3",
+		"name": Strings.RESEARCH_CYBORG_L3_NAME,
+		"subtitle": Strings.RESEARCH_CYBORG_L3_SUB,
+		"description": Strings.RESEARCH_CYBORG_L3_DESC,
+		"fund_cost": 12000.0,
+		"points_cost": 5000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 2,
 	},
 ]
 
