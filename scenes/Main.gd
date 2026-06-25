@@ -101,15 +101,11 @@ var _burst_window_active: bool = false
 var _burst_window_timer: float = 0.0
 var _global_cd_timer: float = randf_range(Config.BUBBLE_GLOBAL_CD_MIN, Config.BUBBLE_GLOBAL_CD_MAX)
 
-# Robo-Shit Sweeper — Node2D visual driven by an inline state machine (no separate scene/script).
-var _sweeper_node: Node2D = null
-var _sweeper_label: Label = null
-
-# SweeperState no longer contains CHARGING — the sweeper cleans continuously.
-enum SweeperState { INACTIVE, MOVING, CLEANING }
-var _sweeper_state: SweeperState = SweeperState.INACTIVE
-var _sweeper_target_poop: Dictionary = {}   # the poop dict currently targeted
-var _sweeper_clean_timer: float = 0.0       # counts down during CLEANING
+# Robo-Shit Sweeper — one entry per purchased sweeper; each runs an independent state machine.
+# Each dict: {node: Node2D, label: Label, state: int, target: Dictionary, clean_timer: float}
+# `target` is an entry from _active_poops ({} when idle/searching).
+enum SweeperState { MOVING, CLEANING }
+var _sweepers: Array[Dictionary] = []
 
 # Developer debug menu — overlay panel built dynamically in _ready() (never in Main.tscn),
 # toggled by the backtick key via _unhandled_key_input so it never blocks existing input.
@@ -182,9 +178,9 @@ func _ready() -> void:
 	_ai_enterprise_membership_button.pressed.connect(_on_buy_ai_enterprise_membership_button_pressed)
 	shop_list.add_child(_ai_enterprise_membership_button)
 	_robo_sweeper_button = Button.new()
-	_robo_sweeper_button.text = Strings.BTN_ROBO_SWEEPER % Util.format_number(Config.ROBO_SWEEPER_PURCHASE_COST)
+	_robo_sweeper_button.text = Strings.BTN_ROBO_SWEEPER % Util.format_number(GameState.next_robo_sweeper_cost)
 	_robo_sweeper_button.visible = false
-	_robo_sweeper_button.set_meta("shop_cost", Config.ROBO_SWEEPER_PURCHASE_COST)
+	_robo_sweeper_button.set_meta("shop_cost", GameState.next_robo_sweeper_cost)
 	_robo_sweeper_button.pressed.connect(_on_buy_robo_sweeper_button_pressed)
 	shop_list.add_child(_robo_sweeper_button)
 	# Cyborg multiplier-upgrade button — hidden until cyborg_cats research completes;
@@ -194,16 +190,7 @@ func _ready() -> void:
 	_cyborg_multiplier_button.set_meta("shop_cost", Config.CYBORG_MULTIPLIER_UPGRADE_COSTS[0])
 	_cyborg_multiplier_button.pressed.connect(_on_buy_cyborg_multiplier_button_pressed)
 	shop_list.add_child(_cyborg_multiplier_button)
-	# Robo-Shit Sweeper device — built once, shown only after robo_sweeper_purchased.
-	_sweeper_node = Node2D.new()
-	_sweeper_node.visible = false
-	_sweeper_node.z_index = 60
-	_sweeper_label = Label.new()
-	_sweeper_label.text = Strings.SWEEPER_EMOJI
-	_sweeper_label.add_theme_font_size_override("font_size", 40)
-	_sweeper_label.position = Vector2(-20.0, -20.0)  # center the emoji on the node origin
-	_sweeper_node.add_child(_sweeper_label)
-	add_child(_sweeper_node)
+	# Sweeper instances are spawned on demand in _process() via _spawn_sweeper_instance().
 	research_slider.visible = false
 	_cat_intelligence_label = Label.new()
 	_cat_intelligence_label.visible = false
@@ -379,13 +366,18 @@ func _process(delta: float) -> void:
 		_ai_enterprise_membership_button.visible = false
 		_sort_shop_list()
 
-	# Robo-Shit Sweeper button — appears once its research completes, disappears on purchase
-	if GameState.research_complete.get("robo_shit_sweeper", false) and not GameState.robo_sweeper_purchased:
+	# Robo-Shit Sweeper button — appears once its research completes; stays visible for repeat purchases.
+	# Cost escalates 3× per purchase; disabled when unaffordable.
+	if GameState.research_complete.get("robo_shit_sweeper", false):
 		if not _robo_sweeper_button.visible:
 			_robo_sweeper_button.visible = true
-		_robo_sweeper_button.disabled = GameState.money < Config.ROBO_SWEEPER_PURCHASE_COST
-	elif GameState.robo_sweeper_purchased and _robo_sweeper_button.visible:
-		_robo_sweeper_button.visible = false
+			_sort_shop_list()
+		_robo_sweeper_button.text = Strings.BTN_ROBO_SWEEPER % Util.format_number(GameState.next_robo_sweeper_cost)
+		_robo_sweeper_button.set_meta("shop_cost", GameState.next_robo_sweeper_cost)
+		_robo_sweeper_button.disabled = GameState.money < GameState.next_robo_sweeper_cost
+		# Spawn a new sweeper node for each newly-purchased sweeper.
+		while _sweepers.size() < GameState.robo_sweeper_count:
+			_spawn_sweeper_instance()
 
 	# OnlyPaws toggle state — green tint when active, default when inactive
 	if GameState.only_paws_active:
@@ -493,7 +485,7 @@ func _process(delta: float) -> void:
 				housing_button.visible = true
 				_sort_shop_list()
 			var next_tier: Dictionary = Config.housing_tiers[GameState.housing_tier_index + 1]
-			housing_button.text = next_tier["label"] + "\n$" + Util.format_number(float(next_tier["cost"]))
+			housing_button.text = Strings.BTN_HOUSING_UPGRADE % [next_tier["label"], Util.format_number(float(next_tier["cost"]))]
 		elif housing_button.visible:
 			housing_button.visible = false
 			_sort_shop_list()
@@ -618,42 +610,79 @@ func _process(delta: float) -> void:
 		_active_bubbles.erase(bubble)
 
 
-# Drives the Robo-Shit Sweeper's inline state machine: it continuously sweeps to the
-# nearest poop and removes it via _on_poop_pressed, with no charging or per-run cap.
-# When no poops remain it idles in MOVING until one appears.
+# Builds one sweeper Node2D + Label, registers it in _sweepers in MOVING state,
+# and positions it at screen centre. Called each time robo_sweeper_count increases.
+func _spawn_sweeper_instance() -> void:
+	var node: Node2D = Node2D.new()
+	node.position = get_viewport_rect().size * 0.5
+	node.z_index = 60
+	var label: Label = Label.new()
+	label.text = Strings.SWEEPER_EMOJI
+	label.add_theme_font_size_override("font_size", 40)
+	label.position = Vector2(-20.0, -20.0)
+	node.add_child(label)
+	add_child(node)
+	_sweepers.append({
+		"node": node,
+		"label": label,
+		"state": SweeperState.MOVING,
+		"target": {},
+		"clean_timer": 0.0,
+	})
+
+
+# Drives every sweeper's state machine each frame. Each sweeper commits to one poop
+# target until it is cleaned or player-removed; only then does it pick the next nearest
+# unclaimed poop. This prevents zig-zagging and guarantees node access is always valid.
 func _process_sweeper(delta: float) -> void:
-	match _sweeper_state:
-		SweeperState.INACTIVE:
-			if not GameState.robo_sweeper_purchased:
-				return
-			# Appear in the middle of the screen and start sweeping immediately.
-			_sweeper_node.position = get_viewport_rect().size * 0.5
-			_sweeper_node.visible = true
-			_sweeper_state = SweeperState.MOVING
-		SweeperState.MOVING:
-			if _active_poops.is_empty():
-				return
-			# Target the poop nearest the sweeper's current position.
-			var nearest_poop: Dictionary = {}
-			var nearest_dist: float = INF
-			for poop: Dictionary in _active_poops:
-				var d: float = _sweeper_node.position.distance_to((poop.node as Control).position)
-				if d < nearest_dist:
-					nearest_dist = d
-					nearest_poop = poop
-			_sweeper_target_poop = nearest_poop
-			var target_pos: Vector2 = (_sweeper_target_poop.node as Control).position
-			_sweeper_node.position = _sweeper_node.position.move_toward(target_pos, Config.SWEEPER_MOVE_SPEED * delta)
-			if _sweeper_node.position.distance_to(target_pos) <= 8.0:
-				_sweeper_state = SweeperState.CLEANING
-				_sweeper_clean_timer = Config.SWEEPER_CLEAN_DELAY
-		SweeperState.CLEANING:
-			_sweeper_clean_timer -= delta
-			if _sweeper_clean_timer <= 0.0:
-				if not _sweeper_target_poop.is_empty() and _active_poops.has(_sweeper_target_poop):
-					_on_poop_pressed(_sweeper_target_poop)
-				_sweeper_target_poop = {}
-				_sweeper_state = SweeperState.MOVING
+	for sweeper: Dictionary in _sweepers:
+		var snode: Node2D = sweeper.node as Node2D
+		match sweeper.state:
+			SweeperState.MOVING:
+				if _active_poops.is_empty():
+					continue
+				# Discard stale target if the poop was player-clicked or otherwise removed.
+				var cur_target: Dictionary = sweeper.target as Dictionary
+				if not cur_target.is_empty() and not _active_poops.has(cur_target):
+					sweeper.target = {}
+				# Pick a new target only when we have none.
+				if (sweeper.target as Dictionary).is_empty():
+					# Claim set: poop instance_ids already targeted by other sweepers.
+					var claimed_ids: Dictionary = {}
+					for other: Dictionary in _sweepers:
+						if other == sweeper:
+							continue
+						var other_target: Dictionary = other.target as Dictionary
+						if not other_target.is_empty() and other_target.has("node") \
+								and is_instance_valid(other_target.node as Button):
+							claimed_ids[(other_target.node as Button).get_instance_id()] = true
+					var nearest_poop: Dictionary = {}
+					var nearest_dist: float = INF
+					for poop: Dictionary in _active_poops:
+						var poop_node: Button = poop.node as Button
+						if claimed_ids.has(poop_node.get_instance_id()):
+							continue
+						var d: float = snode.position.distance_to(poop_node.position)
+						if d < nearest_dist:
+							nearest_dist = d
+							nearest_poop = poop
+					if nearest_poop.is_empty():
+						continue
+					sweeper.target = nearest_poop
+				# Chase committed target — node is guaranteed valid because it is in _active_poops.
+				var target_pos: Vector2 = (sweeper.target.node as Control).position
+				snode.position = snode.position.move_toward(target_pos, Config.SWEEPER_MOVE_SPEED * delta)
+				if snode.position.distance_to(target_pos) <= 8.0:
+					sweeper.state = SweeperState.CLEANING
+					sweeper.clean_timer = Config.SWEEPER_CLEAN_DELAY
+			SweeperState.CLEANING:
+				sweeper.clean_timer -= delta
+				if sweeper.clean_timer <= 0.0:
+					var t: Dictionary = sweeper.target as Dictionary
+					if not t.is_empty() and _active_poops.has(t):
+						_on_poop_pressed(t)
+					sweeper.target = {}
+					sweeper.state = SweeperState.MOVING
 
 
 # Shows research panels one at a time in RESEARCH_ITEMS order, subject to:
@@ -1176,11 +1205,12 @@ func _on_cat_lost() -> void:
 		_cat_poop_timers.erase(node.get_instance_id())
 		_cyborg_cat_ids.erase(node.get_instance_id())
 		node.queue_free()
-	# If the sweeper was cleaning the last poop and it's now gone, return to MOVING
-	# instead of stalling on a target that no longer exists.
-	if _sweeper_state == SweeperState.CLEANING and _active_poops.is_empty():
-		_sweeper_target_poop = {}
-		_sweeper_state = SweeperState.MOVING
+	# Reset any sweeper whose target was removed from _active_poops (e.g. player clicked it).
+	for sweeper: Dictionary in _sweepers:
+		var t: Dictionary = sweeper.target as Dictionary
+		if not t.is_empty() and not _active_poops.has(t):
+			sweeper.target = {}
+			sweeper.state = SweeperState.MOVING
 
 
 # Spawns a poop button near cat_node. Poop accumulates until clicked;

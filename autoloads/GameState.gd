@@ -40,7 +40,8 @@ var auto_feeder_unlocked: bool = false
 var auto_feeder_purchased: bool = false
 var pawsco_membership_purchased: bool = false
 var ai_enterprise_purchased: bool = false
-var robo_sweeper_purchased: bool = false
+var robo_sweeper_count: int = 0
+var next_robo_sweeper_cost: float = Config.ROBO_SWEEPER_PURCHASE_COST
 var first_cat_popup_shown: bool = false
 var starvation_count: int = 0
 var starvation_active: bool = false
@@ -388,17 +389,18 @@ func buy_ai_enterprise_membership() -> void:
 	ai_enterprise_purchased = true
 
 
-## Purchases the Robo-Shit Sweeper upgrade once research is complete.
-## No-ops if already purchased, research not complete, or insufficient funds.
+## Purchases the next Robo-Shit Sweeper once research is complete.
+## No-ops if research not complete or insufficient funds. Each purchase costs
+## Config.ROBO_SWEEPER_COST_MULTIPLIER (3×) more than the previous one.
+## Cost sequence: $10,000 / $30,000 / $90,000 / …
 func buy_robo_sweeper() -> void:
-	if robo_sweeper_purchased:
-		return
 	if not research_complete.get("robo_shit_sweeper", false):
 		return
-	if money < Config.ROBO_SWEEPER_PURCHASE_COST:
+	if money < next_robo_sweeper_cost:
 		return
-	money -= Config.ROBO_SWEEPER_PURCHASE_COST
-	robo_sweeper_purchased = true
+	money -= next_robo_sweeper_cost
+	robo_sweeper_count += 1
+	next_robo_sweeper_cost *= Config.ROBO_SWEEPER_COST_MULTIPLIER
 
 
 ## Returns the current cat cap: base_max_cats plus max_cats_increase for each

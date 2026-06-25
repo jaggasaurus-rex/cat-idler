@@ -30,6 +30,7 @@ const BTN_ONLY_PAWS_ON    := "OnlyPaws: ON"
 const BTN_ONLY_PAWS_OFF   := "OnlyPaws: OFF"
 
 ## Housing tier labels — referenced by Config.housing_tiers and displayed in Main.gd
+const BTN_HOUSING_UPGRADE            := "%s\n$%s"
 const HOUSING_LABEL_STUDIO_BASIC     := "Basic Studio"
 const HOUSING_LABEL_STUDIO_UPGRADED  := "Luxury Cat Trees"
 const HOUSING_LABEL_BEDROOM_1        := "1 Bedroom"

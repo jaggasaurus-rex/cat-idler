@@ -83,8 +83,10 @@ const housing_tiers: Array = [
 const ROBO_SWEEPER_FUND_COST: float = 4000.0
 # 2× ai_model_upgrade (1200 pts) = 2400 pts
 const ROBO_SWEEPER_POINTS_COST: float = 2400.0
-# ai_model_upgrade costs 1200 points; this is twice as hard
+# Base cost of the first sweeper ($10,000). Each additional sweeper costs 3× the previous:
+# sweeper 1 = $10,000; sweeper 2 = $30,000; sweeper 3 = $90,000; etc.
 const ROBO_SWEEPER_PURCHASE_COST: float = 10000.0
+const ROBO_SWEEPER_COST_MULTIPLIER: float = 3.0
 
 # Cyborg Cats — convert a normal cat into a biologically enhanced cat that earns a
 # multiplier on the full per-cat income rate and never poops. The multiplier is the
