@@ -221,6 +221,22 @@ func _ready() -> void:
 	_debug_poop_check.button_pressed = false
 	_debug_poop_check.toggled.connect(_on_debug_poop_toggled)
 	_debug_vbox.add_child(_debug_poop_check)
+	var _debug_btn_10k: Button = Button.new()
+	_debug_btn_10k.text = Strings.DEBUG_GRANT_10K
+	_debug_btn_10k.pressed.connect(_on_debug_grant_10k)
+	_debug_vbox.add_child(_debug_btn_10k)
+	var _debug_btn_100k: Button = Button.new()
+	_debug_btn_100k.text = Strings.DEBUG_GRANT_100K
+	_debug_btn_100k.pressed.connect(_on_debug_grant_100k)
+	_debug_vbox.add_child(_debug_btn_100k)
+	var _debug_btn_1m: Button = Button.new()
+	_debug_btn_1m.text = Strings.DEBUG_GRANT_1M
+	_debug_btn_1m.pressed.connect(_on_debug_grant_1m)
+	_debug_vbox.add_child(_debug_btn_1m)
+	var _debug_btn_research: Button = Button.new()
+	_debug_btn_research.text = Strings.DEBUG_AUTOCOMPLETE_RESEARCH
+	_debug_btn_research.pressed.connect(_on_debug_autocomplete_research)
+	_debug_vbox.add_child(_debug_btn_research)
 	_debug_panel.add_child(_debug_vbox)
 	add_child(_debug_panel)
 
@@ -247,6 +263,33 @@ func _unhandled_key_input(event: InputEvent) -> void:
 # Debug menu "Poop Off" toggle handler — suppresses poop spawning while pressed.
 func _on_debug_poop_toggled(pressed: bool) -> void:
 	_debug_poop_disabled = pressed
+
+
+func _on_debug_grant_10k() -> void:
+	GameState.money += 10000.0
+
+
+func _on_debug_grant_100k() -> void:
+	GameState.money += 100000.0
+
+
+func _on_debug_grant_1m() -> void:
+	GameState.money += 1000000.0
+
+
+# Only advances items that are already funded and not yet complete.
+# Does NOT auto-fund items — the player must fund them first.
+# Directly completes eligible items (bypassing min_cats_required) so the tool
+# works even when too few cats are assigned to research.
+func _on_debug_autocomplete_research() -> void:
+	for item: Dictionary in Config.RESEARCH_ITEMS:
+		var id: String = item["id"]
+		if GameState.research_funded.get(id, false) and not GameState.research_complete.get(id, false):
+			GameState.research_points[id] = float(item["points_cost"])
+			GameState.research_complete[id] = true
+			GameState.cat_intelligence += int(item.get("cat_intelligence_gain", 0))
+			GameState.update_paws_rate()
+			GameState.research_completed.emit(id)
 
 
 func _process(delta: float) -> void:

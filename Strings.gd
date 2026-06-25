@@ -62,6 +62,10 @@ const SWEEPER_EMOJI: String = "🤖"
 ## Developer debug menu
 const DEBUG_MENU_TITLE: String = "Debug Menu"
 const DEBUG_POOP_OFF_LABEL: String = "Poop Off"
+const DEBUG_GRANT_10K: String = "Grant $10,000"
+const DEBUG_GRANT_100K: String = "Grant $100,000"
+const DEBUG_GRANT_1M: String = "Grant $1,000,000"
+const DEBUG_AUTOCOMPLETE_RESEARCH: String = "Autocomplete Research"
 
 ## Research panel title separator — used between name and subtitle in the research list
 const RESEARCH_NAME_SUBTITLE_SEP: String = " — "
