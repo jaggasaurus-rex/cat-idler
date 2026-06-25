@@ -20,3 +20,6 @@ If no violations found, output:
 PASS
 
 Do not suggest fixes. Only report violations.
+
+## Output discipline
+Reason through the rules as you work, but your FINAL message must contain ONLY the violation lines (or the single word `PASS`) — no preamble, no per-rule walkthrough, no restating code you read, no closing summary. Narration in the final message costs the calling agent's context for no benefit.

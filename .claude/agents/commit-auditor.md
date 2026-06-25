@@ -18,3 +18,6 @@ Output one of:
 - COMMITTED — commit message: "[message]"
 - UNCOMMITTED CHANGES — list the uncommitted files
 - BAD MESSAGE — commit exists but message "[message]" does not follow imperative sentence format
+
+## Output discipline
+Your FINAL message must contain ONLY the verdict line (and its file list if UNCOMMITTED CHANGES) — no preamble, no narration of what the commands showed, no closing summary. Narration in the final message costs the calling agent's context for no benefit.

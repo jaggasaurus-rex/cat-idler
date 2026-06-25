@@ -22,3 +22,6 @@ If all strings are properly referenced from Strings.gd, output:
 PASS
 
 Do not modify any files. Only report and suggest.
+
+## Output discipline
+Reason through the changed files as you work, but your FINAL message must contain ONLY the violation/ADD lines (or the single word `PASS`) — no preamble, no per-file narration, no restating what you read, no closing summary. Narration in the final message costs the calling agent's context for no benefit.

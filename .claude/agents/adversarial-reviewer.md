@@ -44,3 +44,6 @@ If you genuinely cannot break the change after trying each front above, output:
 NO WEAKNESSES FOUND — followed by one line naming the strongest attack you tried and why it held.
 
 Do not fix anything. Do not edit any file. Only report.
+
+## Output discipline
+Reason as hard as you need to while working — read files, walk thresholds, try attacks; that exploration is where the bugs are found and you should not shortcut it. But your FINAL message must contain ONLY the finding lines (each in the `SEVERITY | FILE:LINE | THE ATTACK | WHY IT BREAKS` format) ordered most-severe-first, or the `NO WEAKNESSES FOUND` line. Do not replay your full reasoning, restate files you read, or narrate the attacks you tried and discarded. One line per surviving finding — the reasoning that produced it stays in your working steps, not the final report.

@@ -24,3 +24,6 @@ SHOULD NOT CHANGE:
 - List files that are out of scope — if the main agent touches these, it is likely a mistake
 
 Keep each list tight and specific. Do not implement anything. Do not suggest how to implement. Only scope the files.
+
+## Output discipline
+Reason through the file lists as you work, but your FINAL message must contain ONLY the three sections above — no preamble ("here is the scoping"), no narration of how you searched, no closing summary. Narration in the final message costs the calling agent's context for no benefit.

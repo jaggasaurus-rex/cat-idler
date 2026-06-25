@@ -20,3 +20,6 @@ Output one of:
 - STALE — followed by a bullet list of specific gaps (what changed that CONTEXT.md doesn't reflect)
 
 Do not update CONTEXT.md yourself. Only report what is out of sync.
+
+## Output discipline
+Reason through the commits and CONTEXT.md as you work, but your FINAL message must contain ONLY the verdict line (and, if STALE, its gap bullets) — no preamble, no commit-by-commit walkthrough, no restating what you read. Narration in the final message costs the calling agent's context for no benefit.
