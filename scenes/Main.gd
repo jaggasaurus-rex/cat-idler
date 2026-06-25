@@ -4,8 +4,6 @@ const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 const CAT_SPACING_RADIUS := 64.0
 const UI_SAFE_PADDING := 16.0
 const CAT_PLACEMENT_ATTEMPTS := 30
-# Per-level tints for cyborg cats. Index = level - 1; V1 = sky blue, V2 = violet, V3 = amber.
-const CYBORG_TINTS: Array[Color] = [Color(0.5, 0.85, 1.0), Color(0.85, 0.7, 1.0), Color(1.0, 0.65, 0.4)]
 
 
 @onready var earn_money_button: Button = $EarnMoneyButton
@@ -33,9 +31,6 @@ const CYBORG_TINTS: Array[Color] = [Color(0.5, 0.85, 1.0), Color(0.85, 0.7, 1.0)
 @onready var happiness_bar_container: VBoxContainer = $HappinessBarContainer
 @onready var happiness_bar: ProgressBar = $HappinessBarContainer/HappinessRow/HappinessBar
 @onready var first_cat_popup: ColorRect = $FirstCatPopup
-@onready var cyborg_cats_label: Label = $CyborgCatsLabel
-@onready var make_cyborg_button: Button = $MakeCyborgButton
-@onready var cyborg_popup: ColorRect = $CyborgPopup
 @onready var bot_unlock_popup: ColorRect = $BotUnlockPopup
 @onready var bot_manager_unlock_popup: ColorRect = $BotManagerUnlockPopup
 @onready var starvation_popup: ColorRect = $StarvationPopup
@@ -57,15 +52,7 @@ const CYBORG_TINTS: Array[Color] = [Color(0.5, 0.85, 1.0), Color(0.85, 0.7, 1.0)
 var _pawsco_membership_button: Button
 var _ai_enterprise_membership_button: Button
 var _robo_sweeper_button: Button
-# Level-up cyborg button — created in _ready(), added to ShopList. Visible when any cyborg
-# is eligible to level up (research complete); one click levels one cyborg per click.
-var _level_up_cyborg_button: Button
 var _cat_intelligence_label: Label
-# One-way latch for the cyborg-cats achievement popup (fires once on research completion).
-var _cyborg_popup_shown: bool = false
-# Tracks which CatContainer children are cyborgs: instance_id -> level (1/2/3).
-# Used to exclude cyborgs from the poop loop and to pick non-cyborg nodes on cat-loss.
-var _cyborg_cat_ids: Dictionary = {}
 var _only_paws_popup_shown: bool = false
 var _starvation_popup_shown: bool = false
 var _starvation_2_popup_shown: bool = false
@@ -124,8 +111,6 @@ func _ready() -> void:
 	GameState.cat_purchased.connect(_on_cat_purchased)
 	GameState.cat_lost.connect(_on_cat_lost)
 	GameState.research_completed.connect(_on_research_completed)
-	GameState.cyborg_cat_created.connect(_on_cyborg_cat_created)
-	GameState.cyborg_leveled.connect(_on_cyborg_leveled)
 	for item: Dictionary in Config.RESEARCH_ITEMS:
 		var item_id: String = item["id"]
 		var panel: PanelContainer = PanelContainer.new()
@@ -185,13 +170,6 @@ func _ready() -> void:
 	_robo_sweeper_button.set_meta("shop_cost", GameState.next_robo_sweeper_cost)
 	_robo_sweeper_button.pressed.connect(_on_buy_robo_sweeper_button_pressed)
 	shop_list.add_child(_robo_sweeper_button)
-	# Level-up cyborg button — hidden until any cyborg is eligible (research complete);
-	# label set per frame in _process(); disappears when no eligible cyborgs remain.
-	_level_up_cyborg_button = Button.new()
-	_level_up_cyborg_button.visible = false
-	_level_up_cyborg_button.set_meta("shop_cost", 0.0)
-	_level_up_cyborg_button.pressed.connect(_on_level_up_cyborg_button_pressed)
-	shop_list.add_child(_level_up_cyborg_button)
 	# Sweeper instances are spawned on demand in _process() via _spawn_sweeper_instance().
 	research_slider.visible = false
 	_cat_intelligence_label = Label.new()
@@ -215,7 +193,6 @@ func _ready() -> void:
 	_set_popup_text(starvation_asshole_popup, Strings.POPUP_STARVATION_ASSHOLE)
 	_set_popup_text(game_over_popup, Strings.POPUP_GAME_OVER_1)
 	_set_popup_text(game_over_2_popup, Strings.POPUP_GAME_OVER_2)
-	_set_popup_text(cyborg_popup, Strings.POPUP_CYBORG)
 	# Section headers: larger + bold, applied after the fallback base is set above.
 	_style_as_header(cats_label)
 	_style_as_header($HappinessBarContainer/HappinessTitleLabel)
@@ -267,17 +244,12 @@ func _on_debug_poop_toggled(pressed: bool) -> void:
 func _process(delta: float) -> void:
 	money_label.text = Strings.HUD_MONEY % Util.format_number(GameState.money)
 	var max_cats: int = GameState.get_max_cats()
-	# Displayed total counts cyborgs too, so converting a cat does not change the count.
-	var total_cats: int = GameState.get_total_cats()
-	cats_label.text = Strings.HUD_CATS % [Util.format_number(float(total_cats)), Util.format_number(float(max_cats))]
-	cats_label.modulate = Color.RED if total_cats > max_cats else Color.WHITE
+	cats_label.text = Strings.HUD_CATS % [Util.format_number(float(GameState.cats)), Util.format_number(float(max_cats))]
+	cats_label.modulate = Color.RED if GameState.cats > max_cats else Color.WHITE
 	purchase_cat_button.text = Strings.BTN_PURCHASE_CAT % Util.format_number(GameState.next_cat_cost)
-	purchase_cat_button.disabled = total_cats >= GameState.get_max_cats()
-	# No-bot fallback mirrors GameState's: cyborgs contribute via per-cat earning units.
-	var no_bot_population: float = float(GameState.get_onlypaws_normal_cats()) \
-		+ GameState.get_onlypaws_cyborg_earning_units()
+	purchase_cat_button.disabled = GameState.cats >= GameState.get_max_cats()
 	var display_rate: float = GameState.paws_income_rate if GameState.bots_active \
-		else no_bot_population * Config.onlypaws_income_per_cat
+		else float(GameState.get_onlypaws_cats()) * Config.onlypaws_income_per_cat * GameState.get_cyborg_multiplier()
 	only_paws_income_label.text = Strings.HUD_ONLY_PAWS_RATE % display_rate
 
 	# Popup queue discipline: only show a popup when the tree is not already paused.
@@ -508,46 +480,6 @@ func _process(delta: float) -> void:
 		_cat_intelligence_label.visible = true
 	if _cat_intelligence_label.visible:
 		_cat_intelligence_label.text = Strings.HUD_CAT_INTELLIGENCE % str(GameState.cat_intelligence)
-
-	# One-way latch — cyborg count label and conversion button appear together once the
-	# cyborg_cats research completes; both update from dedicated state vars each frame.
-	if GameState.research_complete.get("cyborg_cats", false):
-		if not cyborg_cats_label.visible:
-			cyborg_cats_label.visible = true
-			make_cyborg_button.visible = true
-		# Label reads cyborg_cats; button cost reads next_cyborg_cost (no inline math).
-		cyborg_cats_label.text = Strings.HUD_CYBORG_CATS % Util.format_number(float(GameState.cyborg_cats))
-		make_cyborg_button.text = Strings.BTN_MAKE_CYBORG % Util.format_number(GameState.next_cyborg_cost)
-		make_cyborg_button.disabled = GameState.cats < 1 or GameState.money < GameState.next_cyborg_cost
-
-	# Level Up Cyborg button — visible when at least one cyborg is eligible to advance a level.
-	# Target level mirrors level_up_cyborg()'s scan-order first-eligible logic exactly,
-	# so the label always reflects what the next click will actually produce.
-	var eligible_count: int = GameState.count_cyborgs_eligible_to_level()
-	if eligible_count > 0:
-		var l2_done: bool = GameState.research_complete.get("cyborg_level_2", false)
-		var l3_done: bool = GameState.research_complete.get("cyborg_level_3", false)
-		var target_level: int = 3
-		for lvl: int in GameState.cyborg_levels:
-			if lvl == 1 and l2_done:
-				target_level = 2
-				break
-			elif lvl == 2 and l3_done:
-				break
-		_level_up_cyborg_button.text = Strings.BTN_LEVEL_UP_CYBORG % str(target_level)
-		if not _level_up_cyborg_button.visible:
-			_level_up_cyborg_button.visible = true
-			_sort_shop_list()
-	elif _level_up_cyborg_button.visible:
-		_level_up_cyborg_button.visible = false
-		_sort_shop_list()
-
-	# One-way latch — cyborg achievement popup fires exactly once on research completion.
-	if GameState.research_complete.get("cyborg_cats", false) and not _cyborg_popup_shown:
-		if not get_tree().paused:
-			_cyborg_popup_shown = true
-			cyborg_popup.visible = true
-			get_tree().paused = true
 
 	# One-way latch — whale popup fires the instant the mechanic unlocks (manager_bots >= 2
 	# and the 20s delay elapsed), like every other popup. Decoupled from the spawn pipeline
@@ -890,6 +822,45 @@ func _show_ai_overlords_popup() -> void:
 	get_tree().paused = true
 
 
+# Builds and shows the one-time "Resistance Is Fur-tile" achievement popup in code,
+# mirroring _show_ai_overlords_popup(). Called once when cyborg_cats research completes.
+func _show_cyborg_popup() -> void:
+	var overlay: ColorRect = ColorRect.new()
+	overlay.color = Color(0.0, 0.0, 0.0, 0.6)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	overlay.z_index = 20
+	add_child(overlay)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var dialog: PanelContainer = PanelContainer.new()
+	dialog.custom_minimum_size = Vector2(600.0, 360.0)
+	center.add_child(dialog)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	dialog.add_child(vbox)
+
+	var label: Label = Label.new()
+	label.text = Strings.POPUP_CYBORG
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(560.0, 0.0)
+	vbox.add_child(label)
+
+	var ok_button: Button = Button.new()
+	ok_button.text = Strings.BTN_OK
+	vbox.add_child(ok_button)
+	ok_button.pressed.connect(func() -> void:
+		overlay.queue_free()
+		get_tree().paused = false
+	)
+
+	get_tree().paused = true
+
+
 # Builds and shows the one-time inspiration-bubble achievement popup entirely in code,
 # mirroring _show_viral_popup(). Gated by GameState.inspiration_popup_shown (set true by
 # the caller before this runs) so it fires exactly once, on the first inspiration collect.
@@ -997,47 +968,6 @@ func _on_earn_money_button_pressed() -> void:
 
 func _on_purchase_cat_button_pressed() -> void:
 	GameState.buy_cat()
-
-
-func _on_make_cyborg_button_pressed() -> void:
-	GameState.buy_cyborg_cat()
-
-
-func _on_level_up_cyborg_button_pressed() -> void:
-	GameState.level_up_cyborg()
-
-
-func _on_cyborg_popup_ok_pressed() -> void:
-	cyborg_popup.visible = false
-	get_tree().paused = false
-
-
-# Converts one existing normal CatCharacter into a V1 cyborg in response to cyborg_cat_created:
-# tints it with the V1 colour, removes it from the poop loop (cyborgs never poop), and records
-# its level so the normal cat-loss path won't remove it. GameState already adjusted counts.
-func _on_cyborg_cat_created() -> void:
-	for child: Node in cat_container.get_children():
-		var id: int = child.get_instance_id()
-		if _cyborg_cat_ids.has(id):
-			continue
-		_cyborg_cat_ids[id] = 1
-		(child as Node2D).modulate = CYBORG_TINTS[0]
-		_cat_poop_timers.erase(id)
-		return
-
-
-# Updates the tint of one cyborg node when GameState levels it up. Finds the first node
-# in _cyborg_cat_ids whose stored level matches old_level, bumps it to new_level, and
-# re-applies the corresponding CYBORG_TINTS colour.
-func _on_cyborg_leveled(old_level: int, new_level: int) -> void:
-	for id: int in _cyborg_cat_ids.keys():
-		if _cyborg_cat_ids[id] == old_level:
-			_cyborg_cat_ids[id] = new_level
-			for child: Node in cat_container.get_children():
-				if child.get_instance_id() == id:
-					(child as Node2D).modulate = CYBORG_TINTS[new_level - 1]
-					return
-			return
 
 
 # Toggles OnlyPaws passive income on/off. Turning off also deactivates bots.
@@ -1170,6 +1100,8 @@ func _on_research_completed(id: String) -> void:
 	_refresh_research_slots()
 	if id == "ai_model_upgrade":
 		_show_ai_overlords_popup()
+	elif id == "cyborg_cats":
+		_show_cyborg_popup()
 
 
 func _on_fund_button_pressed(item_id: String) -> void:
@@ -1216,18 +1148,10 @@ func _on_cat_purchased() -> void:
 func _on_cat_lost() -> void:
 	var children: Array[Node] = cat_container.get_children()
 	if children.size() > 0:
-		# cat_lost only decrements the normal `cats` count, so remove the last NON-cyborg
-		# node; fall back to the last child only if every remaining node is a cyborg.
 		var node: Node = children.back()
-		for i: int in range(children.size() - 1, -1, -1):
-			if not _cyborg_cat_ids.has(children[i].get_instance_id()):
-				node = children[i]
-				break
 		_cat_bubble_timers.erase(node.get_instance_id())
 		_cat_poop_timers.erase(node.get_instance_id())
-		_cyborg_cat_ids.erase(node.get_instance_id())
 		node.queue_free()
-	# Reset any sweeper whose target was removed from _active_poops (e.g. player clicked it).
 	for sweeper: Dictionary in _sweepers:
 		var t: Dictionary = sweeper.target as Dictionary
 		if not t.is_empty() and not _active_poops.has(t):

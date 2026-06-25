@@ -88,13 +88,6 @@ const ROBO_SWEEPER_POINTS_COST: float = 2400.0
 const ROBO_SWEEPER_PURCHASE_COST: float = 10000.0
 const ROBO_SWEEPER_COST_MULTIPLIER: float = 3.0
 
-# Cyborg Cats — convert a normal cat into a biologically enhanced cat that earns a
-# multiplier on the full per-cat income rate and never poops. The multiplier is the
-# long-term scaling lever and upgrades in tiers.
-const CYBORG_COST_BASE: float = 250.0        # money cost of the first conversion
-const CYBORG_COST_GROWTH: float = 1.4         # multiplier applied to cost per conversion
-const CYBORG_MULTIPLIERS: Array = [2.0, 4.0, 8.0]   # M by per-cat level index (level-1)
-
 # Research items — each entry defines a fundable, cat-powered research project.
 const RESEARCH_ITEMS: Array = [
 	{
@@ -130,9 +123,8 @@ const RESEARCH_ITEMS: Array = [
 		"min_cats_required": 1,
 		"cat_intelligence_gain": 0,
 		"min_housing_tier": 0,
-		# Unlocked in the research tree when EITHER cats >= 25 OR ai_model_upgrade is complete.
-		"unlock_requires_cats": 25,
-		"unlock_requires_research": "ai_model_upgrade",
+		# Unlocked in the research tree when cats >= 20.
+		"unlock_requires_cats": 20,
 	},
 	{
 		"id": "cyborg_cats",
@@ -144,7 +136,6 @@ const RESEARCH_ITEMS: Array = [
 		"min_cats_required": 1,
 		"cat_intelligence_gain": 0,
 		"min_housing_tier": 2,
-		# Panel appears once cats >= 20 (OR gate, additive to the predecessor-complete gate).
 		"unlock_requires_cats": 20,
 	},
 	{
@@ -165,6 +156,17 @@ const RESEARCH_ITEMS: Array = [
 		"description": Strings.RESEARCH_CYBORG_L3_DESC,
 		"fund_cost": 12000.0,
 		"points_cost": 5000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 2,
+	},
+	{
+		"id": "cyborg_level_4",
+		"name": Strings.RESEARCH_CYBORG_L4_NAME,
+		"subtitle": Strings.RESEARCH_CYBORG_L4_SUB,
+		"description": Strings.RESEARCH_CYBORG_L4_DESC,
+		"fund_cost": 25000.0,
+		"points_cost": 10000.0,
 		"min_cats_required": 1,
 		"cat_intelligence_gain": 0,
 		"min_housing_tier": 2,
