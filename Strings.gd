@@ -95,15 +95,70 @@ const RESEARCH_CYBORG_L4_NAME: String = "Cyborg Enhancement: Level 4"
 const RESEARCH_CYBORG_L4_SUB: String = "All cats ×16 income multiplier"
 const RESEARCH_CYBORG_L4_DESC: String = "Maximum augmentation. When this research completes, the global cat income multiplier reaches 16× — the ultimate income scaling lever."
 
+const RESEARCH_BREEDER_CONTRACT_NAME: String = "Cat Breeder Contract"
+const RESEARCH_BREEDER_CONTRACT_SUB: String  = "Cat cost growth rate −10%"
+const RESEARCH_BREEDER_CONTRACT_DESC: String = "You've signed a deal with a reputable cat breeder. Retroactively applies a 10% discount to the cat purchase cost multiplier. They didn't ask questions. Neither should you."
+
+const RESEARCH_POOP_RECYCLER_NAME: String = "Cybernetic Poop Recyclers"
+const RESEARCH_POOP_RECYCLER_SUB: String  = "Cats poop 50% less"
+const RESEARCH_POOP_RECYCLER_DESC: String = "Your cyborg cats now have internal waste recycling units installed. Efficiency went up. The smell also went up. But frequency? Way down."
+
+const RESEARCH_BURST_BRILLIANCE_NAME: String = "Burst of Brilliance"
+const RESEARCH_BURST_BRILLIANCE_SUB: String  = "Cat Intelligence +5"
+const RESEARCH_BURST_BRILLIANCE_DESC: String = "A sudden and unexplained surge of feline intellectual capacity. Nobody saw it coming. Least of all the cats."
+
+const RESEARCH_BREEDERS_CONTRACT_NAME: String = "Cat Breeders Contract"
+const RESEARCH_BREEDERS_CONTRACT_SUB: String  = "Cat cost growth rate −20%"
+const RESEARCH_BREEDERS_CONTRACT_DESC: String = "You have a problem. You know this. The breeders know this. They didn't offer the discount out of kindness — they offered it because you are their most reliable customer and that is not something to be proud of. Retroactively reduces the cat cost multiplier by 20%."
+
+const RESEARCH_ENRICHMENT_NAME: String = "Cat Enrichment Program"
+const RESEARCH_ENRICHMENT_SUB: String  = "Unlocks Cat Toy Store"
+const RESEARCH_ENRICHMENT_DESC: String = "Your cats are wealthy, intelligent, and increasingly bored. Science demands you address this. Open a store for the finer things in life."
+
+const RESEARCH_FURTHER_CAT_RACE_NAME: String = "Further the Cat Race"
+const RESEARCH_FURTHER_CAT_RACE_SUB: String  = "Cat Intelligence +10"
+const RESEARCH_FURTHER_CAT_RACE_DESC: String = "Your cats are approaching something. Nobody is entirely comfortable with what it is. The research continues anyway."
+
+const RESEARCH_DOG_DEFENCE_NAME: String = "Dog Defence"
+const RESEARCH_DOG_DEFENCE_SUB: String  = "Cat Intelligence +2"
+const RESEARCH_DOG_DEFENCE_DESC: String = "Look, you've never actually seen a dog around here. But your cats are absolutely losing it. Might be a consequence of increased intelligence. Whose to say. The research is underway."
+
+const RESEARCH_OWN_LLMS_NAME: String = "Research Your Own LLMs"
+const RESEARCH_OWN_LLMS_SUB: String  = "Token cost reduced to $10"
+const RESEARCH_OWN_LLMS_DESC: String = "Your cats have achieved something. An internal token infrastructure. Running on vibes and raw intelligence. Somehow cheaper than the market rate. Something is about to go wrong."
+
+## Housing tier labels — new tiers appended after existing bedroom_3
+const HOUSING_LABEL_HOUSE: String          = "Purchase a House"
+const HOUSING_LABEL_HOUSE_FLOOR_2: String  = "Build a Second Floor"
+const HOUSING_LABEL_HOUSE_FLOOR_3: String  = "Fuck Regulation, Third Floor"
+const HOUSING_LABEL_NEIGHBOR_HOUSE: String = "Purchase Your Neighbor's House"
+const HOUSING_LABEL_WHOLE_BLOCK: String    = "Purchase the Whole Goddamn Block"
+const HOUSING_LABEL_WAREHOUSE: String      = "Purchase a Warehouse"
+
+## Enrichment store items
+const ENRICHMENT_DIAMOND_LITTER: String = "Diamond-Encrusted Litter Box\nSelf-cleaning optional. Dignity: mandatory."
+const ENRICHMENT_SILK_BED: String       = "Silk Cat Bed\nThread count: unnecessary. Price: inexcusable."
+const ENRICHMENT_CHANDELIER: String     = "Custom Cat Chandelier\nFor the cat who has achieved ceiling ambitions."
+const ENRICHMENT_MASSEUSE: String       = "Personal Cat Masseuse\nFull-time. Degree in Feline Myotherapy."
+const ENRICHMENT_YACHT: String          = "Cat Yacht\nThey don't know what a yacht is. That's not the point."
+
 ## Research item id -> display name, for the active-research label lookup
 const RESEARCH_NAMES: Dictionary = {
-	"cat_power_unite":  RESEARCH_CAT_POWER_NAME,
-	"ai_model_upgrade": RESEARCH_AI_MODEL_NAME,
-	"robo_shit_sweeper": RESEARCH_ROBO_SWEEPER_NAME,
-	"cyborg_cats": RESEARCH_CYBORG_NAME,
-	"cyborg_level_2": RESEARCH_CYBORG_L2_NAME,
-	"cyborg_level_3": RESEARCH_CYBORG_L3_NAME,
-	"cyborg_level_4": RESEARCH_CYBORG_L4_NAME,
+	"cat_power_unite":          RESEARCH_CAT_POWER_NAME,
+	"ai_model_upgrade":         RESEARCH_AI_MODEL_NAME,
+	"robo_shit_sweeper":        RESEARCH_ROBO_SWEEPER_NAME,
+	"cyborg_cats":              RESEARCH_CYBORG_NAME,
+	"cyborg_level_2":           RESEARCH_CYBORG_L2_NAME,
+	"cyborg_level_3":           RESEARCH_CYBORG_L3_NAME,
+	"cyborg_level_4":           RESEARCH_CYBORG_L4_NAME,
+	"cat_breeder_contract":     RESEARCH_BREEDER_CONTRACT_NAME,
+	"cybernetic_poop_recyclers": RESEARCH_POOP_RECYCLER_NAME,
+	"burst_of_brilliance":      RESEARCH_BURST_BRILLIANCE_NAME,
+	"cat_breeders_contract":    RESEARCH_BREEDERS_CONTRACT_NAME,
+	"cat_enrichment_program":   RESEARCH_ENRICHMENT_NAME,
+	"further_the_cat_race":     RESEARCH_FURTHER_CAT_RACE_NAME,
+	"dog_defence":              RESEARCH_DOG_DEFENCE_NAME,
+	"research_your_own_llms":   RESEARCH_OWN_LLMS_NAME,
 }
 
 ## Popup text — one const per popup, exact text preserved from Main.tscn

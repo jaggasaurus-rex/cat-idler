@@ -52,6 +52,7 @@ const cat_food_pack_cost_discounted: float = 9.0  # active when pawsco_membershi
 # AI Enterprise Membership upgrade
 const ai_enterprise_membership_cost: float = 1000.0
 const token_pack_cost_discounted: float = 15.0  # active when ai_enterprise_purchased
+const TOKEN_PACK_COST_OWN_LLM: float = 10.0  # token pack price after research_your_own_llms completes
 
 # Cat Happiness
 const base_max_cats: int = 10  # baseline cat cap before any housing upgrades
@@ -76,7 +77,23 @@ const housing_tiers: Array = [
 	{"id": "studio_upgraded", "label": Strings.HOUSING_LABEL_STUDIO_UPGRADED, "cost": 500.0,   "max_cats_increase": 10},
 	{"id": "bedroom_1",       "label": Strings.HOUSING_LABEL_BEDROOM_1,       "cost": 3500.0,  "max_cats_increase": 10},
 	{"id": "bedroom_2",       "label": Strings.HOUSING_LABEL_BEDROOM_2,       "cost": 11500.0, "max_cats_increase": 10},
-	{"id": "bedroom_3",       "label": Strings.HOUSING_LABEL_BEDROOM_3,       "cost": 46000.0, "max_cats_increase": 10},
+	{"id": "bedroom_3",       "label": Strings.HOUSING_LABEL_BEDROOM_3,       "cost": 46000.0,     "max_cats_increase": 10},
+	# --- New tiers appended at index 5 ---
+	{"id": "house",          "label": Strings.HOUSING_LABEL_HOUSE,          "cost": 150000.0,    "max_cats_increase": 30},
+	{"id": "house_floor_2",  "label": Strings.HOUSING_LABEL_HOUSE_FLOOR_2,  "cost": 500000.0,    "max_cats_increase": 50},
+	{"id": "house_floor_3",  "label": Strings.HOUSING_LABEL_HOUSE_FLOOR_3,  "cost": 1500000.0,   "max_cats_increase": 75},
+	{"id": "neighbor_house", "label": Strings.HOUSING_LABEL_NEIGHBOR_HOUSE, "cost": 5000000.0,   "max_cats_increase": 100},
+	{"id": "whole_block",    "label": Strings.HOUSING_LABEL_WHOLE_BLOCK,    "cost": 25000000.0,  "max_cats_increase": 200},
+	{"id": "warehouse",      "label": Strings.HOUSING_LABEL_WAREHOUSE,      "cost": 100000000.0, "max_cats_increase": 500},
+]
+
+# Enrichment store items — unlocked by cat_enrichment_program research.
+const ENRICHMENT_ITEMS: Array = [
+	{"id": "diamond_litter_box", "label": Strings.ENRICHMENT_DIAMOND_LITTER, "cost": 1000000.0},
+	{"id": "silk_cat_bed",       "label": Strings.ENRICHMENT_SILK_BED,       "cost": 2500000.0},
+	{"id": "cat_chandelier",     "label": Strings.ENRICHMENT_CHANDELIER,     "cost": 5000000.0},
+	{"id": "personal_masseuse",  "label": Strings.ENRICHMENT_MASSEUSE,       "cost": 10000000.0},
+	{"id": "cat_yacht",          "label": Strings.ENRICHMENT_YACHT,          "cost": 50000000.0},
 ]
 
 # Robo-Shit Sweeper — research-gated upgrade that automates poop cleanup.
@@ -170,6 +187,95 @@ const RESEARCH_ITEMS: Array = [
 		"min_cats_required": 1,
 		"cat_intelligence_gain": 0,
 		"min_housing_tier": 2,
+	},
+	# --- New items appended at index 7 ---
+	{
+		"id": "cat_breeder_contract",
+		"name": Strings.RESEARCH_BREEDER_CONTRACT_NAME,
+		"subtitle": Strings.RESEARCH_BREEDER_CONTRACT_SUB,
+		"description": Strings.RESEARCH_BREEDER_CONTRACT_DESC,
+		"fund_cost": 30000.0,
+		"points_cost": 10000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 3,
+	},
+	{
+		"id": "cybernetic_poop_recyclers",
+		"name": Strings.RESEARCH_POOP_RECYCLER_NAME,
+		"subtitle": Strings.RESEARCH_POOP_RECYCLER_SUB,
+		"description": Strings.RESEARCH_POOP_RECYCLER_DESC,
+		"fund_cost": 50000.0,
+		"points_cost": 15000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 2,
+	},
+	{
+		"id": "burst_of_brilliance",
+		"name": Strings.RESEARCH_BURST_BRILLIANCE_NAME,
+		"subtitle": Strings.RESEARCH_BURST_BRILLIANCE_SUB,
+		"description": Strings.RESEARCH_BURST_BRILLIANCE_DESC,
+		"fund_cost": 40000.0,
+		"points_cost": 12000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 5,
+		"min_housing_tier": 2,
+	},
+	{
+		"id": "cat_breeders_contract",
+		"name": Strings.RESEARCH_BREEDERS_CONTRACT_NAME,
+		"subtitle": Strings.RESEARCH_BREEDERS_CONTRACT_SUB,
+		"description": Strings.RESEARCH_BREEDERS_CONTRACT_DESC,
+		"fund_cost": 80000.0,
+		"points_cost": 25000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 3,
+	},
+	{
+		"id": "cat_enrichment_program",
+		"name": Strings.RESEARCH_ENRICHMENT_NAME,
+		"subtitle": Strings.RESEARCH_ENRICHMENT_SUB,
+		"description": Strings.RESEARCH_ENRICHMENT_DESC,
+		"fund_cost": 100000.0,
+		"points_cost": 30000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 3,
+	},
+	{
+		"id": "further_the_cat_race",
+		"name": Strings.RESEARCH_FURTHER_CAT_RACE_NAME,
+		"subtitle": Strings.RESEARCH_FURTHER_CAT_RACE_SUB,
+		"description": Strings.RESEARCH_FURTHER_CAT_RACE_DESC,
+		"fund_cost": 150000.0,
+		"points_cost": 50000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 10,
+		"min_housing_tier": 4,
+	},
+	{
+		"id": "dog_defence",
+		"name": Strings.RESEARCH_DOG_DEFENCE_NAME,
+		"subtitle": Strings.RESEARCH_DOG_DEFENCE_SUB,
+		"description": Strings.RESEARCH_DOG_DEFENCE_DESC,
+		"fund_cost": 200000.0,
+		"points_cost": 60000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 2,
+		"min_housing_tier": 4,
+	},
+	{
+		"id": "research_your_own_llms",
+		"name": Strings.RESEARCH_OWN_LLMS_NAME,
+		"subtitle": Strings.RESEARCH_OWN_LLMS_SUB,
+		"description": Strings.RESEARCH_OWN_LLMS_DESC,
+		"fund_cost": 500000.0,
+		"points_cost": 100000.0,
+		"min_cats_required": 1,
+		"cat_intelligence_gain": 0,
+		"min_housing_tier": 5,
 	},
 ]
 
