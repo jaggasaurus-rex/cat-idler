@@ -144,8 +144,70 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
 mouse_filter = 2
 
-[node name="CatContainer" type="Node2D" parent="PanelLayout/CenterPanel" unique_id=324393987]
+[node name="CenterVBox" type="VBoxContainer" parent="PanelLayout/CenterPanel" unique_id=600000001]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CatPlayArea" type="Control" parent="PanelLayout/CenterPanel/CenterVBox" unique_id=600000002]
 unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CatContainer" type="Node2D" parent="PanelLayout/CenterPanel/CenterVBox/CatPlayArea" unique_id=324393987]
+unique_name_in_owner = true
+
+[node name="DogBattlePanel" type="PanelContainer" parent="PanelLayout/CenterPanel/CenterVBox" unique_id=600000003]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="BattleVBox" type="VBoxContainer" parent="PanelLayout/CenterPanel/CenterVBox/DogBattlePanel" unique_id=600000004]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="WarningLabel" type="Label" parent="PanelLayout/CenterPanel/CenterVBox/DogBattlePanel/BattleVBox" unique_id=600000005]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="LanesContainer" type="VBoxContainer" parent="PanelLayout/CenterPanel/CenterVBox/DogBattlePanel/BattleVBox" unique_id=600000006]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TopLane" type="Control" parent="PanelLayout/CenterPanel/CenterVBox/DogBattlePanel/BattleVBox/LanesContainer" unique_id=600000007]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+clip_contents = true
+
+[node name="MiddleLane" type="Control" parent="PanelLayout/CenterPanel/CenterVBox/DogBattlePanel/BattleVBox/LanesContainer" unique_id=600000008]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+clip_contents = true
+
+[node name="BottomLane" type="Control" parent="PanelLayout/CenterPanel/CenterVBox/DogBattlePanel/BattleVBox/LanesContainer" unique_id=600000009]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+clip_contents = true
+
+[node name="ResultLabel" type="Label" parent="PanelLayout/CenterPanel/CenterVBox/DogBattlePanel/BattleVBox" unique_id=600000010]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+horizontal_alignment = 1
 
 [node name="RightPanel" type="PanelContainer" parent="PanelLayout" unique_id=500000006]
 layout_mode = 2

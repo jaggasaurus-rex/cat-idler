@@ -46,6 +46,13 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var research_cats_label: Label = %ResearchCatsLabel
 @onready var research_item_list: VBoxContainer = %ResearchItemList
 @onready var center_panel: Control = %CenterPanel
+@onready var cat_play_area: Control = %CatPlayArea
+@onready var dog_battle_panel: PanelContainer = %DogBattlePanel
+@onready var battle_warning_label: Label = %WarningLabel
+@onready var battle_result_label: Label = %ResultLabel
+@onready var battle_top_lane: Control = %TopLane
+@onready var battle_middle_lane: Control = %MiddleLane
+@onready var battle_bottom_lane: Control = %BottomLane
 @onready var pride_label: Label = %PrideLabel
 
 
@@ -100,9 +107,6 @@ var _sweepers: Array[Dictionary] = []
 # Developer debug menu — overlay panel built dynamically in _ready() (never in Main.tscn),
 # toggled by the backtick key via _unhandled_key_input so it never blocks existing input.
 var _pride_label_shown: bool = false
-var _battle_overlay: Node2D = null
-var _battle_warning_label: Label = null
-var _battle_result_label: Label = null
 
 var _debug_menu_visible: bool = false
 var _debug_poop_disabled: bool = false
@@ -247,35 +251,9 @@ func _ready() -> void:
 	_debug_panel.add_child(_debug_vbox)
 	add_child(_debug_panel)
 
-	# Build the BattleOverlay — hidden by default; shown during dog attack visualization.
-	# Lanes and dog sprites are built fresh each battle so they always reflect current cat count.
-	_battle_overlay = Node2D.new()
-	_battle_overlay.visible = false
-	_battle_overlay.z_index = 10
-	add_child(_battle_overlay)
-	_battle_warning_label = Label.new()
-	_battle_warning_label.text = Strings.DOG_ATTACK_WARNING_LABEL
-	_battle_warning_label.add_theme_font_size_override("font_size", 32)
-	_battle_warning_label.visible = false
-	_battle_overlay.add_child(_battle_warning_label)
-	_battle_result_label = Label.new()
-	_battle_result_label.add_theme_font_size_override("font_size", 32)
-	_battle_result_label.visible = false
-	_battle_overlay.add_child(_battle_result_label)
-
-
-# Hides the battle overlay when any popup pauses the tree so it never occludes
-# starvation, game-over, or other scene popups. Restores it when unpaused if
-# the WARNING phase is still active.
-func _notification(what: int) -> void:
-	match what:
-		NOTIFICATION_PAUSED:
-			if is_instance_valid(_battle_overlay):
-				_battle_overlay.visible = false
-		NOTIFICATION_UNPAUSED:
-			if is_instance_valid(_battle_overlay) \
-					and GameState.dog_attack_state == GameState.DogAttackState.WARNING:
-				_battle_overlay.visible = true
+	battle_warning_label.text = Strings.DOG_ATTACK_WARNING_LABEL
+	battle_warning_label.add_theme_font_size_override("font_size", 32)
+	battle_result_label.add_theme_font_size_override("font_size", 32)
 
 
 # Applies the section-header style (larger size + bold) to a Label node.
@@ -581,6 +559,10 @@ func _process(delta: float) -> void:
 		pride_label.visible = true
 	if pride_label.visible:
 		pride_label.text = Strings.HUD_PRIDE % str(GameState.pride)
+
+	# Drive DogBattlePanel visibility from state each frame — shown during WARNING and RESOLVING only.
+	dog_battle_panel.visible = GameState.dog_attack_state == GameState.DogAttackState.WARNING \
+		or GameState.dog_attack_state == GameState.DogAttackState.RESOLVING
 
 	# One-way latch — whale popup fires the instant the mechanic unlocks (manager_bots >= 2
 	# and the 20s delay elapsed), like every other popup. Decoupled from the spawn pipeline
@@ -1410,7 +1392,7 @@ func _on_poop_pressed(poop: Dictionary) -> void:
 
 
 # Places cat at a random position inside CenterPanel, avoiding existing cats.
-# Safe zone uses center_panel.get_global_rect() — all UI is outside this rect.
+# Uses center_panel.get_global_rect() so bounds are stable regardless of DogBattlePanel visibility.
 # Cat wander bounds (set_bounds) use the same rect source.
 func _place_cat(cat: Node2D) -> void:
 	# 40px inset from CenterPanel edges; top 10% excluded so bubbles don't clip above panel.
@@ -1498,67 +1480,57 @@ func _show_dog_attack_unlock_popup() -> void:
 
 
 ## Called when the warning phase begins. Triggers hissing animation on all cats
-## and shows the warning label in the center panel.
+## and shows the warning label in DogBattlePanel (panel visibility driven by _process()).
 func _on_dog_attack_warning_started() -> void:
 	for cat: Node in cat_container.get_children():
 		if cat.has_method("start_hissing"):
 			cat.start_hissing()
-	var panel_rect: Rect2 = center_panel.get_global_rect()
-	_battle_warning_label.position = Vector2(
-		panel_rect.position.x + panel_rect.size.x * 0.5 - 120.0,
-		panel_rect.position.y + 20.0
-	)
-	_battle_warning_label.visible = true
-	_battle_overlay.visible = true
+	battle_warning_label.visible = true
+	battle_result_label.visible = false
 
 
 ## Called when battle resolves. Receives outcome and pride delta. Runs the full
 ## battle visualization sequence then calls GameState.schedule_next_dog_attack().
 func _on_dog_attack_resolved(player_won: bool, pride_delta: int) -> void:
-	_battle_warning_label.visible = false
+	battle_warning_label.visible = false
 
-	var panel_rect: Rect2 = center_panel.get_global_rect()
 	var cat_count: int = GameState.cats
-	var lanes: int = 3
+	var lanes: Array[Control] = [battle_top_lane, battle_middle_lane, battle_bottom_lane]
 
-	# Build cat indicators distributed across three horizontal lanes
+	# Build cat indicators distributed across the three lane Controls (local positions).
 	var cat_labels: Array[Label] = []
-	for lane_idx: int in range(lanes):
-		var cats_in_lane: int = mini(5, int(ceil(float(cat_count) / float(lanes - lane_idx))))
+	for lane_idx: int in range(lanes.size()):
+		var lane: Control = lanes[lane_idx]
+		var cats_in_lane: int = mini(5, int(ceil(float(cat_count) / float(lanes.size() - lane_idx))))
 		cat_count -= cats_in_lane
-		var lane_y: float = panel_rect.position.y + panel_rect.size.y * (0.25 + float(lane_idx) * 0.25)
 		for c: int in range(cats_in_lane):
 			var cat_lbl: Label = Label.new()
 			cat_lbl.text = Strings.BATTLE_CAT_EMOJI
 			cat_lbl.add_theme_font_size_override("font_size", 28)
-			cat_lbl.position = Vector2(
-				panel_rect.position.x + 40.0 + float(c) * 50.0,
-				lane_y
-			)
-			_battle_overlay.add_child(cat_lbl)
+			cat_lbl.position = Vector2(10.0 + float(c) * 50.0, 5.0)
+			lane.add_child(cat_lbl)
 			cat_labels.append(cat_lbl)
 
-	# Build dog sprites entering from the right
+	# Build dog sprites entering from the right edge of each lane.
 	# TODO: swap Label emoji for AnimatedSprite2D once dog sprite sheet is available
 	var dog_labels: Array[Label] = []
-	for lane_idx: int in range(lanes):
+	for lane_idx: int in range(lanes.size()):
+		var lane: Control = lanes[lane_idx]
 		var dog_lbl: Label = Label.new()
 		dog_lbl.text = Strings.BATTLE_DOG_EMOJI
 		dog_lbl.add_theme_font_size_override("font_size", 36)
-		var lane_y: float = panel_rect.position.y + panel_rect.size.y * (0.25 + float(lane_idx) * 0.25)
-		dog_lbl.position = Vector2(panel_rect.end.x + 40.0, lane_y)
-		_battle_overlay.add_child(dog_lbl)
+		dog_lbl.position = Vector2(lane.size.x + 40.0, 5.0)
+		lane.add_child(dog_lbl)
 		dog_labels.append(dog_lbl)
 
-	# Tween dogs in from the right over 1.5s
+	# Tween dogs in from the right over 1.5s.
 	var tween: Tween = create_tween().set_parallel(true)
 	for i: int in range(dog_labels.size()):
 		var dog_lbl: Label = dog_labels[i]
-		var lane_y: float = panel_rect.position.y + panel_rect.size.y * (0.25 + float(i) * 0.25)
-		tween.tween_property(dog_lbl, "position:x",
-			panel_rect.end.x - 80.0 - float(i) * 30.0, 1.5)
+		var lane: Control = lanes[i]
+		tween.tween_property(dog_lbl, "position:x", lane.size.x - 80.0, 1.5)
 
-	# After dogs arrive: fade out losers, show result
+	# After dogs arrive: fade out losers, show result.
 	tween.chain().tween_callback(func() -> void:
 		var fade_tween: Tween = create_tween().set_parallel(true)
 		if player_won:
@@ -1569,21 +1541,14 @@ func _on_dog_attack_resolved(player_won: bool, pride_delta: int) -> void:
 			for fi: int in range(fade_count):
 				fade_tween.tween_property(cat_labels[fi], "modulate:a", 0.0, 0.5)
 
-		# Show result label
-		_battle_result_label.text = (Strings.DOG_ATTACK_RESULT_WIN if player_won else Strings.DOG_ATTACK_RESULT_LOSE) % str(pride_delta)
-		_battle_result_label.position = Vector2(
-			panel_rect.position.x + panel_rect.size.x * 0.5 - 100.0,
-			panel_rect.position.y + panel_rect.size.y * 0.5
-		)
-		_battle_result_label.visible = true
+		battle_result_label.text = (Strings.DOG_ATTACK_RESULT_WIN if player_won else Strings.DOG_ATTACK_RESULT_LOSE) % str(pride_delta)
+		battle_result_label.visible = true
 
-		# Wait 2s then clean up and schedule next attack.
 		# tween_interval() returns IntervalTweener (not Tween), so tween_callback
 		# must be called on fade_tween directly rather than chained on the return value.
 		fade_tween.chain().tween_interval(2.0)
 		fade_tween.tween_callback(func() -> void:
-			_battle_result_label.visible = false
-			_battle_overlay.visible = false
+			battle_result_label.visible = false
 			for cat_lbl: Label in cat_labels:
 				cat_lbl.queue_free()
 			for dog_lbl: Label in dog_labels:
