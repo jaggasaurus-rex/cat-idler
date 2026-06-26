@@ -131,6 +131,12 @@ visible = false
 layout_mode = 2
 text = "Buy Tokens ($20)"
 
+[node name="PrideLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=400000700]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Pride: 0"
+
 [node name="CenterPanel" type="Control" parent="PanelLayout" unique_id=500000005]
 unique_name_in_owner = true
 layout_mode = 2

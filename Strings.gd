@@ -154,6 +154,16 @@ const ENRICHMENT_CHANDELIER: String     = "Custom Cat Chandelier\nFor the cat wh
 const ENRICHMENT_MASSEUSE: String       = "Personal Cat Masseuse\nFull-time. Degree in Feline Myotherapy."
 const ENRICHMENT_YACHT: String          = "Cat Yacht\nThey don't know what a yacht is. That's not the point."
 
+## Dog Attack
+const BATTLE_CAT_EMOJI: String = "🐱"
+const BATTLE_DOG_EMOJI: String = "🐕"
+const POPUP_DOG_ATTACK_UNLOCK_TITLE: String = "NEW ACHIEVEMENT: Self-Fulfilling Prophecy"
+const POPUP_DOG_ATTACK_UNLOCK_BODY: String = "The dogs, generally speaking, are pretty chill. However, they noticed that your cats are planning something. They don't like that. In fact, they fucking hate that.\n\nREWARD: WAR BABYYYYYYY\n\nThe dogs are a-comin, better watch out."
+const HUD_PRIDE: String = "Pride: %s"
+const DOG_ATTACK_WARNING_LABEL: String = "⚠ Dogs incoming!"
+const DOG_ATTACK_RESULT_WIN: String = "Victory! +%s Pride"
+const DOG_ATTACK_RESULT_LOSE: String = "Defeated! -%s Pride"
+
 ## Research item id -> display name, for the active-research label lookup
 const RESEARCH_NAMES: Dictionary = {
 	"cat_power_unite":          RESEARCH_CAT_POWER_NAME,

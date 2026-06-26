@@ -31,6 +31,8 @@ cat-idler/
 ├── autoloads/
 │   ├── GameState.gd        # Global state singleton
 │   └── Util.gd             # Stateless helper functions (format_number)
+├── docs/
+│   └── adr/                # Architecture Decision Records (0001–0004)
 ├── scenes/
 │   ├── CatCharacter.tscn   # Sprite-based cat (instances scripts/CatCharacter.gd; AnimatedSprite2D child)
 │   ├── Main.gd             # Root scene script
@@ -86,7 +88,8 @@ Main (Control, full-rect)             ← Main.gd
 │   │       ├── BotTokenRow (HBoxContainer) ← BotsRateLabel | TokensLabel | MegaBotsRateLabel
 │   │       ├── ManagerBotButton      ← shown once bot_shop_unlocked
 │   │       ├── MegaManagerBotButton  ← shown once ai_model_upgrade research completes
-│   │       └── BuyTokensButton       ← shown once tokens_shop_unlocked
+│   │       ├── BuyTokensButton       ← shown once tokens_shop_unlocked
+│   │       └── PrideLabel (Label)    ← hidden until dog_attack_unlocked (one-way latch in Main.gd._process()); "Pride: X" updated every frame
 │   ├── CenterPanel (Control, EXPAND_FILL, mouse_filter=IGNORE) ← %CenterPanel; cat play area
 │   │   └── CatContainer (Node2D)    ← purchased cats added here; position 0,0 local
 │   └── RightPanel (PanelContainer, min_x=270)
@@ -126,33 +129,6 @@ Main (Control, full-rect)             ← Main.gd
 │       └── VBoxContainer
 │           ├── PopupLabel (Label)    ← unlock message, autowrap
 │           └── OKButton (Button)     ← hides popup and unpauses tree
-├── ManagerBotButton (Button)         ← hidden until bot_shop_unlocked; label shows live cost
-├── MegaManagerBotButton (Button)     ← at offset_top=380; hidden until research_complete["ai_model_upgrade"]; "Mega-Bot ($X)" label, disabled when unaffordable; pressed → buy_mega_bot()
-├── BotTokenRow (HBoxContainer)       ← layout_mode=0 at offset_top=350; always visible; contains BotsRateLabel, TokensLabel, and MegaBotsRateLabel side by side with 16px separation
-│   ├── BotsRateLabel (Label)         ← hidden until bot_shop_unlocked; "Bots: X" updates every frame
-│   ├── TokensLabel (Label)           ← hidden until tokens_shop_unlocked; "Tokens: X" updates every frame
-│   └── MegaBotsRateLabel (Label)     ← hidden until MegaManagerBotButton is visible; "Mega-Bots: X" updates every frame
-├── BuyTokensButton (Button "Buy Tokens ($N)") ← hidden until tokens_shop_unlocked; calls buy_tokens(1); when bot_manager_purchased, label reads live cost each frame via GameState.get_token_pack_cost() with ∞ suffix
-├── CenterColumn (VBoxContainer)      ← fixed pos offset_left=430, offset_top=110, offset_right=830, offset_bottom=600; hidden until housing_tier_index >= 1 (one-way latch in Main.gd._process()); contains research UI
-│   ├── ResearchTitle (Label)         ← static "Research" heading
-│   ├── ResearchActiveLabel (Label)   ← "No Active Research" or active item name; updated every frame
-│   ├── ResearchProgressBar (ProgressBar) ← min=0 max=1; value = points / points_cost of active funded item; 0.0 when none; updated every frame
-│   ├── CatIntelligenceLabel (Label)  ← created programmatically in _ready(), inserted at index 1 (after ResearchTitle); hidden until one-way latch fires when GameState.research_complete["cat_power_unite"] is true; text = "Cat Intelligence: X" updated each frame while visible
-│   ├── ResearchSlider (HSlider)      ← min=0 max=1 step=0.01; hidden in _ready(); revealed by one-way latch when GameState.research_funded.size() > 0; value_changed → GameState.research_cat_fraction
-│   ├── SliderLabels (HBoxContainer)  ← static orientation hints
-│   │   ├── OnlyPawsHint (Label "OnlyPaws") ← left side hint
-│   │   └── ResearchHint (Label "Research") ← right-aligned hint
-│   ├── ResearchCatsLabel (Label)     ← "Cats researching: X"; updated every frame from GameState.get_research_cats()
-│   └── ResearchItemList (VBoxContainer) ← children built dynamically in Main.gd _ready() from Config.RESEARCH_ITEMS; each child is a PanelContainer → VBoxContainer → NameLabel + DescriptionLabel (autowrap) + FundButton + ProgressLabel (hidden until funded); refs stored in _research_panels/_research_fund_buttons/_research_progress_labels dicts keyed by item id. Panel visibility is governed by `_refresh_research_slots()` (a **queued slot system**, not per-item latches): panels appear one at a time in RESEARCH_ITEMS order, subject first to a **global gate** — until `research_complete["cat_power_unite"]` is true, every item except `cat_power_unite` is skipped regardless of its other gates, so the first research item must be fully completed before any other panel can populate (the `cat_power_unite` panel itself stays exempt so it can be funded and completed). Beyond that gate each item is gated by housing tier (`min_housing_tier`), a predecessor-complete gate (every lower-index item must be in `research_complete`), an optional OR unlock gate (when an item declares `unlock_requires_cats` and/or `unlock_requires_research`, it stays hidden until EITHER `GameState.cats >= unlock_requires_cats` OR `research_complete[unlock_requires_research]` — additive to, not a replacement for, the predecessor gate), and a `Config.RESEARCH_MAX_VISIBLE` (4) cap on simultaneously visible panels. The first item is eligible from start; later items only become eligible once all predecessors finish. Showing a panel is a one-way latch (sets `_research_panel_unlocked[id]`); completion hides the panel (`_research_panel_hidden[id] = true`) and immediately frees a slot. Called every frame from `_process()`, at the end of `_ready()`, and right after each completion in `_on_research_completed()`
-├── ShopPanel (VBoxContainer)         ← right-anchored, always visible; offset_left=-380, offset_right=-10 (370px wide)
-│   ├── ShopLabel (Label "Shop")
-│   └── ShopScroll (ScrollContainer) ← fills remaining ShopPanel height; size_flags_vertical=3
-│       └── ShopList (VBoxContainer) ← single item list; size_flags_horizontal=3; separation=8; sorted ascending by cost each time visibility changes
-│           ├── HousingButton (Button) ← hidden until home_shop_unlocked; text = next tier name + cost; disappears when max tier reached; calls buy_housing_upgrade()
-│           ├── AutoFeederButton (Button) ← hidden until auto_feeder_unlocked; disappears on purchase; calls buy_auto_feeder()
-│           ├── BotManagerShopButton (Button) ← hidden until bot_manager_unlocked; disappears on purchase; calls buy_bot_manager()
-│           ├── (dynamic) _pawsco_membership_button / _ai_enterprise_membership_button (Button) ← created in _ready() and added to ShopList; hidden until bot_manager_unlocked; disappear on purchase
-│           ├── (dynamic) _robo_sweeper_button (Button) ← created in _ready() and added to ShopList; hidden until research_complete["robo_shit_sweeper"]; stays visible after each purchase (repeatable); label reads live next_robo_sweeper_cost each frame via BTN_ROBO_SWEEPER; shop_cost meta updated per frame; disabled when unaffordable; calls buy_robo_sweeper()
 ├── HappinessCrampedPopup (ColorRect) ← full-screen dark overlay; process_mode=WHEN_PAUSED; shown once when happiness_cramped_triggered first sets (cats>=10); on dismiss sets home_shop_unlocked=true; pauses tree; "Sardine Can Chic" achievement; reward = Home Tab Unlocked
 │   └── DialogPanel (PanelContainer)  ← centered 500×200 dialog
 │       └── VBoxContainer
@@ -234,12 +210,18 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `viral_bubbles_unlocked` | `bool` | `false` | One-way latch; set to `true` in `_process()` when `manager_bots >= 2` and `_viral_delay_timer >= 20.0`; gates all bubble spawning in Main.gd `_try_spawn_bubble_for_cat()` |
 | `viral_popup_shown` | `bool` | `false` | One-way latch; set to `true` by the Main.gd `_process()` popup latch the instant `viral_bubbles_unlocked` flips, which shows the whale popup |
 | `inspiration_popup_shown` | `bool` | `false` | One-way latch; set to `true` by Main.gd `_on_bubble_pressed()` the first time an inspiration (💡) bubble is collected, which shows the one-time inspiration popup |
+| `pride` | `int` | `0` | Player's Pride score; incremented by `Config.PRIDE_GAIN_WIN` on dog attack win, decremented by `Config.PRIDE_LOSS_LOSE` on loss (clamped at 0) |
+| `dog_attack_unlocked` | `bool` | `false` | One-way latch; set by `unlock_dog_attacks()` when `dog_defence` research popup is dismissed |
+| `dog_attack_state` | `int` | `DogAttackState.IDLE` | Current phase of the dog attack state machine (IDLE/WAITING/WARNING/RESOLVING) |
+| `_dog_attack_timer` | `float` | `0.0` | Counts down in WAITING (to next warning) and WARNING (to battle resolution) |
 
 | Signal | Description |
 |---|---|
 | `cat_purchased` | Emitted by `buy_cat()` after a successful purchase |
 | `cat_lost` | Emitted by `starvation_lose_cat()` when a cat is lost to starvation; Main.gd removes the last CatCharacter node from CatContainer |
 | `research_completed(id: String)` | Emitted by `_process()` the frame a research item finishes accumulating its required points |
+| `dog_attack_warning_started` | Emitted when dog attack state transitions from WAITING → WARNING; Main.gd triggers hissing + warning label |
+| `dog_attack_resolved(player_won: bool, pride_delta: int)` | Emitted by `resolve_dog_attack()` after pre-calculating battle outcome; Main.gd runs battle visualization then calls `schedule_next_dog_attack()` |
 
 | Method | Signature | Description |
 |---|---|---|
@@ -276,6 +258,11 @@ Central singleton that owns all game variables. Accessed globally as `GameState`
 | `get_cyborg_multiplier` | `() -> float` | Returns `pow(2.0, count)` where `count` is the number of cyborg research tiers completed (`cyborg_cats`, `cyborg_level_2`, `cyborg_level_3`, `cyborg_level_4`). Returns 1.0 when none are complete; 2× per completed tier (2×/4×/8×/16× at tiers 1–4). Applied to every cat's full income rate and to research point generation |
 | `fund_research` | `(id: String) -> void` | Finds item in `Config.RESEARCH_ITEMS` by id; if `money >= fund_cost` and not yet funded: deducts cost, sets `research_funded[id] = true`, initialises `research_points[id] = 0.0` |
 | `update_paws_rate` | `() -> void` | Computes `rate = (onlypaws_income_per_cat + onlypaws_income_per_bot * manager_bots + MEGA_BOT_INCOME_PER_CAT * mega_bots) * get_cyborg_multiplier()`, then `paws_income_rate = rate * float(get_onlypaws_cats())`. Must be called whenever cat count, bot/mega-bot count, cyborg research completion, or `research_cat_fraction` change. Called automatically at every research completion (including cyborg tiers) via `_process()` |
+| `unlock_dog_attacks` | `() -> void` | Sets `dog_attack_unlocked = true`, transitions to WAITING, seeds `_dog_attack_timer = Config.DOG_ATTACK_FIRST_DELAY`. Called by Main.gd when the dog_defence unlock popup is dismissed |
+| `get_cat_strength` | `() -> float` | Returns `float(cats) * get_cyborg_multiplier() * Config.DOG_ATTACK_STRATEGY_MODIFIER`. Example at 10 cats, no cyborg: 10.0 |
+| `_roll_dog_strength` | `() -> float` | Private. Returns a randomized dog strength as a fraction of current cat strength. Both roll bounds scale with `cats / 10` and `housing_tier_index` so dogs get bolder with progression. Only called from `resolve_dog_attack()` |
+| `resolve_dog_attack` | `() -> void` | Pre-calculates battle outcome (`cat_str >= dog_str` = win), applies pride delta (gain on win, loss on loss, clamped to 0), transitions to RESOLVING, emits `dog_attack_resolved`. Main.gd calls `schedule_next_dog_attack()` after visualization |
+| `schedule_next_dog_attack` | `() -> void` | Computes next interval as `randf_range(DOG_ATTACK_INTERVAL_MIN, MAX) * pow(DOG_ATTACK_INTERVAL_SCALE, housing_tier_index)`, floored at 60s, transitions to WAITING. Called by Main.gd after the battle visualization finishes |
 
 ### Config (`res://Config.gd`)
 
@@ -350,6 +337,14 @@ Autoloaded singleton containing only `const` tuning values. No mutable state. Lo
 | `RESEARCH_MAX_VISIBLE` | `int` | `4` | Max research panels shown at once by Main.gd's `_refresh_research_slots()` queued slot system |
 | `UI_BASE_FONT_SIZE` | `int` | `22` | Global fallback font size (set on `ThemeDB.fallback_font_size` in `_ready()`); all labels/buttons inherit it; bubble glyphs use `roundi(UI_BASE_FONT_SIZE * 2.2)` |
 | `UI_HEADER_FONT_SIZE` | `int` | `28` | Section-header font size (larger + bold) applied by `_style_as_header()` to CatsLabel, the happiness title, and the Shop label |
+| `DOG_ATTACK_WARNING_DURATION` | `float` | `10.0` | Seconds cats hiss in WARNING state before battle resolves |
+| `DOG_ATTACK_FIRST_DELAY` | `float` | `30.0` | Seconds after `unlock_dog_attacks()` before the first attack |
+| `DOG_ATTACK_INTERVAL_MIN/MAX` | `float` | `300.0/600.0` | Base interval range between attacks (5–10 min); shrinks via `DOG_ATTACK_INTERVAL_SCALE` per housing tier |
+| `DOG_ATTACK_INTERVAL_SCALE` | `float` | `0.92` | Interval multiplier per housing tier; dogs get bolder as player progresses |
+| `DOG_STRENGTH_BASE_MIN/MAX` | `float` | `0.3/0.7` | Dog strength roll bounds as a fraction of `get_cat_strength()` |
+| `DOG_STRENGTH_SCALE_CATS/HOUSING` | `float` | `0.08/0.12` | Additive scaling to both bounds per 10 cats and per housing tier |
+| `PRIDE_GAIN_WIN` / `PRIDE_LOSS_LOSE` | `int` | `5/3` | Pride delta on win/loss |
+| `DOG_ATTACK_STRATEGY_MODIFIER` | `float` | `1.0` | Multiplier applied to cat strength; future stances will vary this |
 
 ### Strings (`res://Strings.gd`)
 
@@ -385,13 +380,15 @@ Sprite-based cat with autonomous wander behaviour and randomized color on spawn.
 
 Color-variant system: `const COLOR_VARIANTS: Array[SpriteFrames]` preloads `cat_frames_1.tres` through `cat_frames_5.tres` from `res://assets/cats/`. In `_ready()`, the script picks one at random (`randi() % 5`) and assigns it to `AnimatedSprite2D.sprite_frames`, then plays `"idle"`. All five .tres files define identical animations (`"idle"` 19 frames, `"walk"` 25 frames, 6 fps, loop=true) and only differ in their atlas texture paths (`cat_N.png` / `cat_walk_N.png`). The script never builds or mutates SpriteFrames data — variant selection is the only SpriteFrames assignment.
 
-Wander state machine (`enum State { IDLE, WALKING }`):
+Wander state machine (`enum State { IDLE, WALKING, HISSING }`):
 - `_ready()` picks a random color variant (see above), then seeds `_wander_timer` with `randf_range(Config.CAT_WANDER_MIN, CAT_WANDER_MAX)`.
 - `_bounds: Rect2` — injected via `set_bounds(rect)` by Main after `add_child`; falls back to `get_viewport_rect()` if never set. Wander targets are always computed inside this rect.
 - `set_bounds(rect: Rect2) -> void` — public method; stores `rect` in `_bounds`. Called once per cat at purchase time with `center_panel.get_global_rect()` so cats stay inside CenterPanel.
 - `_process(delta)`: returns early while `_bubble_paused` (no movement, no timer tick). Otherwise counts `_wander_timer` down; on expiry picks a new `_target_pos` inside `_bounds` (40px inset, top 10% excluded — same formula as `_place_cat`), enters `WALKING`, re-rolls the timer, flips `AnimatedSprite2D.flip_h` toward the target, and plays `"walk"`. While `WALKING`, moves toward `_target_pos` at `Config.CAT_MOVE_SPEED` px/s; on arrival snaps to target, returns to `IDLE`, and plays `"idle"`.
 - `pause_for_bubble()`: sets `_bubble_paused = true`, forces `IDLE`, plays `"idle"`. Called by Main.gd only for **viral** bubbles spawned over this cat.
 - `resume_from_bubble()`: clears `_bubble_paused` and re-rolls `_wander_timer`. Called by Main.gd when a bubble over this cat is collected or expires.
+- `start_hissing()`: public; sets `_state = HISSING`, plays `"idle"` (TODO: swap for `"hiss"` animation when sprite sheet is ready). Freezes movement and wander timer. Composes with `_bubble_paused` — a cat can be both bubble-paused and hissing simultaneously; the `_bubble_paused` guard fires first in `_process()`.
+- `stop_hissing()`: public; returns to `IDLE`, plays `"idle"`, re-rolls `_wander_timer`. Called by Main.gd's `_on_dog_attack_resolved` cleanup after battle animation finishes.
 - `_play_anim(name)`: private; plays the named animation only if the `AnimatedSprite2D` exists and its SpriteFrames defines that animation, else leaves the current animation unchanged. SpriteFrames defines `"idle"` (19 frames, 6 fps, loop) and `"walk"` (25 frames, 6 fps, loop) — both backed by the active color-variant resource assigned in `_ready()`.
 
 Scene tree:
@@ -440,7 +437,10 @@ Drives the root scene. Reads from and delegates to `GameState`; the only local m
 | `_try_spawn_bubble_for_cat(cat_node)` | Spawn guard called when a specific cat's cooldown expires. Returns early (no spawn) if any of: `GameState.viral_bubbles_unlocked == false`, `GameState.only_paws_active == false`, or `_active_bubbles.size() >= Config.BUBBLE_MAX_ON_SCREEN`. Otherwise calls `_spawn_bubble(cat_node)` |
 | `_spawn_bubble(cat_node, force_type = "")` | Picks bubble type: if `force_type` is non-empty it is used directly (skipping selection); else `"viral"` when no research is active (`GameState.get_active_research_id() == ""`), otherwise `"inspiration"` with probability `research_cat_fraction`, else `"viral"`. Creates a clickable Button over `cat_node` (text `"💰"` viral / `"💡"` inspiration; `font_size` override `roundi(Config.UI_BASE_FONT_SIZE * 2.2)`, `custom_minimum_size` 80×80), positioned at `cat_node.global_position + Vector2(randf_range(-30,30), randf_range(-50,-20))`, `z_index = 100` (renders in front of all UI panels), child of Main; stores a `{node, timer, type, research_id, cat_node}` dict in `_active_bubbles` and binds `gui_input` → `_on_bubble_gui_input(event, bubble)`. `research_id` is captured at spawn so collection still works if research changes mid-flight. After appending, if the type is `"viral"` and `cat_node` is valid, calls `cat_node.pause_for_bubble()` to freeze that cat (inspiration bubbles do not pause) |
 | `_show_viral_popup()` | Builds the one-time "Whale Hunting Baby!" achievement popup entirely in code (full-screen `ColorRect` overlay with `process_mode = WHEN_PAUSED` and `z_index = 20` → `CenterContainer` → `PanelContainer` → `VBoxContainer` with an autowrapped `Label` and OK `Button`); pauses the tree on show; OK button frees the overlay, unpauses, and calls `_force_first_viral_bubble()` |
-| `_on_research_completed(id)` | Hides and latches the completed item's panel (`_research_panel_hidden[id] = true`), then calls `_refresh_research_slots()`. Dispatch by id: `ai_model_upgrade` → `_show_ai_overlords_popup()`; `cyborg_cats` → `_show_cyborg_popup()`; `cat_breeder_contract` → `GameState.multiply_cat_cost_growth(0.9)`; `cat_breeders_contract` → `GameState.multiply_cat_cost_growth(0.8)`; `cybernetic_poop_recyclers` → `GameState.set_poop_recyclers_researched()` + re-roll all `_cat_poop_timers` × `Config.POOP_RECYCLER_INTERVAL_MULTIPLIER`; `cat_enrichment_program` → `GameState.unlock_enrichment_store()`; `further_the_cat_race` → `_trigger_glitch_effect()`; `research_your_own_llms` → `GameState.set_own_llm_researched()` + `_trigger_glitch_effect()` |
+| `_on_research_completed(id)` | Hides and latches the completed item's panel (`_research_panel_hidden[id] = true`), then calls `_refresh_research_slots()`. Dispatch by id: `ai_model_upgrade` → `_show_ai_overlords_popup()`; `cyborg_cats` → `_show_cyborg_popup()`; `cat_breeder_contract` → `GameState.multiply_cat_cost_growth(0.9)`; `cat_breeders_contract` → `GameState.multiply_cat_cost_growth(0.8)`; `cybernetic_poop_recyclers` → `GameState.set_poop_recyclers_researched()` + re-roll all `_cat_poop_timers` × `Config.POOP_RECYCLER_INTERVAL_MULTIPLIER`; `cat_enrichment_program` → `GameState.unlock_enrichment_store()`; `further_the_cat_race` → `_trigger_glitch_effect()`; `research_your_own_llms` → `GameState.set_own_llm_researched()` + `_trigger_glitch_effect()`; `dog_defence` → `_show_dog_attack_unlock_popup()` |
+| `_show_dog_attack_unlock_popup()` | Builds the one-time "Self-Fulfilling Prophecy" achievement popup in code (full-screen overlay, 600×360 dialog, process_mode=WHEN_PAUSED, z_index=20, pauses tree). OK button frees overlay, unpauses, then calls `GameState.unlock_dog_attacks()`. Text uses `Strings.POPUP_DOG_ATTACK_UNLOCK_TITLE` + `Strings.POPUP_DOG_ATTACK_UNLOCK_BODY` |
+| `_on_dog_attack_warning_started()` | Signal handler; calls `start_hissing()` on every cat in `cat_container` and positions + shows `_battle_warning_label` in the center panel |
+| `_on_dog_attack_resolved(player_won, pride_delta)` | Signal handler; runs the full battle visualization: distributes cat emoji labels across three horizontal lanes, tweens dog emoji labels in from the right over 1.5s, then fades out losers and shows `_battle_result_label` for 2s via chained tweens. On completion hides overlay, `queue_free()`s lane indicators, calls `stop_hissing()` on all cats, and calls `GameState.schedule_next_dog_attack()` |
 | `_show_cyborg_popup()` | Builds the one-time "Resistance Is Fur-tile" achievement popup in code, mirroring `_show_ai_overlords_popup()` (600×360 `PanelContainer`); pauses the tree on show; OK button frees the overlay and unpauses. Fired exactly once when `cyborg_cats` research completes |
 | `_show_ai_overlords_popup()` | Builds the one-time "AI Overlords" achievement popup in code, mirroring `_show_viral_popup()` but with a 600×360 `PanelContainer`; pauses the tree on show; OK button frees the overlay and unpauses |
 | `_show_inspiration_popup()` | Builds the one-time inspiration-bubble popup in code, mirroring `_show_viral_popup()` (overlay → CenterContainer → PanelContainer → VBox → autowrapped `Strings.POPUP_INSPIRATION` label + OK); pauses on show; OK frees the overlay and unpauses. Gated by `GameState.inspiration_popup_shown` so it fires exactly once |
@@ -485,6 +485,7 @@ Drives the root scene. Reads from and delegates to `GameState`; the only local m
 - [x] **Bubble mechanic** — clickable floating Button bubbles spawn over individual cats. Each cat runs its own randomized cooldown (`_cat_bubble_timers`, keyed by `instance_id`) of `randf_range(Config.BUBBLE_SPAWN_MIN, BUBBLE_SPAWN_MAX)` = 5–15s, registered on purchase and erased on loss; when a cat's timer expires it always resets but only attempts a spawn if a global **burst window** is currently open. The screen alternates between an idle global cooldown (`BUBBLE_GLOBAL_CD_MIN..MAX` = 20–40s, no spawns) and a brief open burst window (`BUBBLE_BURST_WINDOW_MIN..MAX` = 2–10s) during which expiring per-cat timers may fire; the first window does not open immediately on start. Triggers that land outside a window are discarded, never queued. Capped at `BUBBLE_MAX_ON_SCREEN` (4) total. Gated behind `viral_bubbles_unlocked` (set 20s after the **second** Manager-Bot is owned) and `only_paws_active`. Two types: Viral (💰, reward = one cat's $/sec `per_cat_rate × 4`, min $1) and Inspiration (💡, reward = one cat's contribution `1 × 3` research points, min 1, clamped to `points_cost`). Rewards reflect the single cat that spawned the bubble, not the whole population. Viral always spawns when no research is active; with active research, Inspiration spawns with probability `research_cat_fraction` else Viral. The one-time "Whale Hunting Baby!" achievement popup (built in code, pauses tree) fires from a `_process` latch the instant the mechanic unlocks — not from the spawn pipeline — so it appears right at unlock rather than waiting for a random burst window. Dismissing it calls `_force_first_viral_bubble()`, which spawns one guaranteed viral bubble immediately (bypassing all guards), after which normal burst-window scheduling takes over. Bubbles fade out over `BUBBLE_LIFETIME` (4.5s) and disappear if not clicked. Bubble Buttons are large (font `roundi(UI_BASE_FONT_SIZE × 2.2)`, 80×80 min size) and use `z_index = 100` to render in front of all UI; a left-click collects the clicked bubble plus any other bubbles stacked under the cursor in one click (via `gui_input` + `get_global_rect().has_point`). Created in code (no scene file), children of Main. While a **viral** bubble is live over a cat, that cat is frozen via `pause_for_bubble()` and resumes (`resume_from_bubble()`) when the bubble is collected or expires
 - [x] **Cyborg Research Tiers** — four global research upgrades (`cyborg_cats` → `cyborg_level_2` → `cyborg_level_3` → `cyborg_level_4`; fund costs $3k/$6k/$12k/$25k; points costs 1,800/3,000/5,000/10,000; all require min_housing_tier 2). Each completed tier doubles the global `get_cyborg_multiplier()` — `pow(2.0, count)` where count = tiers complete. Multiplier applies to every cat's full income rate (base + bot + mega-bot contributions) via `update_paws_rate()` and to research point generation each tick. `cyborg_cats` completion fires the "Resistance Is Fur-tile" achievement popup (code-built, same pattern as ai_overlords). All four cats poop equally; no conversion cost; no per-cat levels. Slider assigns all cats to research/income proportionally as before
 - [x] **Cat wandering** — each `CatCharacter` autonomously wanders inside its injected `_bounds` rect (set to `center_panel.get_global_rect()` at spawn): after a 25–60s idle, it picks a random destination (40px inset, top 10% excluded) and walks there at 40 px/s, flipping its sprite toward the target. Movement and the wander timer freeze while a viral money bubble is active above the cat
+- [x] **Dog Attack system** — passive auto-battler mini-game that unlocks when the `dog_defence` research popup is dismissed. `GameState` runs a four-state machine (IDLE → WAITING → WARNING → RESOLVING). After `DOG_ATTACK_FIRST_DELAY` (30s), a 10s WARNING phase begins: cats freeze in a hissing state (`CatCharacter.start_hissing()`) and a "⚠ Dogs incoming!" label shows in the center panel. When WARNING expires, `resolve_dog_attack()` pre-calculates outcome as `get_cat_strength() >= _roll_dog_strength()`: cat strength = `cats × cyborg_multiplier × strategy_modifier`; dog strength is a fraction of cat strength with both bounds rising with cats and housing tier. Player wins apply `+Config.PRIDE_GAIN_WIN` (5) to `pride`; losses apply `-Config.PRIDE_LOSS_LOSE` (3) (clamped to 0). The `dog_attack_resolved` signal triggers Main.gd's battle visualization: cat emoji labels distributed across three horizontal lanes, dog emoji labels tweened in from the right over 1.5s, then losers fade out, a result label shows for 2s, then cleanup and `schedule_next_dog_attack()`. Interval between attacks shrinks via `pow(DOG_ATTACK_INTERVAL_SCALE, housing_tier_index)` as the player progresses, floored at 60s. `PrideLabel` in the left panel shows `Pride: X` hidden until unlock. Dog/hiss sprites use placeholder emoji pending sprite sheets
 
 ---
 

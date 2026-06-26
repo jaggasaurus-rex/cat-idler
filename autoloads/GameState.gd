@@ -1,8 +1,12 @@
 extends Node
 
+enum DogAttackState { IDLE, WAITING, WARNING, RESOLVING }
+
 signal cat_purchased
 signal cat_lost
 signal research_completed(id: String)
+signal dog_attack_warning_started
+signal dog_attack_resolved(player_won: bool, pride_delta: int)
 
 var money: float = 0.0
 var cats: int = 0
@@ -69,6 +73,11 @@ var _viral_delay_timer: float = 0.0
 var viral_bubbles_unlocked: bool = false
 var viral_popup_shown: bool = false
 var inspiration_popup_shown: bool = false
+
+var pride: int = 0
+var dog_attack_unlocked: bool = false
+var dog_attack_state: int = DogAttackState.IDLE
+var _dog_attack_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -149,6 +158,20 @@ func _process(delta: float) -> void:
 		_viral_delay_timer += delta
 		if _viral_delay_timer >= 20.0:
 			viral_bubbles_unlocked = true
+	# Dog attack state machine — explicitly skipped while the tree is paused so
+	# a starvation/game-over popup cannot trigger resolution mid-warning.
+	if dog_attack_unlocked and not get_tree().paused:
+		match dog_attack_state:
+			DogAttackState.WAITING:
+				_dog_attack_timer -= delta
+				if _dog_attack_timer <= 0.0:
+					dog_attack_state = DogAttackState.WARNING
+					_dog_attack_timer = Config.DOG_ATTACK_WARNING_DURATION
+					dog_attack_warning_started.emit()
+			DogAttackState.WARNING:
+				_dog_attack_timer -= delta
+				if _dog_attack_timer <= 0.0:
+					resolve_dog_attack()
 
 
 ## Returns the id of the first research item that is funded but not yet complete,
@@ -437,6 +460,69 @@ func fund_research(id: String) -> void:
 				research_funded[id] = true
 				research_points[id] = 0.0
 			return
+
+
+## Unlocks the dog attack system. Called once when dog_defence research completes.
+## Schedules the first attack after DOG_ATTACK_FIRST_DELAY seconds.
+## Idempotent: no-ops if already unlocked so double-press on the OK button is safe.
+func unlock_dog_attacks() -> void:
+	if dog_attack_unlocked:
+		return
+	dog_attack_unlocked = true
+	dog_attack_state = DogAttackState.WAITING
+	_dog_attack_timer = Config.DOG_ATTACK_FIRST_DELAY
+
+
+## Returns cat strength for battle resolution.
+## Formula: cat_count × cyborg_multiplier × strategy_modifier
+## Example at 10 cats, no cyborg research: 10 × 1.0 × 1.0 = 10.0
+func get_cat_strength() -> float:
+	return float(cats) * get_cyborg_multiplier() * Config.DOG_ATTACK_STRATEGY_MODIFIER
+
+
+## Returns a randomized dog strength value scaled by progression.
+## Both bounds rise with housing_tier_index and cats so dogs get bolder over time.
+func _roll_dog_strength() -> float:
+	var scale: float = (float(cats) / 10.0) * Config.DOG_STRENGTH_SCALE_CATS \
+		+ float(housing_tier_index) * Config.DOG_STRENGTH_SCALE_HOUSING
+	var low: float = Config.DOG_STRENGTH_BASE_MIN + scale
+	var high: float = Config.DOG_STRENGTH_BASE_MAX + scale
+	# Dog strength is expressed as a fraction of current cat strength so it
+	# auto-scales with player progression rather than requiring manual tuning.
+	return get_cat_strength() * randf_range(low, high)
+
+
+## Resolves the current battle. Pre-calculates outcome, applies pride delta,
+## emits dog_attack_resolved, then waits for Main.gd to call schedule_next_dog_attack().
+func resolve_dog_attack() -> void:
+	var cat_str: float = get_cat_strength()
+	var dog_str: float = _roll_dog_strength()
+	var player_won: bool = cat_str >= dog_str
+	var delta: int
+	if player_won:
+		delta = Config.PRIDE_GAIN_WIN
+		pride += delta
+	else:
+		# Clamp delta to what was actually lost so the result label is truthful
+		# (e.g. pride 1 − 3 loss → delta = 1, not 3).
+		delta = mini(Config.PRIDE_LOSS_LOSE, pride)
+		pride = max(0, pride - Config.PRIDE_LOSS_LOSE)
+	dog_attack_state = DogAttackState.RESOLVING
+	dog_attack_resolved.emit(player_won, delta)
+	# Schedule next attack after resolution animation plays (Main.gd calls
+	# schedule_next_dog_attack() when animation completes)
+
+
+## Schedules the next attack. Interval shrinks with housing tier (dogs get bolder).
+## Called by Main.gd after the battle visualization finishes.
+func schedule_next_dog_attack() -> void:
+	var interval_min: float = Config.DOG_ATTACK_INTERVAL_MIN \
+		* pow(Config.DOG_ATTACK_INTERVAL_SCALE, float(housing_tier_index))
+	var interval_max: float = Config.DOG_ATTACK_INTERVAL_MAX \
+		* pow(Config.DOG_ATTACK_INTERVAL_SCALE, float(housing_tier_index))
+	# Floor at 60 seconds so attacks never become too rapid
+	_dog_attack_timer = max(60.0, randf_range(interval_min, interval_max))
+	dog_attack_state = DogAttackState.WAITING
 
 
 ## Recalculates paws_income_rate from the current cat count, research fraction,

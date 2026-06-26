@@ -321,6 +321,20 @@ const CAT_MOVE_SPEED: float = 40.0     # pixels per second while walking
 const CAT_WANDER_MIN: float = 25.0     # minimum seconds between movement decisions
 const CAT_WANDER_MAX: float = 60.0     # maximum seconds between movement decisions
 
+## Dog Attack
+const DOG_ATTACK_WARNING_DURATION: float = 10.0       # seconds cats hiss before battle starts
+const DOG_ATTACK_FIRST_DELAY: float = 30.0            # seconds after dog_defence completes before first attack
+const DOG_ATTACK_INTERVAL_MIN: float = 300.0          # 5 min minimum between attacks (early game)
+const DOG_ATTACK_INTERVAL_MAX: float = 600.0          # 10 min maximum between attacks (early game)
+const DOG_ATTACK_INTERVAL_SCALE: float = 0.92         # interval multiplied by this per housing tier (dogs get bolder)
+const DOG_STRENGTH_BASE_MIN: float = 0.3              # dog strength roll lower bound as fraction of early cat strength
+const DOG_STRENGTH_BASE_MAX: float = 0.7              # dog strength roll upper bound as fraction of early cat strength
+const DOG_STRENGTH_SCALE_CATS: float = 0.08           # added to both bounds per 10 cats owned
+const DOG_STRENGTH_SCALE_HOUSING: float = 0.12        # added to both bounds per housing tier
+const PRIDE_GAIN_WIN: int = 5                         # pride gained on battle win
+const PRIDE_LOSS_LOSE: int = 3                        # pride lost on battle loss (floor 0)
+const DOG_ATTACK_STRATEGY_MODIFIER: float = 1.0       # "Survive" stance modifier; future stances change this
+
 ## UI
 const RESEARCH_MAX_VISIBLE: int = 4
 const UI_BASE_FONT_SIZE: int = 22

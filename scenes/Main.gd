@@ -46,6 +46,7 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var research_cats_label: Label = %ResearchCatsLabel
 @onready var research_item_list: VBoxContainer = %ResearchItemList
 @onready var center_panel: Control = %CenterPanel
+@onready var pride_label: Label = %PrideLabel
 
 
 var _pawsco_membership_button: Button
@@ -98,6 +99,11 @@ var _sweepers: Array[Dictionary] = []
 
 # Developer debug menu — overlay panel built dynamically in _ready() (never in Main.tscn),
 # toggled by the backtick key via _unhandled_key_input so it never blocks existing input.
+var _pride_label_shown: bool = false
+var _battle_overlay: Node2D = null
+var _battle_warning_label: Label = null
+var _battle_result_label: Label = null
+
 var _debug_menu_visible: bool = false
 var _debug_poop_disabled: bool = false
 var _debug_panel: PanelContainer = null
@@ -112,6 +118,8 @@ func _ready() -> void:
 	GameState.cat_purchased.connect(_on_cat_purchased)
 	GameState.cat_lost.connect(_on_cat_lost)
 	GameState.research_completed.connect(_on_research_completed)
+	GameState.dog_attack_warning_started.connect(_on_dog_attack_warning_started)
+	GameState.dog_attack_resolved.connect(_on_dog_attack_resolved)
 	for item: Dictionary in Config.RESEARCH_ITEMS:
 		var item_id: String = item["id"]
 		var panel: PanelContainer = PanelContainer.new()
@@ -238,6 +246,36 @@ func _ready() -> void:
 	_debug_vbox.add_child(_debug_btn_research)
 	_debug_panel.add_child(_debug_vbox)
 	add_child(_debug_panel)
+
+	# Build the BattleOverlay — hidden by default; shown during dog attack visualization.
+	# Lanes and dog sprites are built fresh each battle so they always reflect current cat count.
+	_battle_overlay = Node2D.new()
+	_battle_overlay.visible = false
+	_battle_overlay.z_index = 10
+	add_child(_battle_overlay)
+	_battle_warning_label = Label.new()
+	_battle_warning_label.text = Strings.DOG_ATTACK_WARNING_LABEL
+	_battle_warning_label.add_theme_font_size_override("font_size", 32)
+	_battle_warning_label.visible = false
+	_battle_overlay.add_child(_battle_warning_label)
+	_battle_result_label = Label.new()
+	_battle_result_label.add_theme_font_size_override("font_size", 32)
+	_battle_result_label.visible = false
+	_battle_overlay.add_child(_battle_result_label)
+
+
+# Hides the battle overlay when any popup pauses the tree so it never occludes
+# starvation, game-over, or other scene popups. Restores it when unpaused if
+# the WARNING phase is still active.
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_PAUSED:
+			if is_instance_valid(_battle_overlay):
+				_battle_overlay.visible = false
+		NOTIFICATION_UNPAUSED:
+			if is_instance_valid(_battle_overlay) \
+					and GameState.dog_attack_state == GameState.DogAttackState.WARNING:
+				_battle_overlay.visible = true
 
 
 # Applies the section-header style (larger size + bold) to a Label node.
@@ -536,6 +574,13 @@ func _process(delta: float) -> void:
 		_cat_intelligence_label.visible = true
 	if _cat_intelligence_label.visible:
 		_cat_intelligence_label.text = Strings.HUD_CAT_INTELLIGENCE % str(GameState.cat_intelligence)
+
+	# One-way latch — Pride label appears when dog attacks unlock
+	if GameState.dog_attack_unlocked and not _pride_label_shown:
+		_pride_label_shown = true
+		pride_label.visible = true
+	if pride_label.visible:
+		pride_label.text = Strings.HUD_PRIDE % str(GameState.pride)
 
 	# One-way latch — whale popup fires the instant the mechanic unlocks (manager_bots >= 2
 	# and the 20s delay elapsed), like every other popup. Decoupled from the spawn pipeline
@@ -1277,6 +1322,8 @@ func _on_research_completed(id: String) -> void:
 	elif id == "research_your_own_llms":
 		GameState.set_own_llm_researched()
 		_trigger_glitch_effect()
+	elif id == "dog_defence":
+		_show_dog_attack_unlock_popup()
 
 
 func _on_fund_button_pressed(item_id: String) -> void:
@@ -1407,3 +1454,140 @@ func _too_close_to_cats(pos: Vector2, existing_positions: Array[Vector2]) -> boo
 		if pos.distance_to(existing) < CAT_SPACING_RADIUS:
 			return true
 	return false
+
+
+# Builds and shows the one-time "Self-Fulfilling Prophecy" dog-attack unlock popup in code,
+# following the same pattern as _show_ai_overlords_popup(). On dismiss: frees overlay,
+# unpauses tree, then calls GameState.unlock_dog_attacks().
+func _show_dog_attack_unlock_popup() -> void:
+	var overlay: ColorRect = ColorRect.new()
+	overlay.color = Color(0.0, 0.0, 0.0, 0.6)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	overlay.z_index = 20
+	add_child(overlay)
+
+	var center: CenterContainer = CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+
+	var dialog: PanelContainer = PanelContainer.new()
+	dialog.custom_minimum_size = Vector2(600.0, 360.0)
+	center.add_child(dialog)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	dialog.add_child(vbox)
+
+	var label: Label = Label.new()
+	label.text = Strings.POPUP_DOG_ATTACK_UNLOCK_TITLE + "\n\n" + Strings.POPUP_DOG_ATTACK_UNLOCK_BODY
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(560.0, 0.0)
+	vbox.add_child(label)
+
+	var ok_button: Button = Button.new()
+	ok_button.text = Strings.BTN_OK
+	vbox.add_child(ok_button)
+	ok_button.pressed.connect(func() -> void:
+		overlay.queue_free()
+		get_tree().paused = false
+		GameState.unlock_dog_attacks()
+	)
+
+	get_tree().paused = true
+
+
+## Called when the warning phase begins. Triggers hissing animation on all cats
+## and shows the warning label in the center panel.
+func _on_dog_attack_warning_started() -> void:
+	for cat: Node in cat_container.get_children():
+		if cat.has_method("start_hissing"):
+			cat.start_hissing()
+	var panel_rect: Rect2 = center_panel.get_global_rect()
+	_battle_warning_label.position = Vector2(
+		panel_rect.position.x + panel_rect.size.x * 0.5 - 120.0,
+		panel_rect.position.y + 20.0
+	)
+	_battle_warning_label.visible = true
+	_battle_overlay.visible = true
+
+
+## Called when battle resolves. Receives outcome and pride delta. Runs the full
+## battle visualization sequence then calls GameState.schedule_next_dog_attack().
+func _on_dog_attack_resolved(player_won: bool, pride_delta: int) -> void:
+	_battle_warning_label.visible = false
+
+	var panel_rect: Rect2 = center_panel.get_global_rect()
+	var cat_count: int = GameState.cats
+	var lanes: int = 3
+
+	# Build cat indicators distributed across three horizontal lanes
+	var cat_labels: Array[Label] = []
+	for lane_idx: int in range(lanes):
+		var cats_in_lane: int = mini(5, int(ceil(float(cat_count) / float(lanes - lane_idx))))
+		cat_count -= cats_in_lane
+		var lane_y: float = panel_rect.position.y + panel_rect.size.y * (0.25 + float(lane_idx) * 0.25)
+		for c: int in range(cats_in_lane):
+			var cat_lbl: Label = Label.new()
+			cat_lbl.text = Strings.BATTLE_CAT_EMOJI
+			cat_lbl.add_theme_font_size_override("font_size", 28)
+			cat_lbl.position = Vector2(
+				panel_rect.position.x + 40.0 + float(c) * 50.0,
+				lane_y
+			)
+			_battle_overlay.add_child(cat_lbl)
+			cat_labels.append(cat_lbl)
+
+	# Build dog sprites entering from the right
+	# TODO: swap Label emoji for AnimatedSprite2D once dog sprite sheet is available
+	var dog_labels: Array[Label] = []
+	for lane_idx: int in range(lanes):
+		var dog_lbl: Label = Label.new()
+		dog_lbl.text = Strings.BATTLE_DOG_EMOJI
+		dog_lbl.add_theme_font_size_override("font_size", 36)
+		var lane_y: float = panel_rect.position.y + panel_rect.size.y * (0.25 + float(lane_idx) * 0.25)
+		dog_lbl.position = Vector2(panel_rect.end.x + 40.0, lane_y)
+		_battle_overlay.add_child(dog_lbl)
+		dog_labels.append(dog_lbl)
+
+	# Tween dogs in from the right over 1.5s
+	var tween: Tween = create_tween().set_parallel(true)
+	for i: int in range(dog_labels.size()):
+		var dog_lbl: Label = dog_labels[i]
+		var lane_y: float = panel_rect.position.y + panel_rect.size.y * (0.25 + float(i) * 0.25)
+		tween.tween_property(dog_lbl, "position:x",
+			panel_rect.end.x - 80.0 - float(i) * 30.0, 1.5)
+
+	# After dogs arrive: fade out losers, show result
+	tween.chain().tween_callback(func() -> void:
+		var fade_tween: Tween = create_tween().set_parallel(true)
+		if player_won:
+			for dog_lbl: Label in dog_labels:
+				fade_tween.tween_property(dog_lbl, "modulate:a", 0.0, 0.5)
+		else:
+			var fade_count: int = maxi(1, cat_labels.size() / 2)
+			for fi: int in range(fade_count):
+				fade_tween.tween_property(cat_labels[fi], "modulate:a", 0.0, 0.5)
+
+		# Show result label
+		_battle_result_label.text = (Strings.DOG_ATTACK_RESULT_WIN if player_won else Strings.DOG_ATTACK_RESULT_LOSE) % str(pride_delta)
+		_battle_result_label.position = Vector2(
+			panel_rect.position.x + panel_rect.size.x * 0.5 - 100.0,
+			panel_rect.position.y + panel_rect.size.y * 0.5
+		)
+		_battle_result_label.visible = true
+
+		# Wait 2s then clean up and schedule next attack
+		fade_tween.chain().tween_interval(2.0).tween_callback(func() -> void:
+			_battle_result_label.visible = false
+			_battle_overlay.visible = false
+			for cat_lbl: Label in cat_labels:
+				cat_lbl.queue_free()
+			for dog_lbl: Label in dog_labels:
+				dog_lbl.queue_free()
+			for cat: Node in cat_container.get_children():
+				if cat.has_method("stop_hissing"):
+					cat.stop_hissing()
+			GameState.schedule_next_dog_attack()
+		)
+	)
