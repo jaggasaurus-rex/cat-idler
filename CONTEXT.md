@@ -27,7 +27,7 @@ cat-idler/
 │   ├── agents/             # Seven-agent sub-agent pipeline (see Agent Pipeline below)
 │   └── skills/             # run-cat-idler skill (build/run/screenshot harness)
 ├── assets/
-│   └── cats/               # Cat sprite sheets; cat_1..5.png (idle) + cat_walk_1..5.png (walk); cat_frames_1..5.tres (SpriteFrames variants)
+│   └── cats/               # Cat sprite sheets; cat_1..5.png (idle) + cat_walk_1..5.png (walk); cat_frames_1..5.tres (SpriteFrames variants); cat_1-sheet.png (combined sheet, not yet wired up)
 ├── autoloads/
 │   ├── GameState.gd        # Global state singleton
 │   └── Util.gd             # Stateless helper functions (format_number)
