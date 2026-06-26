@@ -1,9 +1,10 @@
 extends Node2D
 
 # Wander states. IDLE: waiting for next move decision. WALKING: moving toward _target_pos.
+# HISSING: frozen during dog attack warning phase; composes with _bubble_paused independently.
 # _bubble_paused = true freezes both movement and timer; only viral bubbles trigger this.
 # Animation names "idle" and "walk" are called by name — frames are authored in .tres resources.
-enum State { IDLE, WALKING }
+enum State { IDLE, WALKING, HISSING }
 
 # Each .tres defines both "idle" (19 frames) and "walk" (25 frames) at 6 fps, loop=true.
 # randi() % COLOR_VARIANTS.size() yields an index in [0, 4] for five variants.
@@ -45,6 +46,8 @@ func set_bounds(rect: Rect2) -> void:
 func _process(delta: float) -> void:
 	if _bubble_paused:
 		return
+	if _state == State.HISSING:
+		return
 
 	_wander_timer -= delta
 	if _wander_timer <= 0.0:
@@ -79,6 +82,22 @@ func pause_for_bubble() -> void:
 ## Resumes wandering after the money bubble is collected or expires.
 func resume_from_bubble() -> void:
 	_bubble_paused = false
+	_wander_timer = randf_range(Config.CAT_WANDER_MIN, Config.CAT_WANDER_MAX)
+
+
+## Interrupts wander behavior and plays the hissing animation for the warning phase.
+## Movement and wander timer are frozen until stop_hissing() is called.
+## Composes with _bubble_paused: a cat can be both bubble-paused and hissing.
+func start_hissing() -> void:
+	_state = State.HISSING
+	# TODO: swap "idle" for "hiss" once cat_frames_N.tres includes that animation
+	_play_anim("idle")
+
+
+## Resumes normal wander behavior after battle warning ends.
+func stop_hissing() -> void:
+	_state = State.IDLE
+	_play_anim("idle")
 	_wander_timer = randf_range(Config.CAT_WANDER_MIN, Config.CAT_WANDER_MAX)
 
 
