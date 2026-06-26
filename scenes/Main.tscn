@@ -146,104 +146,123 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.0
 
-[node name="RightScroll" type="ScrollContainer" parent="PanelLayout/RightPanel" unique_id=500000007]
+[node name="RightVBox" type="VBoxContainer" parent="PanelLayout/RightPanel" unique_id=500000008]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ResearchSubPanel" type="PanelContainer" parent="PanelLayout/RightPanel/RightVBox" unique_id=500000009]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="RightVBox" type="VBoxContainer" parent="PanelLayout/RightPanel/RightScroll" unique_id=500000008]
+[node name="CenterColumn" type="VBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel" unique_id=400000600]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="ShopPanel" type="VBoxContainer" parent="PanelLayout/RightPanel/RightScroll/RightVBox" unique_id=210934857]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ShopLabel" type="Label" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel" unique_id=304719283]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Shop"
-
-[node name="ShopList" type="VBoxContainer" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel" unique_id=400000401]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
-[node name="HousingButton" type="Button" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList" unique_id=400000402]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-text = "Cozy Apartment
-$0"
-
-[node name="AutoFeederButton" type="Button" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList" unique_id=400000403]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-text = "Auto-Feeder
-$20,000"
-
-[node name="BotManagerShopButton" type="Button" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList" unique_id=400000404]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-text = "Manager-Bot Manager
-$40,000"
-
-[node name="CenterColumn" type="VBoxContainer" parent="PanelLayout/RightPanel/RightScroll/RightVBox" unique_id=400000600]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ResearchTitle" type="Label" parent="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn" unique_id=400000601]
+[node name="ResearchTitle" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000601]
 layout_mode = 2
 text = "Research"
 
-[node name="ResearchActiveLabel" type="Label" parent="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn" unique_id=400000602]
+[node name="ResearchActiveLabel" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000602]
 unique_name_in_owner = true
 layout_mode = 2
 text = "No Active Research"
 
-[node name="ResearchProgressBar" type="ProgressBar" parent="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn" unique_id=400000603]
+[node name="ResearchProgressBar" type="ProgressBar" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000603]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
 show_percentage = false
 
-[node name="ResearchSlider" type="HSlider" parent="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn" unique_id=400000604]
+[node name="ResearchSlider" type="HSlider" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000604]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
 step = 0.01
 
-[node name="SliderLabels" type="HBoxContainer" parent="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn" unique_id=400000605]
+[node name="SliderLabels" type="HBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000605]
 layout_mode = 2
 
-[node name="OnlyPawsHint" type="Label" parent="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn/SliderLabels" unique_id=400000606]
+[node name="OnlyPawsHint" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn/SliderLabels" unique_id=400000606]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "OnlyPaws"
 
-[node name="ResearchHint" type="Label" parent="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn/SliderLabels" unique_id=400000607]
+[node name="ResearchHint" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn/SliderLabels" unique_id=400000607]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Research"
 horizontal_alignment = 2
 
-[node name="ResearchCatsLabel" type="Label" parent="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn" unique_id=400000608]
+[node name="ResearchCatsLabel" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000608]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Cats researching: 0"
 
-[node name="ResearchItemList" type="VBoxContainer" parent="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn" unique_id=400000609]
+[node name="ResearchScroll" type="ScrollContainer" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=500000010]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ResearchItemList" type="VBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn/ResearchScroll" unique_id=400000609]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 4
+
+[node name="ShopSubPanel" type="PanelContainer" parent="PanelLayout/RightPanel/RightVBox" unique_id=500000011]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ShopPanel" type="VBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel" unique_id=210934857]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="ShopLabel" type="Label" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel" unique_id=304719283]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Shop"
+
+[node name="ShopScroll" type="ScrollContainer" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel" unique_id=400000400]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ShopList" type="VBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll" unique_id=400000401]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="HousingButton" type="Button" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList" unique_id=400000402]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Cozy Apartment
+$0"
+
+[node name="AutoFeederButton" type="Button" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList" unique_id=400000403]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Auto-Feeder
+$20,000"
+
+[node name="BotManagerShopButton" type="Button" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList" unique_id=400000404]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Manager-Bot Manager
+$40,000"
 
 [node name="HappinessBarContainer" type="VBoxContainer" parent="." unique_id=400000050]
 unique_name_in_owner = true
@@ -773,10 +792,10 @@ text = "OK"
 [connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
 [connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/MegaManagerBotButton" to="." method="_on_mega_manager_bot_button_pressed"]
 [connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/BuyTokensButton" to="." method="_on_buy_token_x1_button_pressed"]
-[connection signal="pressed" from="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList/HousingButton" to="." method="_on_buy_housing_button_pressed"]
-[connection signal="pressed" from="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList/AutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
-[connection signal="pressed" from="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList/BotManagerShopButton" to="." method="_on_buy_bot_manager_button_pressed"]
-[connection signal="value_changed" from="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn/ResearchSlider" to="." method="_on_research_slider_value_changed"]
+[connection signal="pressed" from="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList/HousingButton" to="." method="_on_buy_housing_button_pressed"]
+[connection signal="pressed" from="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList/AutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
+[connection signal="pressed" from="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList/BotManagerShopButton" to="." method="_on_buy_bot_manager_button_pressed"]
+[connection signal="value_changed" from="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn/ResearchSlider" to="." method="_on_research_slider_value_changed"]
 [connection signal="pressed" from="OnlyPawsPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_only_paws_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessCrampedPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_cramped_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessRiotPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_riot_popup_ok_pressed"]
