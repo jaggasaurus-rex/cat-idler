@@ -2,34 +2,32 @@ extends Control
 
 const CAT_SCENE := preload("res://scenes/CatCharacter.tscn")
 const CAT_SPACING_RADIUS := 64.0
-const UI_SAFE_PADDING := 16.0
 const CAT_PLACEMENT_ATTEMPTS := 30
 
 
-@onready var earn_money_button: Button = $EarnMoneyButton
-@onready var money_label: Label = $MoneyLabel
-@onready var cats_label: Label = $CatsLabel
-@onready var purchase_cat_button: Button = $PurchaseCatButton
-@onready var cat_container: Node2D = $CatContainer
-@onready var only_paws_button: Button = $OnlyPawsButton
-@onready var only_paws_income_label: Label = $OnlyPawsIncomeLabel
+@onready var earn_money_button: Button = %EarnMoneyButton
+@onready var money_label: Label = %MoneyLabel
+@onready var cats_label: Label = %CatsLabel
+@onready var purchase_cat_button: Button = %PurchaseCatButton
+@onready var cat_container: Node2D = %CatContainer
+@onready var only_paws_button: Button = %OnlyPawsButton
+@onready var only_paws_income_label: Label = %OnlyPawsIncomeLabel
 @onready var only_paws_popup: ColorRect = $OnlyPawsPopup
 @onready var upgrades_tab_popup: ColorRect = $UpgradesTabPopup
-@onready var manager_bot_button: Button = $ManagerBotButton
-@onready var mega_manager_bot_button: Button = $MegaManagerBotButton
-@onready var bots_rate_label: Label = $BotTokenRow/BotsRateLabel
-@onready var mega_bots_rate_label: Label = $BotTokenRow/MegaBotsRateLabel
-@onready var shop_panel: VBoxContainer = $ShopPanel
-@onready var shop_list: VBoxContainer = $ShopPanel/ShopScroll/ShopList
-@onready var housing_button: Button = $ShopPanel/ShopScroll/ShopList/HousingButton
-@onready var auto_feeder_button: Button = $ShopPanel/ShopScroll/ShopList/AutoFeederButton
-@onready var bot_manager_shop_button: Button = $ShopPanel/ShopScroll/ShopList/BotManagerShopButton
-@onready var cat_food_label: Label = $CatFoodLabel
-@onready var buy_cat_food_button: Button = $BuyCatFoodButton
-@onready var tokens_label: Label = $BotTokenRow/TokensLabel
-@onready var buy_tokens_button: Button = $BuyTokensButton
-@onready var happiness_bar_container: VBoxContainer = $HappinessBarContainer
-@onready var happiness_bar: ProgressBar = $HappinessBarContainer/HappinessRow/HappinessBar
+@onready var manager_bot_button: Button = %ManagerBotButton
+@onready var mega_manager_bot_button: Button = %MegaManagerBotButton
+@onready var bots_rate_label: Label = %BotsRateLabel
+@onready var mega_bots_rate_label: Label = %MegaBotsRateLabel
+@onready var shop_panel: VBoxContainer = %ShopPanel
+@onready var shop_list: VBoxContainer = %ShopList
+@onready var housing_button: Button = %HousingButton
+@onready var auto_feeder_button: Button = %AutoFeederButton
+@onready var bot_manager_shop_button: Button = %BotManagerShopButton
+@onready var cat_food_label: Label = %CatFoodLabel
+@onready var buy_cat_food_button: Button = %BuyCatFoodButton
+@onready var tokens_label: Label = %TokensLabel
+@onready var buy_tokens_button: Button = %BuyTokensButton
+@onready var happiness_bar: ProgressBar = %HappinessBar
 @onready var first_cat_popup: ColorRect = $FirstCatPopup
 @onready var bot_unlock_popup: ColorRect = $BotUnlockPopup
 @onready var bot_manager_unlock_popup: ColorRect = $BotManagerUnlockPopup
@@ -41,12 +39,13 @@ const CAT_PLACEMENT_ATTEMPTS := 30
 @onready var game_over_2_popup: ColorRect = $GameOver2Popup
 @onready var happiness_cramped_popup: ColorRect = $HappinessCrampedPopup
 @onready var happiness_riot_popup: ColorRect = $HappinessRiotPopup
-@onready var center_column: VBoxContainer = $CenterColumn
-@onready var research_active_label: Label = $CenterColumn/ResearchActiveLabel
-@onready var research_progress_bar: ProgressBar = $CenterColumn/ResearchProgressBar
-@onready var research_slider: HSlider = $CenterColumn/ResearchSlider
-@onready var research_cats_label: Label = $CenterColumn/ResearchCatsLabel
-@onready var research_item_list: VBoxContainer = $CenterColumn/ResearchItemList
+@onready var center_column: VBoxContainer = %CenterColumn
+@onready var research_active_label: Label = %ResearchActiveLabel
+@onready var research_progress_bar: ProgressBar = %ResearchProgressBar
+@onready var research_slider: HSlider = %ResearchSlider
+@onready var research_cats_label: Label = %ResearchCatsLabel
+@onready var research_item_list: VBoxContainer = %ResearchItemList
+@onready var center_panel: Control = %CenterPanel
 
 
 var _pawsco_membership_button: Button
@@ -203,8 +202,8 @@ func _ready() -> void:
 	_set_popup_text(game_over_2_popup, Strings.POPUP_GAME_OVER_2)
 	# Section headers: larger + bold, applied after the fallback base is set above.
 	_style_as_header(cats_label)
-	_style_as_header($HappinessBarContainer/HappinessTitleLabel)
-	_style_as_header($ShopPanel/ShopLabel)
+	_style_as_header(%HappinessTitleLabel)
+	_style_as_header(%ShopLabel)
 	# Show any research panels immediately eligible on game start (no first-frame delay).
 	_refresh_research_slots()
 	# Developer debug menu — code-only overlay above everything, hidden until toggled.
@@ -244,7 +243,7 @@ func _ready() -> void:
 # Applies the section-header style (larger size + bold) to a Label node.
 func _style_as_header(label: Label) -> void:
 	label.add_theme_font_size_override("font_size", Config.UI_HEADER_FONT_SIZE)
-	var bold_font := SystemFont.new()
+	var bold_font: SystemFont = SystemFont.new()
 	bold_font.font_weight = 700
 	label.add_theme_font_override("font", bold_font)
 
@@ -615,7 +614,7 @@ func _process(delta: float) -> void:
 # and positions it at screen centre. Called each time robo_sweeper_count increases.
 func _spawn_sweeper_instance() -> void:
 	var node: Node2D = Node2D.new()
-	node.position = get_viewport_rect().size * 0.5
+	node.position = center_panel.get_global_rect().get_center()
 	node.z_index = 60
 	var label: Label = Label.new()
 	label.text = Strings.SWEEPER_EMOJI
@@ -776,7 +775,7 @@ func _spawn_bubble(cat_node: Node2D, force_type: String = "") -> void:
 	else:
 		type = "inspiration" if randf() < GameState.research_cat_fraction else "viral"
 
-	var offset := Vector2(randf_range(-30.0, 30.0), randf_range(-50.0, -20.0))
+	var offset: Vector2 = Vector2(randf_range(-30.0, 30.0), randf_range(-50.0, -20.0))
 	var spawn_pos: Vector2 = cat_node.global_position + offset
 
 	var button: Button = Button.new()
@@ -1316,6 +1315,7 @@ func _on_cat_purchased() -> void:
 	var cat: Node2D = CAT_SCENE.instantiate()
 	cat.scale = Vector2(0.4, 0.4)
 	cat_container.add_child(cat)
+	cat.set_bounds(center_panel.get_global_rect())
 	_place_cat(cat)
 	_cat_bubble_timers[cat.get_instance_id()] = randf_range(Config.BUBBLE_SPAWN_MIN, Config.BUBBLE_SPAWN_MAX)
 	_cat_poop_timers[cat.get_instance_id()] = randf_range(Config.POOP_SPAWN_MIN, Config.POOP_SPAWN_MAX)
@@ -1338,7 +1338,7 @@ func _on_cat_lost() -> void:
 # Spawns a poop button near cat_node. Poop accumulates until clicked;
 # it does not expire automatically.
 func _spawn_poop(cat_node: Node2D) -> void:
-	var offset := Vector2(randf_range(-40.0, 40.0), randf_range(10.0, 30.0))
+	var offset: Vector2 = Vector2(randf_range(-40.0, 40.0), randf_range(10.0, 30.0))
 	var spawn_pos: Vector2 = cat_node.global_position + offset
 
 	var button: Button = Button.new()
@@ -1362,27 +1362,17 @@ func _on_poop_pressed(poop: Dictionary) -> void:
 	GameState.poop_count = max(0, GameState.poop_count - 1)
 
 
-# Places cat at a random viewport position that avoids UI elements and existing cats.
-# Falls back to ignoring cat spacing, then to anywhere in the viewport.
+# Places cat at a random position inside CenterPanel, avoiding existing cats.
+# Safe zone uses center_panel.get_global_rect() — all UI is outside this rect.
+# Cat wander bounds (set_bounds) use the same rect source.
 func _place_cat(cat: Node2D) -> void:
-	# Safe zone: 40px inset from all edges, top 10% of screen excluded so
-	# bubbles spawned above cats don't render off the top of the viewport.
-	var vp_size: Vector2 = get_viewport_rect().size
+	# 40px inset from CenterPanel edges; top 10% excluded so bubbles don't clip above panel.
+	var bounds: Rect2 = center_panel.get_global_rect()
 	var padding: float = 40.0
-	var min_x: float = padding
-	var max_x: float = vp_size.x - padding
-	var min_y: float = vp_size.y * 0.10 + padding
-	var max_y: float = vp_size.y - padding
-	var ui_nodes: Array[Control] = [
-		shop_panel, happiness_bar_container, money_label, cats_label,
-		cat_food_label, buy_cat_food_button, earn_money_button, purchase_cat_button,
-		only_paws_button, manager_bot_button, bots_rate_label, tokens_label, buy_tokens_button,
-	]
-	if center_column.visible:
-		ui_nodes.append(center_column)
-	var ui_rects: Array[Rect2] = []
-	for node: Control in ui_nodes:
-		ui_rects.append(node.get_global_rect().grow(UI_SAFE_PADDING))
+	var min_x: float = bounds.position.x + padding
+	var max_x: float = bounds.end.x - padding
+	var min_y: float = bounds.position.y + bounds.size.y * 0.10 + padding
+	var max_y: float = bounds.end.y - padding
 
 	var existing_positions: Array[Vector2] = []
 	for child: Node in cat_container.get_children():
@@ -1393,27 +1383,15 @@ func _place_cat(cat: Node2D) -> void:
 	var found: bool = false
 
 	for _i: int in CAT_PLACEMENT_ATTEMPTS:
-		var candidate := Vector2(
+		var candidate: Vector2 = Vector2(
 			randf_range(min_x, max_x),
 			randf_range(min_y, max_y)
 		)
-		if _overlaps_ui(candidate, ui_rects) or _too_close_to_cats(candidate, existing_positions):
+		if _too_close_to_cats(candidate, existing_positions):
 			continue
 		chosen_pos = candidate
 		found = true
 		break
-
-	if not found:
-		for _i: int in CAT_PLACEMENT_ATTEMPTS:
-			var candidate := Vector2(
-				randf_range(min_x, max_x),
-				randf_range(min_y, max_y)
-			)
-			if _overlaps_ui(candidate, ui_rects):
-				continue
-			chosen_pos = candidate
-			found = true
-			break
 
 	if not found:
 		chosen_pos = Vector2(
@@ -1422,13 +1400,6 @@ func _place_cat(cat: Node2D) -> void:
 		)
 
 	cat.position = cat_container.to_local(chosen_pos)
-
-
-func _overlaps_ui(pos: Vector2, ui_rects: Array[Rect2]) -> bool:
-	for rect: Rect2 in ui_rects:
-		if rect.has_point(pos):
-			return true
-	return false
 
 
 func _too_close_to_cats(pos: Vector2, existing_positions: Array[Vector2]) -> bool:

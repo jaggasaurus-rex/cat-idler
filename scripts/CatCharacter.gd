@@ -21,6 +21,7 @@ var _state: State = State.IDLE
 var _wander_timer: float = 0.0
 var _target_pos: Vector2 = Vector2.ZERO
 var _bubble_paused: bool = false
+var _bounds: Rect2
 
 
 func _ready() -> void:
@@ -29,6 +30,16 @@ func _ready() -> void:
 		sprite.sprite_frames = COLOR_VARIANTS[randi() % COLOR_VARIANTS.size()]
 		_play_anim("idle")
 	_wander_timer = randf_range(Config.CAT_WANDER_MIN, Config.CAT_WANDER_MAX)
+	_bounds = get_viewport_rect()
+
+
+## Sets the play-area rect used for wander targeting. Called by Main after add_child
+## so cats stay inside CenterPanel rather than the full viewport.
+## Ignores zero-size rects (layout not yet resolved) and keeps the current bounds.
+func set_bounds(rect: Rect2) -> void:
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return
+	_bounds = rect
 
 
 func _process(delta: float) -> void:
@@ -37,11 +48,10 @@ func _process(delta: float) -> void:
 
 	_wander_timer -= delta
 	if _wander_timer <= 0.0:
-		# Pick a new destination inside the safe zone (matches _place_cat in Main.gd).
-		var vp: Vector2 = get_viewport_rect().size
+		# Pick a new destination inside the injected bounds (matches _place_cat in Main.gd).
 		var padding: float = 40.0
-		_target_pos.x = randf_range(padding, vp.x - padding)
-		_target_pos.y = randf_range(vp.y * 0.10 + padding, vp.y - padding)
+		_target_pos.x = randf_range(_bounds.position.x + padding, _bounds.end.x - padding)
+		_target_pos.y = randf_range(_bounds.position.y + _bounds.size.y * 0.10 + padding, _bounds.end.y - padding)
 		_state = State.WALKING
 		_wander_timer = randf_range(Config.CAT_WANDER_MIN, Config.CAT_WANDER_MAX)
 		var sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D

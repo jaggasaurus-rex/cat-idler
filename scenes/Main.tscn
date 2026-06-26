@@ -21,138 +21,265 @@ offset_bottom = 1705.7068
 scale = Vector2(0.84666383, 0.84666383)
 texture = ExtResource("2_rvslj")
 
-[node name="CatContainer" type="Node2D" parent="." unique_id=324393987]
-position = Vector2(576, 530)
+[node name="PanelLayout" type="HBoxContainer" parent="." unique_id=500000001]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
 
-[node name="MoneyLabel" type="Label" parent="." unique_id=1899892703]
-layout_mode = 0
-offset_left = 20.0
-offset_top = 63.0
-offset_right = 300.0
-offset_bottom = 93.0
-text = "Money: $0.0"
+[node name="LeftPanel" type="PanelContainer" parent="PanelLayout" unique_id=500000002]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
 
-[node name="EarnMoneyButton" type="Button" parent="." unique_id=1094360717]
-layout_mode = 0
-offset_left = 20.0
-offset_top = 95.0
-offset_right = 185.0
-offset_bottom = 125.0
-text = "Work at McPawnalds"
+[node name="MarginContainer" type="MarginContainer" parent="PanelLayout/LeftPanel" unique_id=500000003]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
 
-[node name="CatsLabel" type="Label" parent="." unique_id=1595888146]
-layout_mode = 0
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 300.0
-offset_bottom = 58.0
+[node name="LeftVBox" type="VBoxContainer" parent="PanelLayout/LeftPanel/MarginContainer" unique_id=500000004]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CatsLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=1595888146]
+unique_name_in_owner = true
+layout_mode = 2
 text = "Cats: 0"
 
-[node name="PurchaseCatButton" type="Button" parent="." unique_id=375900732]
-layout_mode = 0
-offset_left = 20.0
-offset_top = 130.0
-offset_right = 275.0
-offset_bottom = 160.0
+[node name="MoneyLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=1899892703]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Money: $0.0"
+
+[node name="EarnMoneyButton" type="Button" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=1094360717]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Work at McPawnalds"
+
+[node name="PurchaseCatButton" type="Button" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=375900732]
+unique_name_in_owner = true
+layout_mode = 2
 text = "Purchase Cat ($5)"
 
-[node name="CatFoodLabel" type="Label" parent="." unique_id=400000001]
+[node name="CatFoodLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=400000001]
+unique_name_in_owner = true
 visible = false
-layout_mode = 0
-offset_left = 20.0
-offset_top = 165.0
-offset_right = 300.0
-offset_bottom = 195.0
+layout_mode = 2
 text = "Cat Food: 1000"
 
-[node name="BuyCatFoodButton" type="Button" parent="." unique_id=400000007]
+[node name="BuyCatFoodButton" type="Button" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=400000007]
+unique_name_in_owner = true
 visible = false
-layout_mode = 0
-offset_left = 20.0
-offset_top = 197.0
-offset_right = 275.0
-offset_bottom = 227.0
+layout_mode = 2
 text = "Buy Food ($10)"
 
-[node name="OnlyPawsButton" type="Button" parent="." unique_id=519044290]
+[node name="OnlyPawsButton" type="Button" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=519044290]
+unique_name_in_owner = true
 visible = false
-layout_mode = 0
-offset_left = 20.0
-offset_top = 245.0
-offset_right = 275.0
-offset_bottom = 275.0
+layout_mode = 2
 text = "Sell pics on OnlyPaws"
 
-[node name="OnlyPawsIncomeLabel" type="Label" parent="." unique_id=1013931731]
+[node name="OnlyPawsIncomeLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=1013931731]
+unique_name_in_owner = true
 visible = false
-layout_mode = 0
-offset_left = 20.0
-offset_top = 280.0
-offset_right = 350.0
-offset_bottom = 305.0
+layout_mode = 2
 text = "OnlyPaws: $0/sec"
 
-[node name="ManagerBotButton" type="Button" parent="." unique_id=641728503]
-visible = false
-layout_mode = 0
-offset_left = 20.0
-offset_top = 315.0
-offset_right = 360.0
-offset_bottom = 345.0
-text = "OnlyPaws Manager-Bot ($50.00)"
+[node name="BotTokenRow" type="HBoxContainer" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=400000500]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="MegaManagerBotButton" type="Button" parent="." unique_id=641728504]
-visible = false
-layout_mode = 0
-offset_left = 20.0
-offset_top = 380.0
-offset_right = 360.0
-offset_bottom = 410.0
-text = "Mega-Bot ($100.00)"
-
-[node name="BotTokenRow" type="HBoxContainer" parent="." unique_id=400000500]
-layout_mode = 0
-offset_left = 20.0
-offset_top = 350.0
-offset_right = 500.0
-offset_bottom = 375.0
-theme_override_constants/separation = 16
-
-[node name="BotsRateLabel" type="Label" parent="BotTokenRow" unique_id=982341620]
+[node name="BotsRateLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox/BotTokenRow" unique_id=982341620]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Bots: 0 | Rate: $0.00/sec"
 
-[node name="TokensLabel" type="Label" parent="BotTokenRow" unique_id=400000010]
+[node name="TokensLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox/BotTokenRow" unique_id=400000010]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Tokens: 0"
 
-[node name="MegaBotsRateLabel" type="Label" parent="BotTokenRow" unique_id=982341621]
+[node name="MegaBotsRateLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox/BotTokenRow" unique_id=982341621]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Mega-Bots: 0"
 
-[node name="BuyTokensButton" type="Button" parent="." unique_id=400000016]
+[node name="ManagerBotButton" type="Button" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=641728503]
+unique_name_in_owner = true
 visible = false
-layout_mode = 0
-offset_left = 20.0
-offset_top = 415.0
-offset_right = 275.0
-offset_bottom = 445.0
+layout_mode = 2
+text = "OnlyPaws Manager-Bot ($50.00)"
+
+[node name="MegaManagerBotButton" type="Button" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=641728504]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Mega-Bot ($100.00)"
+
+[node name="BuyTokensButton" type="Button" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=400000016]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
 text = "Buy Tokens ($20)"
 
+[node name="CenterPanel" type="Control" parent="PanelLayout" unique_id=500000005]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+mouse_filter = 2
+
+[node name="CatContainer" type="Node2D" parent="PanelLayout/CenterPanel" unique_id=324393987]
+unique_name_in_owner = true
+
+[node name="RightPanel" type="PanelContainer" parent="PanelLayout" unique_id=500000006]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="RightVBox" type="VBoxContainer" parent="PanelLayout/RightPanel" unique_id=500000008]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ResearchSubPanel" type="PanelContainer" parent="PanelLayout/RightPanel/RightVBox" unique_id=500000009]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CenterColumn" type="VBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel" unique_id=400000600]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="ResearchTitle" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000601]
+layout_mode = 2
+text = "Research"
+
+[node name="ResearchActiveLabel" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000602]
+unique_name_in_owner = true
+layout_mode = 2
+text = "No Active Research"
+
+[node name="ResearchProgressBar" type="ProgressBar" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000603]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+show_percentage = false
+
+[node name="ResearchSlider" type="HSlider" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000604]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+
+[node name="SliderLabels" type="HBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000605]
+layout_mode = 2
+
+[node name="OnlyPawsHint" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn/SliderLabels" unique_id=400000606]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OnlyPaws"
+
+[node name="ResearchHint" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn/SliderLabels" unique_id=400000607]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Research"
+horizontal_alignment = 2
+
+[node name="ResearchCatsLabel" type="Label" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=400000608]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cats researching: 0"
+
+[node name="ResearchScroll" type="ScrollContainer" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn" unique_id=500000010]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ResearchItemList" type="VBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn/ResearchScroll" unique_id=400000609]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="ShopSubPanel" type="PanelContainer" parent="PanelLayout/RightPanel/RightVBox" unique_id=500000011]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ShopPanel" type="VBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel" unique_id=210934857]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="ShopLabel" type="Label" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel" unique_id=304719283]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Shop"
+
+[node name="ShopScroll" type="ScrollContainer" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel" unique_id=400000400]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ShopList" type="VBoxContainer" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll" unique_id=400000401]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="HousingButton" type="Button" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList" unique_id=400000402]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Cozy Apartment
+$0"
+
+[node name="AutoFeederButton" type="Button" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList" unique_id=400000403]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Auto-Feeder
+$20,000"
+
+[node name="BotManagerShopButton" type="Button" parent="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList" unique_id=400000404]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Manager-Bot Manager
+$40,000"
+
 [node name="HappinessBarContainer" type="VBoxContainer" parent="." unique_id=400000050]
+unique_name_in_owner = true
 layout_mode = 0
-offset_left = 358.0
-offset_top = 20.0
-offset_right = 698.0
-offset_bottom = 95.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -180.0
+offset_top = 10.0
+offset_right = 180.0
+offset_bottom = 90.0
 theme_override_constants/separation = 4
 
 [node name="HappinessTitleLabel" type="Label" parent="HappinessBarContainer" unique_id=400000051]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Cat Happiness"
+horizontal_alignment = 1
 
 [node name="HappinessRow" type="HBoxContainer" parent="HappinessBarContainer" unique_id=400000052]
 layout_mode = 2
@@ -163,7 +290,8 @@ layout_mode = 2
 text = "0%"
 
 [node name="HappinessBar" type="ProgressBar" parent="HappinessBarContainer/HappinessRow" unique_id=400000054]
-custom_minimum_size = Vector2(100, 22)
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 22)
 layout_mode = 2
 size_flags_horizontal = 3
 value = 100.0
@@ -172,98 +300,6 @@ show_percentage = false
 [node name="HappinessMaxLabel" type="Label" parent="HappinessBarContainer/HappinessRow" unique_id=400000055]
 layout_mode = 2
 text = "100%"
-
-[node name="ShopPanel" type="VBoxContainer" parent="." unique_id=210934857]
-layout_mode = 0
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -380.0
-offset_top = 20.0
-offset_right = -10.0
-offset_bottom = 500.0
-theme_override_constants/separation = 8
-
-[node name="ShopLabel" type="Label" parent="ShopPanel" unique_id=304719283]
-layout_mode = 2
-text = "Shop"
-
-[node name="ShopScroll" type="ScrollContainer" parent="ShopPanel" unique_id=400000400]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="ShopList" type="VBoxContainer" parent="ShopPanel/ShopScroll" unique_id=400000401]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
-[node name="HousingButton" type="Button" parent="ShopPanel/ShopScroll/ShopList" unique_id=400000402]
-visible = false
-layout_mode = 2
-text = "Cozy Apartment
-$0"
-
-[node name="AutoFeederButton" type="Button" parent="ShopPanel/ShopScroll/ShopList" unique_id=400000403]
-visible = false
-layout_mode = 2
-text = "Auto-Feeder
-$20,000"
-
-[node name="BotManagerShopButton" type="Button" parent="ShopPanel/ShopScroll/ShopList" unique_id=400000404]
-visible = false
-layout_mode = 2
-text = "Manager-Bot Manager
-$40,000"
-
-[node name="CenterColumn" type="VBoxContainer" parent="." unique_id=400000600]
-visible = false
-layout_mode = 0
-offset_left = 430.0
-offset_top = 110.0
-offset_right = 830.0
-offset_bottom = 600.0
-theme_override_constants/separation = 8
-
-[node name="ResearchTitle" type="Label" parent="CenterColumn" unique_id=400000601]
-layout_mode = 2
-text = "Research"
-
-[node name="ResearchActiveLabel" type="Label" parent="CenterColumn" unique_id=400000602]
-layout_mode = 2
-text = "No Active Research"
-
-[node name="ResearchProgressBar" type="ProgressBar" parent="CenterColumn" unique_id=400000603]
-layout_mode = 2
-size_flags_horizontal = 3
-max_value = 1.0
-show_percentage = false
-
-[node name="ResearchSlider" type="HSlider" parent="CenterColumn" unique_id=400000604]
-layout_mode = 2
-size_flags_horizontal = 3
-max_value = 1.0
-step = 0.01
-
-[node name="SliderLabels" type="HBoxContainer" parent="CenterColumn" unique_id=400000605]
-layout_mode = 2
-
-[node name="OnlyPawsHint" type="Label" parent="CenterColumn/SliderLabels" unique_id=400000606]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "OnlyPaws"
-
-[node name="ResearchHint" type="Label" parent="CenterColumn/SliderLabels" unique_id=400000607]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Research"
-horizontal_alignment = 2
-
-[node name="ResearchCatsLabel" type="Label" parent="CenterColumn" unique_id=400000608]
-layout_mode = 2
-text = "Cats researching: 0"
-
-[node name="ResearchItemList" type="VBoxContainer" parent="CenterColumn" unique_id=400000609]
-layout_mode = 2
-theme_override_constants/separation = 4
 
 [node name="OnlyPawsPopup" type="ColorRect" parent="." unique_id=400000040]
 process_mode = 2
@@ -749,17 +785,17 @@ autowrap_mode = 3
 layout_mode = 2
 text = "OK"
 
-[connection signal="pressed" from="EarnMoneyButton" to="." method="_on_earn_money_button_pressed"]
-[connection signal="pressed" from="PurchaseCatButton" to="." method="_on_purchase_cat_button_pressed"]
-[connection signal="pressed" from="BuyCatFoodButton" to="." method="_on_buy_cat_food_x1_button_pressed"]
-[connection signal="pressed" from="OnlyPawsButton" to="." method="_on_only_paws_button_pressed"]
-[connection signal="pressed" from="ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
-[connection signal="pressed" from="MegaManagerBotButton" to="." method="_on_mega_manager_bot_button_pressed"]
-[connection signal="pressed" from="BuyTokensButton" to="." method="_on_buy_token_x1_button_pressed"]
-[connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/HousingButton" to="." method="_on_buy_housing_button_pressed"]
-[connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/AutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
-[connection signal="pressed" from="ShopPanel/ShopScroll/ShopList/BotManagerShopButton" to="." method="_on_buy_bot_manager_button_pressed"]
-[connection signal="value_changed" from="CenterColumn/ResearchSlider" to="." method="_on_research_slider_value_changed"]
+[connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/EarnMoneyButton" to="." method="_on_earn_money_button_pressed"]
+[connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/PurchaseCatButton" to="." method="_on_purchase_cat_button_pressed"]
+[connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/BuyCatFoodButton" to="." method="_on_buy_cat_food_x1_button_pressed"]
+[connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/OnlyPawsButton" to="." method="_on_only_paws_button_pressed"]
+[connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
+[connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/MegaManagerBotButton" to="." method="_on_mega_manager_bot_button_pressed"]
+[connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/BuyTokensButton" to="." method="_on_buy_token_x1_button_pressed"]
+[connection signal="pressed" from="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList/HousingButton" to="." method="_on_buy_housing_button_pressed"]
+[connection signal="pressed" from="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList/AutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
+[connection signal="pressed" from="PanelLayout/RightPanel/RightVBox/ShopSubPanel/ShopPanel/ShopScroll/ShopList/BotManagerShopButton" to="." method="_on_buy_bot_manager_button_pressed"]
+[connection signal="value_changed" from="PanelLayout/RightPanel/RightVBox/ResearchSubPanel/CenterColumn/ResearchSlider" to="." method="_on_research_slider_value_changed"]
 [connection signal="pressed" from="OnlyPawsPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_only_paws_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessCrampedPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_cramped_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessRiotPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_riot_popup_ok_pressed"]
