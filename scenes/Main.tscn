@@ -32,7 +32,8 @@ mouse_filter = 1
 
 [node name="LeftPanel" type="PanelContainer" parent="PanelLayout" unique_id=500000002]
 layout_mode = 2
-custom_minimum_size = Vector2(270, 0)
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
 
 [node name="MarginContainer" type="MarginContainer" parent="PanelLayout/LeftPanel" unique_id=500000003]
 layout_mode = 2
@@ -164,6 +165,7 @@ text = "Buy Tokens ($20)"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
 mouse_filter = 2
 
 [node name="CatContainer" type="Node2D" parent="PanelLayout/CenterPanel" unique_id=324393987]
@@ -171,7 +173,8 @@ unique_name_in_owner = true
 
 [node name="RightPanel" type="PanelContainer" parent="PanelLayout" unique_id=500000006]
 layout_mode = 2
-custom_minimum_size = Vector2(270, 0)
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
 
 [node name="RightScroll" type="ScrollContainer" parent="PanelLayout/RightPanel" unique_id=500000007]
 layout_mode = 2
