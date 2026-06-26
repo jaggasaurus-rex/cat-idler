@@ -91,8 +91,8 @@ Main (Control, full-rect)             ← Main.gd
 │   │   └── CatContainer (Node2D)    ← purchased cats added here; position 0,0 local
 │   └── RightPanel (PanelContainer, min_x=270)
 │       └── RightScroll (ScrollContainer) → RightVBox (VBoxContainer)
-│           ├── ShopPanel (VBoxContainer) ← shop section; ShopLabel + ShopScroll/ShopList
-│           │   └── ShopScroll → ShopList (VBoxContainer)
+│           ├── ShopPanel (VBoxContainer) ← shop section; ShopLabel + ShopList
+│           │   └── ShopList (VBoxContainer)
 │           │       ├── HousingButton (hidden until home_shop_unlocked)
 │           │       ├── AutoFeederButton (hidden until auto_feeder_unlocked)
 │           │       └── BotManagerShopButton (hidden until bot_manager_unlocked)

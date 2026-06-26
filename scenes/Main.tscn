@@ -192,31 +192,27 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Shop"
 
-[node name="ShopScroll" type="ScrollContainer" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel" unique_id=400000400]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="ShopList" type="VBoxContainer" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopScroll" unique_id=400000401]
+[node name="ShopList" type="VBoxContainer" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel" unique_id=400000401]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="HousingButton" type="Button" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopScroll/ShopList" unique_id=400000402]
+[node name="HousingButton" type="Button" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList" unique_id=400000402]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Cozy Apartment
 $0"
 
-[node name="AutoFeederButton" type="Button" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopScroll/ShopList" unique_id=400000403]
+[node name="AutoFeederButton" type="Button" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList" unique_id=400000403]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 text = "Auto-Feeder
 $20,000"
 
-[node name="BotManagerShopButton" type="Button" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopScroll/ShopList" unique_id=400000404]
+[node name="BotManagerShopButton" type="Button" parent="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList" unique_id=400000404]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -767,9 +763,9 @@ text = "OK"
 [connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/ManagerBotButton" to="." method="_on_manager_bot_button_pressed"]
 [connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/MegaManagerBotButton" to="." method="_on_mega_manager_bot_button_pressed"]
 [connection signal="pressed" from="PanelLayout/LeftPanel/MarginContainer/LeftVBox/BuyTokensButton" to="." method="_on_buy_token_x1_button_pressed"]
-[connection signal="pressed" from="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopScroll/ShopList/HousingButton" to="." method="_on_buy_housing_button_pressed"]
-[connection signal="pressed" from="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopScroll/ShopList/AutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
-[connection signal="pressed" from="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopScroll/ShopList/BotManagerShopButton" to="." method="_on_buy_bot_manager_button_pressed"]
+[connection signal="pressed" from="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList/HousingButton" to="." method="_on_buy_housing_button_pressed"]
+[connection signal="pressed" from="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList/AutoFeederButton" to="." method="_on_buy_auto_feeder_button_pressed"]
+[connection signal="pressed" from="PanelLayout/RightPanel/RightScroll/RightVBox/ShopPanel/ShopList/BotManagerShopButton" to="." method="_on_buy_bot_manager_button_pressed"]
 [connection signal="value_changed" from="PanelLayout/RightPanel/RightScroll/RightVBox/CenterColumn/ResearchSlider" to="." method="_on_research_slider_value_changed"]
 [connection signal="pressed" from="OnlyPawsPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_only_paws_popup_ok_pressed"]
 [connection signal="pressed" from="HappinessCrampedPopup/DialogPanel/VBoxContainer/OKButton" to="." method="_on_happiness_cramped_popup_ok_pressed"]
