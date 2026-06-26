@@ -1577,8 +1577,11 @@ func _on_dog_attack_resolved(player_won: bool, pride_delta: int) -> void:
 		)
 		_battle_result_label.visible = true
 
-		# Wait 2s then clean up and schedule next attack
-		fade_tween.chain().tween_interval(2.0).tween_callback(func() -> void:
+		# Wait 2s then clean up and schedule next attack.
+		# tween_interval() returns IntervalTweener (not Tween), so tween_callback
+		# must be called on fade_tween directly rather than chained on the return value.
+		fade_tween.chain().tween_interval(2.0)
+		fade_tween.tween_callback(func() -> void:
 			_battle_result_label.visible = false
 			_battle_overlay.visible = false
 			for cat_lbl: Label in cat_labels:
