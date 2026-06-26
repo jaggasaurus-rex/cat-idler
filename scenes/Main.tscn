@@ -90,36 +90,6 @@ visible = false
 layout_mode = 2
 text = "OnlyPaws: $0/sec"
 
-[node name="HappinessBarContainer" type="VBoxContainer" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=400000050]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="HappinessTitleLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox/HappinessBarContainer" unique_id=400000051]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Cat Happiness"
-
-[node name="HappinessRow" type="HBoxContainer" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox/HappinessBarContainer" unique_id=400000052]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="HappinessMinLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox/HappinessBarContainer/HappinessRow" unique_id=400000053]
-layout_mode = 2
-text = "0%"
-
-[node name="HappinessBar" type="ProgressBar" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox/HappinessBarContainer/HappinessRow" unique_id=400000054]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(100, 22)
-layout_mode = 2
-size_flags_horizontal = 3
-value = 100.0
-show_percentage = false
-
-[node name="HappinessMaxLabel" type="Label" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox/HappinessBarContainer/HappinessRow" unique_id=400000055]
-layout_mode = 2
-text = "100%"
-
 [node name="BotTokenRow" type="HBoxContainer" parent="PanelLayout/LeftPanel/MarginContainer/LeftVBox" unique_id=400000500]
 unique_name_in_owner = true
 layout_mode = 2
@@ -274,6 +244,43 @@ text = "Cats researching: 0"
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 4
+
+[node name="HappinessBarContainer" type="VBoxContainer" parent="." unique_id=400000050]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -180.0
+offset_top = 10.0
+offset_right = 180.0
+offset_bottom = 90.0
+theme_override_constants/separation = 4
+
+[node name="HappinessTitleLabel" type="Label" parent="HappinessBarContainer" unique_id=400000051]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cat Happiness"
+horizontal_alignment = 1
+
+[node name="HappinessRow" type="HBoxContainer" parent="HappinessBarContainer" unique_id=400000052]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HappinessMinLabel" type="Label" parent="HappinessBarContainer/HappinessRow" unique_id=400000053]
+layout_mode = 2
+text = "0%"
+
+[node name="HappinessBar" type="ProgressBar" parent="HappinessBarContainer/HappinessRow" unique_id=400000054]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+value = 100.0
+show_percentage = false
+
+[node name="HappinessMaxLabel" type="Label" parent="HappinessBarContainer/HappinessRow" unique_id=400000055]
+layout_mode = 2
+text = "100%"
 
 [node name="OnlyPawsPopup" type="ColorRect" parent="." unique_id=400000040]
 process_mode = 2
